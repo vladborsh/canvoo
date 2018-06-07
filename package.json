@@ -1,16 +1,20 @@
 {
-  "name": "typescript-webpack-starter",
-  "version": "1.0.0",
+  "name": "canvoo",
+  "version": "0.0.1",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "karma start ./karma.conf.js --browsers PhantomJS",
     "test:chrome": "karma start ./karma.conf.js --browsers Chrome",
-    "webpack": "webpack",
-    "webpack:watch": "webpack -w"
+    "webpack:watch": "webpack -w",
+    "build": "webpack --disable-bs"
   },
-  "author": "Vlad",
+  "author": "Vlad Borsh <v.borsh.io@gmail.com>",
   "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vladborsh/canvoo"
+  },
   "devDependencies": {
     "@types/jasmine": "^2.8.7",
     "@types/node": "^10.3.1",
@@ -27,9 +31,10 @@
     "source-map-loader": "^0.2.3",
     "ts-loader": "^4.3.0",
     "ts-node": "^6.0.5",
-    "webpack": "^4.8.3",
     "typescript": "2.7.2",
-    "webpack-cli": "^2.1.4"
+    "webpack": "^4.8.3",
+    "webpack-cli": "^2.1.4",
+    "yargs": "^11.0.0"
   },
   "dependencies": {
     "lodash": "^4.17.10",

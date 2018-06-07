@@ -12,5 +12,5 @@ export function patch(canvas: Canvas) {
         canvas.canvasStorage.push(() => {
             canvas.drawImage.apply(canvas, arg);
         });
-    };
+    }; 
 }

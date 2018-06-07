@@ -1,2 +1,4 @@
 import { Canvas } from "./canvas/canvas";
-import { initializeControl } from './control/control';
+import { patch } from './patch/patch';
+
+export { Canvas, patch }

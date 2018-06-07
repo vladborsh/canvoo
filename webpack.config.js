@@ -1,5 +1,10 @@
 const path = require('path'),
-   BrowserSyncPlugin = require('browser-sync-webpack-plugin');
+  yargs  = require("yargs"),
+  BrowserSyncPlugin = require('browser-sync-webpack-plugin')
+
+var argv = yargs
+  .boolean("disable-bs")
+  .argv;
 
 module.exports = {
   entry: './src/index.ts',
@@ -18,15 +23,21 @@ module.exports = {
       }
     ]
   },
-  watch: true,
-	plugins: [
-	    new BrowserSyncPlugin({
-	      host: 'localhost',
-	      port: 4100,
-	      files: ['./*.html'],
-	      server: { baseDir: ['.'] }
-	    })
-	],
+  watch: false,
+	plugins: (function(argv) { 
+    var plugins = []
+    if (!argv.disableBs) {
+      plugins.push(
+        new BrowserSyncPlugin({
+          host: 'localhost',
+          port: 4100,
+          files: ['./*.html'],
+          server: { baseDir: ['.'] }
+        })
+      )
+    }
+    return plugins;
+  })(argv),
   resolve: {
     extensions: ['.tsx', '.ts', '.js'],
     modules: [path.resolve(__dirname, 'src'), "node_modules"]
