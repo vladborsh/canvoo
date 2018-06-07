@@ -24,7 +24,7 @@ export class Control {
             .pipe(
                 map((event: KeyboardEvent) => {
                     return DIRECTIONS[event.keyCode]
-                } )
+                })
             )
     }
     

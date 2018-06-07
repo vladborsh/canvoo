@@ -1,4 +1,6 @@
-export class CanvasStorage {
+import { each } from 'lodash';
+
+export class AnimationProcedureStorage {
 
     public animations: Array<Function>;
     
@@ -8,5 +10,11 @@ export class CanvasStorage {
 
     public push(animationFunc : Function): void {
         this.animations.push(animationFunc);
+    }
+
+    public render() {
+        each( this.animations, animation => {
+            animation();
+        } );
     }
 }

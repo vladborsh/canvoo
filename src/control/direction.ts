@@ -7,8 +7,7 @@ export enum Direction {
 
 export interface Directions {
     [key: number]: Direction;
-  }
-  
+}
 
 export const DIRECTIONS: Directions = {
     37 : Direction.LEFT,

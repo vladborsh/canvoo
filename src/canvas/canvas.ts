@@ -1,21 +1,26 @@
 import { Vector } from "../space/point";
-import { CanvasStorage } from "./canvas-storage";
-import { Animation } from './animation';
+import { AnimationProcedureStorage } from "./animation-procedure-storage";
+import { AnimationController } from './animation-controller';
+import { MediaStorageController } from "./media/media-storage-controller";
+import { Observable } from "rxjs";
+import { MediaStorage } from "./media/media-storage";
 
 export class Canvas {
 
     public canvas: HTMLCanvasElement;
     public context: CanvasRenderingContext2D;
     public canvasCenter: Vector;
-    public canvasStorage: CanvasStorage;
-    public animation: Animation;
+    public canvasStorage: AnimationProcedureStorage;
+    public animationController: AnimationController;
+    public mediaStorageController: MediaStorageController;
+    public mediaStorage$: Observable<MediaStorage>
 
-    constructor() {
+    constructor(pathList?: string[]) {
         this.createCanvas();
-        this.patch();
-        this.canvasStorage = new CanvasStorage();
-        this.animation = new Animation(this.canvasStorage);
-        this.animationLoop();
+        this.canvasStorage = new AnimationProcedureStorage();
+        this.animationController = new AnimationController(this.canvasStorage);
+        this.mediaStorageController = new MediaStorageController();
+        this.mediaStorage$ = this.mediaStorageController.loadSources(pathList);
     }
 
     public createCanvas(w?: number, h?: number): void {
@@ -31,24 +36,16 @@ export class Canvas {
         document.body.appendChild(this.canvas);
     }
 
-    public animationLoop() {
-        this.animation.startAnimating(4);
-    }
-
     public drawRect( color: string, position: Vector, size: Vector ): void {
         this.context.fillStyle = color;
         this.context.fillRect(position.x, position.y, size.x, size.y);
     }
 
-    public patch() {
-        const self = this;
-        (<any>window).drawRect = function () {
-            const arg = arguments;
-            const patch = () => {
-                self.drawRect.apply(self, arg);
-            }
-            self.canvasStorage.push(patch);
-        };
+    public drawImage( image: HTMLImageElement, position: Vector, size?: Vector ) {
+        if (!!size) {
+            this.context.drawImage(image, position.x, position.y, size.x, size.y);
+        }
+        this.context.drawImage(image, position.x, position.y);
     }
 
 }

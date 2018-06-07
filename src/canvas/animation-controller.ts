@@ -1,7 +1,7 @@
-import { CanvasStorage } from "./canvas-storage";
+import { AnimationProcedureStorage } from "./animation-procedure-storage";
 import { each } from 'lodash';
 
-export class Animation {
+export class AnimationController {
     
     public stop: boolean;
     public frameCount: number;
@@ -11,7 +11,7 @@ export class Animation {
     public then: number;
     public elapsed: number;
 
-    constructor(private canvasStorage: CanvasStorage) {
+    constructor(private animationProcedureStorage: AnimationProcedureStorage) {
         this.stop = false;
         this.frameCount = 0;
     }
@@ -39,9 +39,7 @@ export class Animation {
             // Also, adjust for fpsInterval not being multiple of 16.67
             this.then = this.now - (this.elapsed % this.fpsInterval);
             // animation stuff
-            each( this.canvasStorage.animations, animation => {
-                animation();
-            } );
+            this.animationProcedureStorage.render();
         }
     }
 
