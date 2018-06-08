@@ -1,28 +1,27 @@
 import { Vector } from "../space/point";
-import { AnimationProcedureStorage } from "./animation-procedure-storage";
-import { AnimationController } from './animation-controller';
 import { MediaStorageController } from "./media/media-storage-controller";
 import { Observable } from "rxjs";
 import { MediaStorage } from "./media/media-storage";
+import { RectangleRenderedEntity } from "./rendered-entity/rectangle-rendered-entity";
+import { AbstractRenderedEntity } from "./rendered-entity/abstract-rendered-entity";
+import { findIndex } from 'lodash';
 
 export class Canvas {
 
     public canvas: HTMLCanvasElement;
     public context: CanvasRenderingContext2D;
     public canvasCenter: Vector;
-    public canvasStorage: AnimationProcedureStorage;
-    public animationController: AnimationController;
     public mediaStorageController: MediaStorageController;
     public mediaStorage$: Observable<MediaStorage>;
+    public renderedEntitiesStorage: AbstractRenderedEntity[];
 
     constructor(pathList?: string[]) {
         this.createCanvas();
-        this.canvasStorage = new AnimationProcedureStorage();
-        this.animationController = new AnimationController(this.canvasStorage);
         this.mediaStorageController = new MediaStorageController();
         if (pathList) {
             this.mediaStorage$ = this.mediaStorageController.loadSources(pathList);
         }
+        this.renderedEntitiesStorage = [];
     }
 
     public createCanvas(w?: number, h?: number): void {
@@ -38,12 +37,27 @@ export class Canvas {
         document.body.appendChild(this.canvas);
     }
 
-    public drawRect( color: string, position: Vector, size: Vector ): void {
-        this.context.fillStyle = color;
-        this.context.fillRect(position.x, position.y, size.x, size.y);
+    public addEntity( abstractRenderedEntity: AbstractRenderedEntity): void {
+        this.renderedEntitiesStorage.push(abstractRenderedEntity);
     }
 
-    public drawImage( image: HTMLImageElement, position: Vector, size?: Vector ) {
+    public destroy(id: string) {
+        this.renderedEntitiesStorage.splice(
+            findIndex( this.renderedEntitiesStorage, (entity: AbstractRenderedEntity) => {
+                return entity.id === id;
+            }), 1);
+    }
+
+    public drawRectangleObject( rectangleObject: RectangleRenderedEntity ): void {
+        rectangleObject.render();
+    }
+
+    public drawRect( color: string, position: Vector, size: Vector ): void {
+        this.context.fillStyle = color;
+        this.context.fillRect( position.x, position.y, size.x, size.y, );
+    }
+
+    public drawImage( image: HTMLImageElement, position: Vector, size?: Vector ): void {
         if (!!size) {
             this.context.drawImage(image, position.x, position.y, size.x, size.y);
         }

@@ -1,7 +1,9 @@
-import { AnimationProcedureStorage } from "./animation-procedure-storage";
 import { each } from 'lodash';
+import { StateController } from "../state/state-controller";
+import { Canvas } from "./canvas";
+import { AbstractRenderedEntity } from "./rendered-entity/abstract-rendered-entity";
 
-export class AnimationController {
+export class LoopController {
     
     public stop: boolean;
     public frameCount: number;
@@ -10,15 +12,19 @@ export class AnimationController {
     public now: number;
     public then: number;
     public elapsed: number;
+    public state: StateController;
+    public canvas: Canvas;
 
-    constructor(private animationProcedureStorage: AnimationProcedureStorage) {
+    constructor( canvas: Canvas, state: StateController ) {
         this.stop = false;
         this.frameCount = 0;
+        this.state = state;
+        this.canvas = canvas;
     }
-
-    public startLoop(fps) {
-        this.fpsInterval = 1000 / fps;
+    
+    public startLoop(fps: number): void {
         this.then = Date.now();
+        this.fpsInterval = 1000 / fps;
         this.startTime = this.then;
         this.loop();
     }
@@ -38,8 +44,18 @@ export class AnimationController {
             // Get ready for next frame by setting then=now, but...
             // Also, adjust for fpsInterval not being multiple of 16.67
             this.then = this.now - (this.elapsed % this.fpsInterval);
+            // state recalculation stuff
+            if (!!this.state) {
+                this.state.update();
+            }
             // animation stuff
-            this.animationProcedureStorage.render();
+            if (!!this.canvas) {
+                this.canvas.context.clearRect(0, 0, this.canvas.canvas.width, this.canvas.canvas.height);
+                each( this.canvas.renderedEntitiesStorage, (renderedObject: AbstractRenderedEntity) => {
+                    renderedObject.render();
+                } ) ;
+
+            }
         }
     }
 

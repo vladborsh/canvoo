@@ -1,18 +1,12 @@
 import { Canvas } from "../canvas/canvas";
+import { StateController } from "../state/state-controller";
 
-export function patchWindow(canvas: Canvas) {
+export function patchWindowCanvas(canvas: Canvas) {
     (<any>window).canvas = canvas;
-    (<any>window).drawRect = function () {
-        const arg = arguments;
-        canvas.canvasStorage.push(() => {
-            canvas.drawRect.apply(canvas, arg);
-        });
-    };
-    (<any>window).drawImage = function () {
-        const arg = arguments;
-        canvas.canvasStorage.push(() => {
-            canvas.drawImage.apply(canvas, arg);
-        });
-    }; 
-    console.log('patched');
+    console.log('canvas patched');
+}
+
+export function patchWindowStateController(state: StateController) {
+    (<any>window).state = state;
+    console.log('state patched');
 }
