@@ -1,31 +1,28 @@
-import { Observable, fromEvent } from 'rxjs';
+import { Observable, fromEvent, OperatorFunction } from 'rxjs';
 import { map } from 'rxjs/operators'
 import { DIRECTIONS, Direction } from './direction';
 
-export function initializeControl(): Observable<Direction> {
+export function initializeControl(): Control {
     let control = new Control();
-    return control.getDirection();
+    return control;
 }
 
 export class Control {
     
-    private keydown$: Observable<{}>;
+    private mapper: OperatorFunction<KeyboardEvent, Direction>;
+    public keydown$: Observable<Direction>;
+    public keyup$: Observable<Direction>;
     
     constructor() {
         this.initializeSource();
     }
 
     public initializeSource(): void {
-        this.keydown$ = fromEvent(document, 'keydown');
-    }
-
-    public getDirection(): Observable<Direction> {
-        return this.keydown$
-            .pipe(
-                map((event: KeyboardEvent) => {
-                    return DIRECTIONS[event.keyCode]
-                })
-            )
+        this.mapper = map((event: KeyboardEvent) => {
+            return DIRECTIONS[event.keyCode]
+        })
+        this.keydown$ = fromEvent(document, 'keydown').pipe(this.mapper);
+        this.keyup$ = fromEvent(document, 'keyup').pipe(this.mapper);
     }
     
 } 

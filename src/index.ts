@@ -1,14 +1,14 @@
-import { defaultSetup } from "./setup/setup";
 import { TestingCube } from "./entity/testing-cube";
+import { defaultSetup } from "./setup/setup";
+import { initializeControl } from "./control/control";
+import { Vector } from "./space/vector";
+import { Direction, Directions } from "./control/direction";
+import { AbstractEntity } from "./entity/abstract-entity";
 
-function main():void {
-    defaultSetup();
-    let obj = new TestingCube('cube', {x:50, y:50}, {x:50, y:50}, '#555');
-    obj.update( function () {
-        if ( this.position.x < 200) {
-            this.position.x++;
-        }
-    })
+export { 
+    defaultSetup, 
+    Direction,
+    initializeControl, 
+    TestingCube,
+    AbstractEntity,
 }
-
-main();

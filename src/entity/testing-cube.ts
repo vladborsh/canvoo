@@ -1,5 +1,5 @@
 import { AbstractEntity } from "./abstract-entity";
-import { Vector } from "../space/point";
+import { Vector } from "../space/vector";
 
 export class TestingCube extends AbstractEntity {
 

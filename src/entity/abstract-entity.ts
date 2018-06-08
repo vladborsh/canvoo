@@ -1,5 +1,5 @@
 import { RectangleRenderedEntity } from "../canvas/rendered-entity/rectangle-rendered-entity";
-import { Vector } from "../space/point";
+import { Vector } from "../space/vector";
 import { CommonStateEntity } from "../state/state-entity/common-state-entity";
 
 export abstract class AbstractEntity {

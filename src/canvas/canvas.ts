@@ -1,4 +1,4 @@
-import { Vector } from "../space/point";
+import { Vector } from "../space/vector";
 import { MediaStorageController } from "./media/media-storage-controller";
 import { Observable } from "rxjs";
 import { MediaStorage } from "./media/media-storage";

@@ -1,4 +1,4 @@
-import { Vector } from "../../space/point";
+import { Vector } from "../../space/vector";
 import { Canvas } from "../canvas";
 
 export abstract class AbstractRenderedEntity {
