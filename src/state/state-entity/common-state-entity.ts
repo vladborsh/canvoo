@@ -1,6 +1,6 @@
 import { AbstractStateEntity } from "./abstract-state-entity";
 import { StateController } from "../state-controller";
-import { Vector } from "../../space/point";
+import { Vector } from "../../space/vector";
 
 export class CommonStateEntity extends AbstractStateEntity{
 

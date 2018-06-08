@@ -9,5 +9,5 @@ export function defaultSetup() {
     let loopController = new LoopController(canvas, state);
     patchWindowCanvas(canvas);
     patchWindowStateController(state);
-    loopController.startLoop(20);
+    loopController.startLoop(60);
 }
