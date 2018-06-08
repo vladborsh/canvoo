@@ -1,4 +1,8 @@
-import { Canvas } from "./canvas/canvas";
-import { patch } from './patch/patch';
+import { defaultSetup } from "./setup/setup";
 
-export { Canvas, patch }
+function main():void {
+    defaultSetup();
+    (<any>window).drawRect('#333', {x:40,y:40}, {x:40,y:40});
+}
+
+main();

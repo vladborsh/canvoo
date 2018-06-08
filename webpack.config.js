@@ -43,7 +43,7 @@ module.exports = {
     modules: [path.resolve(__dirname, 'src'), "node_modules"]
   },
   output: {
-    filename: 'bundle.js',
+    filename: 'index.js',
     path: path.resolve(__dirname, 'dist')
   }
 };

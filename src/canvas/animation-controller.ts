@@ -16,20 +16,20 @@ export class AnimationController {
         this.frameCount = 0;
     }
 
-    public startAnimating(fps) {
+    public startLoop(fps) {
         this.fpsInterval = 1000 / fps;
         this.then = Date.now();
         this.startTime = this.then;
-        this.animate();
+        this.loop();
     }
 
-    public animate() {
+    public loop() {
         // stop
         if (this.stop) {
             return;
         }
         // request another frame
-        requestAnimationFrame(this.animate.bind(this));
+        requestAnimationFrame(this.loop.bind(this));
         // calc elapsed time since last loop
         this.now = Date.now();
         this.elapsed = this.now - this.then;

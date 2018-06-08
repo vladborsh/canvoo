@@ -2,11 +2,12 @@
   "name": "canvoo",
   "version": "0.0.1",
   "description": "",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "types" : "dist/dist/index.d.ts",
   "scripts": {
     "test": "karma start ./karma.conf.js --browsers PhantomJS",
     "test:chrome": "karma start ./karma.conf.js --browsers Chrome",
-    "webpack:watch": "webpack -w",
+    "webpack": "webpack -w",
     "build": "webpack --disable-bs"
   },
   "author": "Vlad Borsh <v.borsh.io@gmail.com>",

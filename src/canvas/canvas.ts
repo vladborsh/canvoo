@@ -13,14 +13,16 @@ export class Canvas {
     public canvasStorage: AnimationProcedureStorage;
     public animationController: AnimationController;
     public mediaStorageController: MediaStorageController;
-    public mediaStorage$: Observable<MediaStorage>
+    public mediaStorage$: Observable<MediaStorage>;
 
     constructor(pathList?: string[]) {
         this.createCanvas();
         this.canvasStorage = new AnimationProcedureStorage();
         this.animationController = new AnimationController(this.canvasStorage);
         this.mediaStorageController = new MediaStorageController();
-        this.mediaStorage$ = this.mediaStorageController.loadSources(pathList);
+        if (pathList) {
+            this.mediaStorage$ = this.mediaStorageController.loadSources(pathList);
+        }
     }
 
     public createCanvas(w?: number, h?: number): void {
@@ -46,6 +48,10 @@ export class Canvas {
             this.context.drawImage(image, position.x, position.y, size.x, size.y);
         }
         this.context.drawImage(image, position.x, position.y);
+    }
+
+    public set mediaSources(sources: string[]) {
+        this.mediaSources = sources;
     }
 
 }

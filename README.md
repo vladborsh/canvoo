@@ -1,22 +1,46 @@
-# Typescript project starter
+# Canvoo
 
-Following project contains starter and config for simple typescript project. Default address: ```localhost:4100```
+Rendering easy to use engine that run full screen canvas and provide some rendering and animation stuff
+
+## Installation 
+
+```sh
+npm install canvoo --save
+yarn add canvoo
+bower install canvoo --save
+```
 
 ## Features
 
-* Typescript
-* Webpack
-* Live dev server
-* Karma & Jasmine
-* TravisCI
+* 2d rendering
+* User input capturing
+* Media resource management
+* State management
 
-## Installation
+## Usage
 
-Open terminal and run next commands
+### Javascript
+```javascript
+import { defaultSetup } from "canvoo";
 
-```sh
-npm i
-npm run webpack:watch
+function main() {
+    defaultSetup();
+    window.drawRect('#333', {x:40,y:40}, {x:40,y:40});
+}
+
+main();
+```
+
+### TypeScript
+```typescript
+import { defaultSetup } from "canvoo";
+
+function main():void {
+    defaultSetup();
+    (<any>window).drawRect('#333', {x:40,y:40}, {x:40,y:40});
+}
+
+main();
 ```
 
 ## Testing

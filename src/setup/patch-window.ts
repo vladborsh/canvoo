@@ -1,6 +1,7 @@
 import { Canvas } from "../canvas/canvas";
 
-export function patch(canvas: Canvas) {
+export function patchWindow(canvas: Canvas) {
+    (<any>window).canvas = canvas;
     (<any>window).drawRect = function () {
         const arg = arguments;
         canvas.canvasStorage.push(() => {
@@ -13,4 +14,5 @@ export function patch(canvas: Canvas) {
             canvas.drawImage.apply(canvas, arg);
         });
     }; 
+    console.log('patched');
 }
