@@ -2,11 +2,6 @@ import { Observable, fromEvent, OperatorFunction } from 'rxjs';
 import { map } from 'rxjs/operators'
 import { DIRECTIONS, Direction } from './direction';
 
-export function initializeControl(): Control {
-    let control = new Control();
-    return control;
-}
-
 export class Control {
     
     private mapper: OperatorFunction<KeyboardEvent, Direction>;

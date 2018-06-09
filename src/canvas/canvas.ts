@@ -64,6 +64,23 @@ export class Canvas {
         this.context.drawImage(image, position.x, position.y);
     }
 
+    public drawText( text: string, 
+                    x: number, 
+                    y: number, 
+                    fillStyle: string,
+                    fontSize: number, 
+                    horizontalAlign: string = 'center', 
+                    verticalAlign: string = 'middle' ) {
+
+        this.context.fillStyle = fillStyle;
+        this.context.font = `bold ${fontSize}px sans-serif`;
+
+        this.context.textAlign = horizontalAlign;
+        this.context.textBaseline = verticalAlign;
+
+        this.context.fillText(text, x, y);
+      }
+
     public set mediaSources(sources: string[]) {
         this.mediaSources = sources;
     }

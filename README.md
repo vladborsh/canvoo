@@ -21,8 +21,6 @@ bower install canvoo --save
 
 Move forward gray cube
 
-### Javascript
-
 ### TypeScript
 
 Move forward cube
@@ -43,46 +41,24 @@ function main():void {
 main();
 ```
 
-Cube controlled by keyboard
+Cube controlled from keyboard
 
 ```typescript
-import { Direction, defaultSetup, initializeControl, TestingCube } from "canvoo";
+import { defaultSetup, TestingCube } from "canvoo";
 
-const state = {
-    [Direction.UP] : false,
-    [Direction.DOWN] : false,
-    [Direction.LEFT] : false,
-    [Direction.RIGHT] : false,
-    cubeVelocity : {x: 0, y: 0}
-}
-
-function getVelocity() {
-    const velocity = {x:0, y: 0}
-    if (state[Direction.UP]) velocity.y += -1;
-    if (state[Direction.DOWN]) velocity.y += 1;
-    if (state[Direction.LEFT]) velocity.x += -1;
-    if (state[Direction.RIGHT]) velocity.x += 1;
-    return velocity;
-}
-
+const VELOCITY_STEP = 5;
 
 function main():void {
     defaultSetup();
-    let control = initializeControl();
-    control.keydown$
-        .subscribe( (dir: Direction) => {
-            state[dir] = true;
-        });
-    control.keyup$
-        .subscribe( (dir: Direction) => {
-            state[dir] = false;
-        });
-
     let obj = new TestingCube('cube', {x:50, y:50}, {x:50, y:50}, '#555');
     obj.update( function () {
-        state.cubeVelocity = getVelocity();
-        this.position.x += state.cubeVelocity.x;
-        this.position.y += state.cubeVelocity.y;
+        const velocity = {x:0, y: 0}
+        if (this.controlState[Direction.UP]) velocity.y += -VELOCITY_STEP;
+        if (this.controlState[Direction.DOWN]) velocity.y += VELOCITY_STEP;
+        if (this.controlState[Direction.LEFT]) velocity.x += -VELOCITY_STEP;
+        if (this.controlState[Direction.RIGHT]) velocity.x += VELOCITY_STEP;
+        this.position.x += velocity.x;
+        this.position.y += velocity.y;
     })
 }
 

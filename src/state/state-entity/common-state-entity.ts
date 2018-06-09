@@ -4,8 +4,8 @@ import { Vector } from "../../space/vector";
 
 export class CommonStateEntity extends AbstractStateEntity{
 
-    constructor(id: string, state: StateController, position: Vector, size: Vector) {
-        super(id, state, position, size);
+    constructor(id: string, stateController: StateController, position: Vector, size: Vector) {
+        super(id, stateController, position, size);
     }
 
     update() { }
