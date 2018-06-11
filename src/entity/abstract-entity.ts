@@ -1,19 +1,20 @@
-import { RectangleRenderedEntity } from "../canvas/rendered-entity/rectangle-rendered-entity";
+
 import { Vector } from "../space/vector";
-import { CommonStateEntity } from "../state/state-entity/common-state-entity";
+import { AbstractStateEntity } from "../state/state-entity/abstract-state-entity";
+import { AbstractRenderedEntity } from "../canvas/rendered-entity/abstract-rendered-entity";
 
 export abstract class AbstractEntity {
     
-    public stateEntity: CommonStateEntity;
-    public renderedEntity: RectangleRenderedEntity;
+    public id: string;
+    public stateEntity: AbstractStateEntity;
+    public renderedEntity: AbstractRenderedEntity;
     public position: Vector;
     public size: Vector;
 
-    constructor(id: string, position: Vector, size: Vector, color?: string ) {
-        this.stateEntity = new CommonStateEntity(id, (<any>window).state, position,  size );
-        (<any>window).state.addEntity(this.stateEntity );
-        this.renderedEntity = new RectangleRenderedEntity(id, (<any>window).canvas, color ? color :'#444444', position, size );
-        (<any>window).canvas.addEntity(this.renderedEntity);
+    constructor(id: string, position: Vector, size: Vector ) {
+        this.id = id;
+        this.position = position;
+        this.size = size;
     }
 
     update( func: () => void ) {

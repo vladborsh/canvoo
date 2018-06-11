@@ -2,7 +2,7 @@ import { Vector } from "../space/vector";
 import { MediaStorageController } from "./media/media-storage-controller";
 import { Observable } from "rxjs";
 import { MediaStorage } from "./media/media-storage";
-import { RectangleRenderedEntity } from "./rendered-entity/rectangle-rendered-entity";
+import { RectangleEntity } from "./rendered-entity/rectangle-entity";
 import { AbstractRenderedEntity } from "./rendered-entity/abstract-rendered-entity";
 import { findIndex } from 'lodash';
 
@@ -48,7 +48,7 @@ export class Canvas {
             }), 1);
     }
 
-    public drawRectangleObject( rectangleObject: RectangleRenderedEntity ): void {
+    public drawRectangleObject( rectangleObject: RectangleEntity ): void {
         rectangleObject.render();
     }
 
