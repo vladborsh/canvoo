@@ -11,8 +11,6 @@ export class TestingCube extends AbstractEntity {
     constructor(id: string, position: Vector, size: Vector, color?: string) {
         super(id, position, size );
         this.stateEntity = new CommonStateEntity(id, (<any>window).state, position,  size );
-        (<any>window).state.addEntity(this.stateEntity );
         this.renderedEntity = new RectangleEntity(id, (<any>window).canvas, color ? color :'#444444', position, size );
-        (<any>window).canvas.addEntity(this.renderedEntity);
     }
 }

@@ -10,6 +10,5 @@ export class Background extends AbstractEntity {
     constructor(id: string, color?: string) {
         super(id, null, null );
         this.renderedEntity = new BackgroundEntity(id, (<any>window).canvas, color ? color :'#444444' );
-        (<any>window).canvas.addEntity(this.renderedEntity);
     }
 }
