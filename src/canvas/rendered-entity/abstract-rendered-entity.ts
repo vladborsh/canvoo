@@ -17,6 +17,6 @@ export abstract class AbstractRenderedEntity {
         this.canvas.destroy(this.id);
     }
 
-    abstract render();
+    abstract render(): void;
 
 }
