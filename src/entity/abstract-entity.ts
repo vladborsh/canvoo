@@ -13,7 +13,7 @@ export abstract class AbstractEntity {
     public position: Vector;
     public size: Vector;
 
-    constructor(id: string, position: Vector, size: Vector ) {
+    constructor(id: string, position: Vector, size?: Vector ) {
         this.id = id;
         this.position = position;
         this.size = size;
