@@ -3,9 +3,15 @@ import { Canvas } from "../canvas/canvas";
 import { StateController } from "../state/state-controller";
 import { LoopController } from "../canvas/loop-controller";
 
-export function defaultSetup() {
+export function setup() {
     let canvas = new Canvas();
     let state = new StateController();
+    let loopController = new LoopController(canvas, state);
+    
+    loopController.startLoop(60);
+
     patchWindowCanvas(canvas);
     patchWindowStateController(state);
+
+    return { canvas, state };
 }

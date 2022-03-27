@@ -69,8 +69,8 @@ export class Canvas {
                     y: number, 
                     fillStyle: string,
                     fontSize: number, 
-                    horizontalAlign: string = 'center', 
-                    verticalAlign: string = 'middle' ) {
+                    horizontalAlign: CanvasTextAlign = 'center', 
+                    verticalAlign: CanvasTextBaseline = 'middle' ) {
 
         this.context.fillStyle = fillStyle;
         this.context.font = `bold ${fontSize}px sans-serif`;

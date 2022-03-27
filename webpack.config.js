@@ -1,49 +1,46 @@
-const path = require('path'),
-  yargs  = require("yargs"),
-  BrowserSyncPlugin = require('browser-sync-webpack-plugin')
+const path = require("path");
+const yargs = require("yargs");
+const HtmlWebpackPlugin = require("html-webpack-plugin");
+const ProgressBarPlugin = require('progress-bar-webpack-plugin')
 
-var argv = yargs
-  .boolean("disable-bs")
-  .argv;
+/* Configure HTMLWebpack plugin */
+const HTMLWebpackPluginConfig = new HtmlWebpackPlugin({
+    template: __dirname + "/src/index.html",
+    filename: "index.html",
+    inject: "body"
+});
+
+/* Configure ProgressBar */
+const ProgressBarPluginConfig = new ProgressBarPlugin() 
+
+var argv = yargs.boolean("disable-bs").argv;
 
 module.exports = {
-  entry: './src/index.ts',
-  devtool: 'source-map',
-  module: {
-    rules: [
-      {
-        enforce: "pre",
-        test: /\.js$/,
-        use: "source-map-loader"
-      },
-      {
-        test: /\.tsx?$/,
-        use: 'ts-loader',
-        exclude: /node_modules/
-      }
-    ]
-  },
-  watch: false,
-	plugins: (function(argv) { 
-    var plugins = []
-    if (!argv.disableBs) {
-      plugins.push(
-        new BrowserSyncPlugin({
-          host: 'localhost',
-          port: 4100,
-          files: ['./*.html'],
-          server: { baseDir: ['.'] }
-        })
-      )
+    entry: "./src/index.ts",
+    devtool: "source-map",
+    mode: 'development',
+    module: {
+        rules: [
+        {
+            test: /\.ts?$/,
+            use: 'awesome-typescript-loader'
+        }
+        ]
+    },
+    watch: false,
+    plugins: (function(argv) {
+        var plugins = [];
+        if (!argv.disableBs) {
+        plugins.push(HTMLWebpackPluginConfig, ProgressBarPluginConfig);
+        }
+        return plugins;
+    })(argv),
+    resolve: {
+        extensions: [".tsx", ".ts", ".js"],
+        modules: [path.resolve(__dirname, "src"), "node_modules"]
+    },
+    output: {
+        filename: "index.js",
+        path: path.resolve(__dirname, "dist")
     }
-    return plugins;
-  })(argv),
-  resolve: {
-    extensions: ['.tsx', '.ts', '.js'],
-    modules: [path.resolve(__dirname, 'src'), "node_modules"]
-  },
-  output: {
-    filename: 'index.js',
-    path: path.resolve(__dirname, 'dist')
-  }
 };

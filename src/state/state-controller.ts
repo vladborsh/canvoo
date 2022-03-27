@@ -36,9 +36,9 @@ export class StateController {
             }), 1);
     }
 
-    public update(): void {
+    public update(dt: number): void {
         each(this.entities, (entity: AbstractStateEntity) => {
-            entity.update();
+            entity.update(dt);
         })
     }
 
