@@ -44,9 +44,10 @@ export class LoopController {
             // Get ready for next frame by setting then=now, but...
             // Also, adjust for fpsInterval not being multiple of 16.67
             this.then = this.now - (this.elapsed % this.fpsInterval);
+
             // state recalculation stuff
             if (!!this.state) {
-                this.state.update();
+                this.state.update(this.elapsed);
             }
             // animation stuff
             if (!!this.canvas) {

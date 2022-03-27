@@ -17,27 +17,18 @@ export abstract class AbstractEntity {
         this.id = id;
         this.position = position;
         this.size = size;
-        this.bindIt();
     }
 
-    public bind(state: StateController, canvas: Canvas) {
+    public register(state: StateController, canvas: Canvas) {
         state.addEntity(this.stateEntity);
         canvas.addEntity(this.renderedEntity);
     }
 
-    public update( func: () => void ) {
-        this.stateEntity.update = func.bind(this.stateEntity);
+    public onUpdate( func: (dt: number, stateEntity: AbstractStateEntity) => void ) {
+        this.stateEntity.onUpdate(func);
     }
 
-    public render( func: () => void ) {
+    public onRender( func: () => void ) {
         this.renderedEntity.render = func.bind(this.renderedEntity);
     }
-
-    private bindIt() {
-        if ((<any>window)['abstract_entity_storage'] === undefined) {
-            (<any>window)['abstract_entity_storage'] = [];
-        }
-        (<any>window)['abstract_entity_storage'].push(this);
-    }
-
 }

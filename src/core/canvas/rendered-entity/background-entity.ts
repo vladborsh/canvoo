@@ -3,12 +3,8 @@ import { Vector } from "../../space/vector";
 import { Canvas } from "../canvas";
 
 export class BackgroundEntity extends AbstractRenderedEntity {
-
-    public color: string;
-
-    constructor(id: string, canvas: Canvas, color: string ) {
-        super(id, canvas, {x:0,y:0});
-        this.color = color;
+    constructor(id: string, canvas: Canvas, public color: string ) {
+        super(id, canvas);
     }
 
     public render() {
