@@ -47,7 +47,7 @@ export class LoopController {
 
             // state recalculation stuff
             if (!!this.state) {
-                this.state.update(this.elapsed);
+                this.state.update(this.elapsed/1000);
             }
             // animation stuff
             if (!!this.canvas) {
