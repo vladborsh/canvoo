@@ -53,7 +53,7 @@ export class LoopController {
             if (!!this.canvas) {
                 this.canvas.context.clearRect(0, 0, this.canvas.canvas.width, this.canvas.canvas.height);
                 each( this.canvas.renderedEntitiesStorage, (renderedObject: AbstractRenderedEntity) => {
-                    renderedObject.render();
+                    renderedObject.render(this.elapsed);
                 } ) ;
 
             }

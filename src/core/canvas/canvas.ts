@@ -14,12 +14,9 @@ export class Canvas {
     public mediaStorage$: Observable<MediaStorage>;
     public renderedEntitiesStorage: AbstractRenderedEntity[];
 
-    constructor(pathList?: string[]) {
+    constructor() {
         this.createCanvas();
         this.mediaStorageController = new MediaStorageController();
-        if (pathList) {
-            this.mediaStorage$ = this.mediaStorageController.loadSources(pathList);
-        }
         this.renderedEntitiesStorage = [];
     }
 
@@ -63,14 +60,15 @@ export class Canvas {
         this.context.drawImage(image, position.x, position.y);
     }
 
-    public drawText( text: string, 
-                    x: number, 
-                    y: number, 
-                    fillStyle: string,
-                    fontSize: number, 
-                    horizontalAlign: CanvasTextAlign = 'center', 
-                    verticalAlign: CanvasTextBaseline = 'middle' ) {
-
+    public drawText(
+        text: string, 
+        x: number, 
+        y: number, 
+        fillStyle: string,
+        fontSize: number, 
+        horizontalAlign: CanvasTextAlign = 'center', 
+        verticalAlign: CanvasTextBaseline = 'middle' 
+    ) {
         this.context.fillStyle = fillStyle;
         this.context.font = `bold ${fontSize}px sans-serif`;
 

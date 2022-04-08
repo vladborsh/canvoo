@@ -4,18 +4,45 @@ import { Canvas } from "../canvas";
 import { AbstractRenderedEntity } from "./abstract-rendered-entity";
 
 export class Sprite extends AbstractRenderedEntity {
+    private currentFrame = 0;
+    private elapsedTimeBetweenFrames = 0;
+
     constructor(
         public id: string,
         public canvas: Canvas,
-        public size: Vector, 
-        public stateEntity: AbstractStateEntity,
-        public frameSize: Vector,
-        public framesLength: Vector,
+        private stateEntity: AbstractStateEntity,
+        private frameSize: Vector,
+        private animationLength: number,
+        private frameDuration: number,
+        private image: HTMLImageElement,
     ) {
         super(id, canvas);
     }
 
-    public render() {
-        this.canvas.context.fillRect(this.stateEntity.position.x, this.stateEntity.position.y, this.size.x, this.size.y);
+    public render(dt: number) {
+        console.log(dt)
+        
+        this.canvas.context.drawImage(
+            this.image,
+            this.currentFrame * this.frameSize.x,
+            0,
+            this.frameSize.x,
+            this.frameSize.y,
+            this.stateEntity.position.x,
+            this.stateEntity.position.y,
+            this.frameSize.x,
+            this.frameSize.y
+        );
+
+        this.elapsedTimeBetweenFrames += dt;
+        
+        if (this.elapsedTimeBetweenFrames > this.frameDuration) {
+            this.currentFrame++;
+            this.elapsedTimeBetweenFrames = 0;
+        }
+
+        if (this.currentFrame == this.animationLength) {
+            this.currentFrame = 0;
+        }
     }
 }
