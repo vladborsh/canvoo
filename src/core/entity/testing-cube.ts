@@ -1,5 +1,5 @@
 import { AbstractEntity } from "./abstract-entity";
-import { Vector } from "../space/vector";
+import { Vector } from "../interfaces/vector";
 import { RectangleEntity } from "../canvas/rendered-entity/rectangle-entity";
 import { AbstractStateEntity } from "../state/state-entity/abstract-state-entity";
 

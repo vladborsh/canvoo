@@ -1,4 +1,4 @@
-import { Vector } from "../space/vector";
+import { Vector } from "../interfaces/vector";
 import { MediaStorageController } from "./media/media-storage-controller";
 import { Observable } from "rxjs";
 import { MediaStorage } from "./media/media-storage";
@@ -7,7 +7,6 @@ import { AbstractRenderedEntity } from "./rendered-entity/abstract-rendered-enti
 import { findIndex } from 'lodash';
 
 export class Canvas {
-
     public canvas: HTMLCanvasElement;
     public context: CanvasRenderingContext2D;
     public canvasCenter: Vector;

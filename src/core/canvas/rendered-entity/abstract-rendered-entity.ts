@@ -1,4 +1,3 @@
-import { Vector } from "../../space/vector";
 import { Canvas } from "../canvas";
 
 export abstract class AbstractRenderedEntity {
@@ -9,5 +8,4 @@ export abstract class AbstractRenderedEntity {
     }
 
     abstract render(): void;
-
 }

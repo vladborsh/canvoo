@@ -1,4 +1,4 @@
-import { Vector } from "../space/vector";
+import { Vector } from "../interfaces/vector";
 
 export function calculateCenter(p1: Vector, p2: Vector, p3: Vector): Vector {
     return {

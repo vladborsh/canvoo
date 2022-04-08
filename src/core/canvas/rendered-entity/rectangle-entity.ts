@@ -1,14 +1,11 @@
 import { AbstractRenderedEntity } from "./abstract-rendered-entity";
-import { Vector } from "../../space/vector";
+import { Vector } from "../../interfaces/vector";
 import { Canvas } from "../canvas";
-import { AbstractStateEntity } from "src/state/state-entity/abstract-state-entity";
+import { AbstractStateEntity } from "../../state/state-entity/abstract-state-entity";
 
 export class RectangleEntity extends AbstractRenderedEntity {
-
     constructor(id: string, canvas: Canvas, public color: string, public size: Vector, public stateEntity: AbstractStateEntity ) {
         super(id, canvas);
-        this.color = color;
-        this.size = size;
     }
 
     public render() {

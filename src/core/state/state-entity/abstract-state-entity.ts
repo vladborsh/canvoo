@@ -1,4 +1,4 @@
-import { Vector } from "../../space/vector";
+import { Vector } from "../../interfaces/vector";
 import { StateController } from "../state-controller";
 
 export class AbstractStateEntity {

@@ -1,5 +1,4 @@
 import { AbstractRenderedEntity } from "./abstract-rendered-entity";
-import { Vector } from "../../space/vector";
 import { Canvas } from "../canvas";
 
 export class BackgroundEntity extends AbstractRenderedEntity {
