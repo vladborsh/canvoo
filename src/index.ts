@@ -1,4 +1,4 @@
-import { TestingCube } from "./core/entity/testing-cube";
+import { RectangleEntity } from "./core/entity/rectangle-entity";
 import { setup } from "./core/setup/setup";
 import { Vector } from "./core/interfaces/vector";
 import { Direction } from "./core/state/control/direction";
@@ -6,32 +6,8 @@ import { AbstractStateEntity } from "./core/state/state-entity/abstract-state-en
 import { multiply, sum } from "./core/utils/calc";
 import { intersect } from "./core/utils/physics";
 import { MediaStorageController } from "./core/canvas/media/media-storage-controller";
-import { AbstractEntity } from "./core/entity/abstract-entity";
-import { Sprite } from "./core/canvas/rendered-entity/sprite";
-
-export class TestSprite extends AbstractEntity {
-    constructor(
-        id: string, 
-        position: Vector, 
-        size: Vector, 
-        frameSize: Vector,
-        animationLength: number,
-        frameDuration: number,
-        image: HTMLImageElement,
-    ) {
-        super(id, position, size );
-        this.stateEntity = new AbstractStateEntity(id, (<any>window).state, position,  size );
-        this.renderedEntity = new Sprite(
-            id, 
-            (<any>window).canvas,
-            this.stateEntity,
-            frameSize,
-            animationLength,
-            frameDuration,
-            image,
-        );
-    }
-}
+import { AnimatedEntity } from "./core/entity/animated-entity";
+import { generateUuid } from "./core/utils/generate-uuid";
 
 const {canvas, state} = setup();
 const mediaStorage = new MediaStorageController();
@@ -44,9 +20,9 @@ mediaStorage.loadSources({
 );
 
 function playGame() {
-    const cube = new TestingCube('qwef', { x: 100, y: 100 }, { x: 50, y: 50 }, '#333333');
-    const panel = new TestingCube('qw15326f', { x: 600, y: 90 }, { x: 50, y: 200 }, '#666666');
-    const testSpriteObject = new TestSprite(
+    const cube = new RectangleEntity(generateUuid(), { x: 100, y: 100 }, { x: 50, y: 50 }, '#333333');
+    const panel = new RectangleEntity(generateUuid(), { x: 600, y: 90 }, { x: 50, y: 200 }, '#666666');
+    const testSpriteObject = new AnimatedEntity(
         'qw15326f12',
         { x: 600, y: 600 }, 
         { x: 50, y: 200 }, 

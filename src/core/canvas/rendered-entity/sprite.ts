@@ -19,9 +19,7 @@ export class Sprite extends AbstractRenderedEntity {
         super(id, canvas);
     }
 
-    public render(dt: number) {
-        console.log(dt)
-        
+    public render(dt: number) {        
         this.canvas.context.drawImage(
             this.image,
             this.currentFrame * this.frameSize.x,

@@ -3,7 +3,7 @@ import { Vector } from "../../interfaces/vector";
 import { Canvas } from "../canvas";
 import { AbstractStateEntity } from "../../state/state-entity/abstract-state-entity";
 
-export class RectangleEntity extends AbstractRenderedEntity {
+export class RectangleRenderedEntity extends AbstractRenderedEntity {
     constructor(id: string, canvas: Canvas, public color: string, public size: Vector, public stateEntity: AbstractStateEntity ) {
         super(id, canvas);
     }

@@ -24,7 +24,6 @@ export class MediaStorageController {
                     this.storage[key] = img;
                 })
 
-                console.log(this.storage)
                 return this.storage;
             }),
         )
