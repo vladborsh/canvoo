@@ -1,5 +1,5 @@
 import { Canvas } from '../canvas/canvas';
-import { Sprite } from '../canvas/rendered-entity/sprite';
+import { AnimationSprite } from '../canvas/rendered-entity/animation-sprite';
 import { Vector } from '../interfaces/vector';
 import { StateController } from '../state/state-controller';
 import { AbstractStateEntity } from '../state/state-entity/abstract-state-entity';
@@ -13,9 +13,9 @@ interface AnimatedEntityBlueprint {
 }
 
 export class StatefulObject extends AbstractEntity {
-  public stateStore: Record<string, Sprite>;
+  public stateStore: Record<string, AnimationSprite>;
   public activeStateName: string;
-  public activeState: Sprite;
+  public activeState: AnimationSprite;
   public update: (dt: number, stateEntity: AbstractStateEntity) => void;
 
   constructor(
@@ -35,7 +35,7 @@ export class StatefulObject extends AbstractEntity {
     this.stateStore = Object.entries(states).reduce(
       (acc, [key, blueprint]) => ({
         ...acc,
-        [key]: new Sprite(
+        [key]: new AnimationSprite(
           canvas,
           this.stateEntity,
           size,

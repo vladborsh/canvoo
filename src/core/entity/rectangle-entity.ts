@@ -13,5 +13,9 @@ export class RectangleEntity extends AbstractEntity {
       size,
       this.stateEntity
     );
+
+    (<any>window).canvas.addEntity(this.renderedEntity);
+    (<any>window).state.addEntity(this.stateEntity);
+    this.stateEntity.onUpdate(() => {});
   }
 }

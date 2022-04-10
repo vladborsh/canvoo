@@ -9,6 +9,7 @@ export class AbstractStateEntity {
   public readonly controlState: Record<Direction, boolean>;
   public size: Vector;
   public position: Vector;
+  public prevPosition: Vector;
   public velocity: Vector = { x: 0, y: 0 };
   public update: (dt: number) => void;
 
@@ -16,6 +17,7 @@ export class AbstractStateEntity {
     this.controlState = stateController.controlState;
     this.size = size ? size : { x: 0, y: 0 };
     this.position = position ? position : { x: 0, y: 0 };
+    this.prevPosition = this.position;
   }
 
   destroy() {
@@ -26,6 +28,7 @@ export class AbstractStateEntity {
     this.update = (dt: number) => {
       func(dt, this);
 
+      this.prevPosition = { ...this.position };
       this.position = sum(this.position, multiply(this.velocity, dt / 100));
     };
   }

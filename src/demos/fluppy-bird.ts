@@ -1,12 +1,11 @@
-import { MediaStorageController } from 'src/core/canvas/media/media-storage-controller';
-import { RectangleEntity } from 'src/core/entity/rectangle-entity';
-import { Vector } from 'src/core/interfaces/vector';
-import { setup } from 'src/core/setup/setup';
-import { Direction } from 'src/core/state/control/direction';
-import { AbstractStateEntity } from 'src/core/state/state-entity/abstract-state-entity';
-import { multiply, sum } from 'src/core/utils/calc';
-import { generateUuid } from 'src/core/utils/generate-uuid';
-import { intersect } from 'src/core/utils/physics';
+import { MediaStorageController } from '../../src/core/canvas/media/media-storage-controller';
+import { RectangleEntity } from '../../src/core/entity/rectangle-entity';
+import { Vector } from '../../src/core/interfaces/vector';
+import { setup } from '../../src/core/setup/setup';
+import { Direction } from '../../src/core/state/control/direction';
+import { AbstractStateEntity } from '../../src/core/state/state-entity/abstract-state-entity';
+import { multiply, sum } from '../../src/core/utils/calc';
+import { intersect } from '../../src/core/utils/physics';
 
 export function initGame() {
   const { canvas, state } = setup();
@@ -70,22 +69,11 @@ export function initGame() {
             return;
           }
 
-          stateEntity.position = sum(
-            stateEntity.position,
-            multiply(stateEntity.velocity, dt / 100)
-          );
-
           if (stateEntity.position.x + stateEntity.size.x < 0) {
             stateEntity.position.x = canvas.canvas.width;
           }
         };
       })()
     );
-
-    state.addEntity(cube.stateEntity);
-    state.addEntity(panel.stateEntity);
-
-    canvas.addEntity(cube.renderedEntity);
-    canvas.addEntity(panel.renderedEntity);
   }
 }
