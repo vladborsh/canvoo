@@ -34,6 +34,9 @@ export class StateController {
 
   public update(dt: number): void {
     each(this.entities, (entity: AbstractStateEntity) => {
+      if (!entity.update) {
+        return;
+      }
       entity.update(dt);
     });
   }

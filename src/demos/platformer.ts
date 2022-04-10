@@ -5,6 +5,7 @@ import { Direction } from '../../src/core/state/control/direction';
 import { RectangleEntity } from '../../src/core/entity/rectangle-entity';
 import { getFreeAccelerationVelocity, intersect } from '../../src/core/utils/physics';
 import { SpriteEntity } from '../../src/core/entity/sripte-entity';
+import { TileMapGenerator } from '../../src/core/scene/tile-map-generator';
 
 export function initGame() {
   const { canvas, state } = setup();
@@ -23,7 +24,7 @@ export function initGame() {
     const JUMP_VELOCITY = { x: 0, y: -40 };
 
     const person = new StatefulObject(
-      { x: 400, y: 500 },
+      { x: 400, y: 400 },
       { x: 60, y: 60 },
       state,
       canvas,
@@ -50,32 +51,26 @@ export function initGame() {
       'idle'
     );
 
-    const wall = [
-      new SpriteEntity(
-        { x: 20, y: 20 },
-        { x: 60, y: 60 },
-        mediaStorage.getSource('wall')
-      ),
-      new SpriteEntity(
-        { x: 80, y: 20 },
-        { x: 60, y: 60 },
-        mediaStorage.getSource('wall')
-      ),
-    ];
+    const timeMap = new TileMapGenerator(
+      [
+        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
+        [' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ',],
+        [' ', ' ', '#', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ',],
+        [' ', ' ', '#', ' ', ' ', '#', '#', '#', ' ', ' ', ' ', ' ',],
+        [' ', ' ', '#', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ',],
+        [' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
+        [' ', ' ', '#', '#', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
+        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
+        [' ', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', ' ',],
+        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
+      ],
+      {
+        '#': { image: mediaStorage.getSource('wall') },
+      },
+      { x: 60, y: 60 },
+    );
 
-    const platforms = [
-      new RectangleEntity(
-        { x: 60, y: 600 },
-        { x: 700, y: 50 },
-        '#666666'
-      ),
-
-      new RectangleEntity(
-        { x: 200, y: 300 },
-        { x: 500, y: 50 },
-        '#666666'
-      ),
-    ];
+    timeMap.generate();
 
     person.onUpdate((dt, stateEntity) => {
       if (state.controlState[Direction.LEFT]) {
@@ -90,8 +85,13 @@ export function initGame() {
         stateEntity.velocity.x = 0;
         person.changeState('idle');
       }
+      if (state.controlState[Direction.UP]) {
+        stateEntity.velocity.y = JUMP_VELOCITY.y;
+      }
 
-      for (let platform of platforms) {
+      let isIntersection = false;
+
+      for (let platform of timeMap.tiles) {
         if (
           intersect(
             person.stateEntity.position,
@@ -100,16 +100,18 @@ export function initGame() {
             platform.stateEntity.size
           )
         ) {
-          stateEntity.velocity.y = 0;
-          stateEntity.position.y = stateEntity.prevPosition.y;
-        } else {
-          stateEntity.velocity = getFreeAccelerationVelocity(stateEntity.velocity, dt);
+          isIntersection = true
         }
       }
 
-      if (state.controlState[Direction.UP]) {
-        stateEntity.velocity = JUMP_VELOCITY;
+      if (isIntersection) {
+        stateEntity.velocity.y = 0;
+        stateEntity.position.y = stateEntity.prevPosition.y;
+      } else {
+        stateEntity.velocity = getFreeAccelerationVelocity(stateEntity.velocity, dt);
       }
+
+      console.log(stateEntity.velocity);
     });
   }
 }
