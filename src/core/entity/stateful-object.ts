@@ -25,6 +25,7 @@ export class StatefulObject extends AbstractEntity {
     private canvas: Canvas,
     states: Record<string, AnimatedEntityBlueprint>,
     defaultState: string,
+    layer: number,
   ) {
     super(position, size);
     this.stateEntity = new AbstractStateEntity(
@@ -42,6 +43,7 @@ export class StatefulObject extends AbstractEntity {
           blueprint.animationLength,
           blueprint.frameDuration,
           blueprint.image,
+          layer,
           blueprint.isBoomerang
         )
       }),
@@ -56,7 +58,7 @@ export class StatefulObject extends AbstractEntity {
 
   public changeState(newState: string): void {
     if (newState !== this.activeStateName && !!this.stateStore[newState]) {
-      this.canvas.destroy(this.activeState.id);
+      this.canvas.destroy(this.activeState.layer, this.activeState.id);
 
       this.activeStateName = newState;
       this.activeState = this.stateStore[newState];

@@ -17,11 +17,13 @@ export function initGame() {
     const cube = new RectangleEntity(
       { x: 100, y: 100 },
       { x: 50, y: 50 },
+      2,
       '#333333'
     );
     const panel = new RectangleEntity(
       { x: 600, y: 90 },
       { x: 50, y: 200 },
+      2,
       '#666666'
     );
 

@@ -3,7 +3,7 @@ import { Canvas } from '../canvas';
 
 export class BackgroundEntity extends AbstractRenderedEntity {
   constructor(canvas: Canvas, public color: string) {
-    super(canvas);
+    super(canvas, 0);
   }
 
   public render() {

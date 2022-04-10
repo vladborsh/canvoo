@@ -10,14 +10,15 @@ export class AnimationSprite extends AbstractRenderedEntity {
 
   constructor(
     public canvas: Canvas,
-    private stateEntity: AbstractStateEntity,
-    private frameSize: Vector,
-    private animationLength: number,
-    private frameDuration: number,
-    private image: HTMLImageElement,
+    public stateEntity: AbstractStateEntity,
+    public frameSize: Vector,
+    public animationLength: number,
+    public frameDuration: number,
+    public image: HTMLImageElement,
+    public layer: number,
     private isBoomerang = false
   ) {
-    super(canvas);
+    super(canvas, layer);
   }
 
   public render(dt: number) {

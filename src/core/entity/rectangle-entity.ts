@@ -4,14 +4,20 @@ import { RectangleRenderedEntity } from '../canvas/rendered-entity/rectangle-ren
 import { AbstractStateEntity } from '../state/state-entity/abstract-state-entity';
 
 export class RectangleEntity extends AbstractEntity {
-  constructor(position: Vector, size: Vector, color?: string) {
+  constructor(
+    position: Vector,
+    size: Vector,
+    layer: number,
+    color: string = '#444444'
+  ) {
     super(position, size);
     this.stateEntity = new AbstractStateEntity((<any>window).state, position, size);
     this.renderedEntity = new RectangleRenderedEntity(
       (<any>window).canvas,
-      color ? color : '#444444',
+      color,
       size,
-      this.stateEntity
+      this.stateEntity,
+      layer
     );
 
     (<any>window).canvas.addEntity(this.renderedEntity);

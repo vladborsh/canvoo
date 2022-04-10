@@ -8,9 +8,10 @@ export class RectangleRenderedEntity extends AbstractRenderedEntity {
     canvas: Canvas,
     public color: string,
     public size: Vector,
-    public stateEntity: AbstractStateEntity
+    public stateEntity: AbstractStateEntity,
+    public layer: number,
   ) {
-    super(canvas);
+    super(canvas, layer);
   }
 
   public render() {

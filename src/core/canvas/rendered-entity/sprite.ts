@@ -9,8 +9,9 @@ export class Sprite extends AbstractRenderedEntity {
     private stateEntity: AbstractStateEntity,
     private size: Vector,
     private image: HTMLImageElement,
+    public layer: number,
   ) {
-    super(canvas);
+    super(canvas, layer);
   }
 
   public render() {

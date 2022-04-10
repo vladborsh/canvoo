@@ -10,6 +10,7 @@ export class AnimatedEntity extends AbstractEntity {
     animationLength: number,
     frameDuration: number,
     image: HTMLImageElement,
+    layer: number,
     isBoomerang = false
   ) {
     super(position, size);
@@ -25,8 +26,11 @@ export class AnimatedEntity extends AbstractEntity {
       animationLength,
       frameDuration,
       image,
+      layer,
       isBoomerang
     );
+    (<any>window).canvas.addEntity(this.renderedEntity);
+    (<any>window).state.addEntity(this.stateEntity);
     this.onUpdate(() => {});
   }
 }

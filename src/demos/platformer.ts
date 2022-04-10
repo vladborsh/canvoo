@@ -17,11 +17,13 @@ export function initGame() {
       minion_move_right: '../assets/minion_move.png',
       minion_move_left: '../assets/minion_move_left.png',
       wall: '../assets/wall_fragment.png',
+      fire: '../assets/fire.png',
     })
     .subscribe(() => playGame());
 
   function playGame() {
     const JUMP_VELOCITY = { x: 0, y: -40 };
+    const PERSON_LAYER = 2;
 
     const person = new StatefulObject(
       { x: 400, y: 400 },
@@ -48,24 +50,37 @@ export function initGame() {
           isBoomerang: false,
         },
       },
-      'idle'
+      'idle',
+      PERSON_LAYER,
     );
 
     const timeMap = new TileMapGenerator(
       [
         [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
         [' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ',],
-        [' ', ' ', '#', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ',],
+        [' ', ' ', '#', ' ', ' ', ' ', 'f', '#', ' ', ' ', ' ', ' ',],
         [' ', ' ', '#', ' ', ' ', '#', '#', '#', ' ', ' ', ' ', ' ',],
         [' ', ' ', '#', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ',],
         [' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
         [' ', ' ', '#', '#', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
-        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
+        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'f', ' ', ' ', ' ',],
         [' ', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', ' ',],
         [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
       ],
       {
-        '#': { image: mediaStorage.getSource('wall') },
+        '#': {
+          image: mediaStorage.getSource('wall'),
+          layer: PERSON_LAYER,
+          isBlock: true,
+        },
+        'f': {
+          image: mediaStorage.getSource('fire'),
+          layer: 1,
+          isAnimation: true,
+          animationLength: 4,
+          frameDuration: 400,
+          isBlock: false,
+        },
       },
       { x: 60, y: 60 },
     );
@@ -110,8 +125,6 @@ export function initGame() {
       } else {
         stateEntity.velocity = getFreeAccelerationVelocity(stateEntity.velocity, dt);
       }
-
-      console.log(stateEntity.velocity);
     });
   }
 }

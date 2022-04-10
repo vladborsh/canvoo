@@ -8,6 +8,7 @@ export class SpriteEntity extends AbstractEntity {
     position: Vector,
     size: Vector,
     image: HTMLImageElement,
+    layer: number,
   ) {
     super(position, size);
     this.stateEntity = new AbstractStateEntity(
@@ -20,6 +21,7 @@ export class SpriteEntity extends AbstractEntity {
       this.stateEntity,
       size,
       image,
+      layer,
     );
     (<any>window).canvas.addEntity(this.renderedEntity);
     (<any>window).state.addEntity(this.stateEntity);
