@@ -2,13 +2,13 @@ import { MediaStorageController } from '../../src/core/canvas/media/media-storag
 import { setup } from '../../src//core/setup/setup';
 import { StatefulObject } from '../../src/core/entity/stateful-object';
 import { Direction } from '../../src/core/state/control/direction';
-import { RectangleEntity } from '../../src/core/entity/rectangle-entity';
 import { getFreeAccelerationVelocity, intersect } from '../../src/core/utils/physics';
-import { SpriteEntity } from '../../src/core/entity/sripte-entity';
 import { TileMapGenerator } from '../../src/core/scene/tile-map-generator';
+import { FpsEntity } from '../../src/core/entity/fps-entity';
+import { BackgroundFiller } from '../../src/core/entity/background-filler';
 
 export function initGame() {
-  const { canvas, state } = setup();
+  const { canvas, state, loopController } = setup();
   const mediaStorage = new MediaStorageController();
 
   mediaStorage
@@ -18,12 +18,27 @@ export function initGame() {
       minion_move_left: '../assets/minion_move_left.png',
       wall: '../assets/wall_fragment.png',
       fire: '../assets/fire.png',
+      wall_1: '../assets/wall_1.png',
+      wall_2: '../assets/wall_2.png',
+      wall_3: '../assets/wall_3.png',
     })
     .subscribe(() => playGame());
 
+  new FpsEntity(canvas, loopController);
+
   function playGame() {
-    const JUMP_VELOCITY = { x: 0, y: -40 };
+    const JUMP_VELOCITY = { x: 0, y: -60 };
     const PERSON_LAYER = 2;
+
+    new BackgroundFiller(
+      canvas,
+      {x: 150, y: 150},
+      [
+        mediaStorage.getSource('wall_1'),
+        mediaStorage.getSource('wall_2'),
+        mediaStorage.getSource('wall_3'),
+      ]
+    )
 
     const person = new StatefulObject(
       { x: 400, y: 400 },

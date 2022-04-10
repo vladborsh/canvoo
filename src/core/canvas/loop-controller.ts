@@ -1,25 +1,20 @@
-import { each } from 'lodash';
 import { StateController } from '../state/state-controller';
+import { throttle } from '../utils/throttle';
 import { Canvas } from './canvas';
 import { AbstractRenderedEntity } from './rendered-entity/abstract-rendered-entity';
 
 export class LoopController {
-  public stop: boolean;
-  public frameCount: number;
+  public stop: boolean = false;
+  public frameCount: number = 0;
   public fpsInterval: number;
   public startTime: number;
   public now: number;
   public then: number;
   public elapsed: number;
-  public state: StateController;
-  public canvas: Canvas;
 
-  constructor(canvas: Canvas, state: StateController) {
-    this.stop = false;
-    this.frameCount = 0;
-    this.state = state;
-    this.canvas = canvas;
-  }
+  private listeners: ((dt: number) => void)[] = [];
+
+  constructor(public canvas: Canvas, public state: StateController) {}
 
   public startLoop(fps: number): void {
     this.then = Date.now();
@@ -67,6 +62,12 @@ export class LoopController {
             )
           });
       }
+
+      this.listeners.forEach(listener => listener(this.elapsed));
     }
+  }
+
+  public subscribe(listener: (dt: number) => void): void {
+    this.listeners.push(throttle(listener, 1000));
   }
 }

@@ -2,7 +2,7 @@ import { AnimationSprite } from "../canvas/rendered-entity/animation-sprite";
 import { AbstractEntity } from "../entity/abstract-entity";
 import { AnimatedEntity } from "../entity/animated-entity";
 import { RectangleEntity } from "../entity/rectangle-entity";
-import { SpriteEntity } from "../entity/sripte-entity";
+import { SpriteEntity } from "../entity/sprite-entity";
 import { Vector } from "../interfaces/vector";
 
 export interface BlockBlueprint {

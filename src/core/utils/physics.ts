@@ -22,6 +22,6 @@ export function intersect(position1: Vector, size1: Vector, position2: Vector, s
 export function getFreeAccelerationVelocity(startVelocity: Vector, dt: number): Vector {
   return sum(
     startVelocity,
-    multiply(FREE_ACCELERATION, dt / 1000)
+    multiply(FREE_ACCELERATION, dt / 500)
   );
 }

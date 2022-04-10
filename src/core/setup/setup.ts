@@ -7,11 +7,11 @@ export function setup() {
     let canvas = new Canvas();
     let state = new StateController();
     let loopController = new LoopController(canvas, state);
-    
+
     loopController.startLoop(60);
 
     patchWindowCanvas(canvas);
     patchWindowStateController(state);
 
-    return { canvas, state };
+    return { canvas, state, loopController };
 }
