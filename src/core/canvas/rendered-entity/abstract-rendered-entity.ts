@@ -1,11 +1,14 @@
-import { Canvas } from "../canvas";
+import { generateUuid } from '../../utils/generate-uuid';
+import { Canvas } from '../canvas';
 
 export abstract class AbstractRenderedEntity {
-    constructor( public id: string, public canvas: Canvas ) {}
+  public readonly id = generateUuid();
 
-    destroy() {
-        this.canvas.destroy(this.id);
-    }
+  constructor(public canvas: Canvas) {}
 
-    abstract render(dt: number): void;
+  destroy() {
+    this.canvas.destroy(this.id);
+  }
+
+  abstract render(dt: number): void;
 }
