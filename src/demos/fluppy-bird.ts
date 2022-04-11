@@ -2,10 +2,10 @@ import { MediaStorageController } from '../../src/core/canvas/media/media-storag
 import { RectangleEntity } from '../../src/core/entity/rectangle-entity';
 import { Vector } from '../../src/core/interfaces/vector';
 import { setup } from '../../src/core/setup/setup';
-import { Direction } from '../../src/core/state/control/direction';
+import { Direction } from '../core/interfaces/direction';
 import { AbstractStateEntity } from '../../src/core/state/state-entity/abstract-state-entity';
 import { multiply, sum } from '../../src/core/utils/calc';
-import { intersect } from '../../src/core/utils/physics';
+import { intersect } from '../core/physics/physics';
 
 export function initGame() {
   const { canvas, state } = setup();

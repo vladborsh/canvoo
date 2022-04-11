@@ -1,7 +1,7 @@
 import { AbstractStateEntity } from './state-entity/abstract-state-entity';
 import { each, findIndex } from 'lodash';
 import { Control } from './control/control';
-import { Direction } from './control/direction';
+import { Direction } from '../interfaces/direction';
 
 export class StateController {
   public entities: AbstractStateEntity[];

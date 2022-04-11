@@ -1,8 +1,8 @@
 export enum Direction {
-    LEFT,
-    RIGHT,
-    UP,
-    DOWN,
+    LEFT = 'LEFT',
+    RIGHT = 'RIGHT',
+    UP = 'UP',
+    DOWN = 'DOWN',
 };
 
 export interface Directions {

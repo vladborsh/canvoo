@@ -1,7 +1,7 @@
 import { generateUuid } from '../../utils/generate-uuid';
 import { Vector } from '../../interfaces/vector';
 import { StateController } from '../state-controller';
-import { Direction } from '../control/direction';
+import { Direction } from '../../interfaces/direction';
 import { multiply, sum } from '../../../core/utils/calc';
 
 export class AbstractStateEntity {
