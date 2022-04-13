@@ -53,5 +53,14 @@ export class AnimationSprite extends AbstractRenderedEntity {
     if (this.currentFrame === 0 && this.isBoomerang) {
       this.direction = 1;
     }
+
+
+    this.canvas.context.fillStyle = '#55ee44';
+    this.canvas.context.strokeRect(
+      this.stateEntity.position.x,
+      this.stateEntity.position.y,
+      this.frameSize.x,
+      this.frameSize.y
+    )
   }
 }

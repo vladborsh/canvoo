@@ -55,6 +55,43 @@ export function setCollisions(
   }
 }
 
+export function setCollisions2(
+  setCollisions: Record<Direction, Collision>,
+  targetPosition: Vector,
+  targetPrevPosition: Vector,
+  targetSize: Vector,
+  position2: Vector,
+  size2: Vector
+): void {
+  if (
+    targetPosition.y <= position2.y + size2.y &&
+    targetPosition.y + targetSize.y >= position2.y + size2.y &&
+    targetPrevPosition.y > targetPosition.y
+  ) {
+    setCollisions[Direction.UP] = { isCollided: true, coordinate: position2.y + size2.y };
+  }
+  if (targetPosition.y + targetSize.y >= position2.y &&
+    targetPosition.y <= position2.y &&
+    targetPrevPosition.y < targetPosition.y
+  ) {
+    setCollisions[Direction.DOWN] = { isCollided: true, coordinate: position2.y };
+  }
+  if (
+    targetPosition.x <= position2.x + size2.x &&
+    targetPosition.x + targetSize.x >= position2.x + size2.x &&
+    targetPrevPosition.x > targetPosition.x
+  ) {
+    setCollisions[Direction.LEFT] = { isCollided: true, coordinate: position2.x + size2.x };
+  }
+  if (
+    targetPosition.x + targetSize.x >= position2.x &&
+    targetPosition.x <= position2.x &&
+    targetPrevPosition.x < targetPosition.x
+  ) {
+    setCollisions[Direction.RIGHT] = { isCollided: true, coordinate: position2.x };
+  }
+}
+
 export function getFreeAccelerationVelocity(startVelocity: Vector, dt: number): Vector {
   return sum(startVelocity, multiply(FREE_ACCELERATION, dt / 500));
 }

@@ -2,7 +2,7 @@ import { MediaStorageController } from '../../src/core/canvas/media/media-storag
 import { setup } from '../../src/core/setup/setup';
 import { StatefulObject } from '../../src/core/entity/stateful-object';
 import { Direction } from '../core/interfaces/direction';
-import { FREE_ACCELERATION, setCollisions, getFreeAccelerationVelocity, intersect, RectCollision } from '../core/physics/physics';
+import { FREE_ACCELERATION, setCollisions, getFreeAccelerationVelocity, intersect, RectCollision, setCollisions2 } from '../core/physics/physics';
 import { TileMapGenerator } from '../../src/core/scene/tile-map-generator';
 import { FpsEntity } from '../../src/core/entity/fps-entity';
 import { BackgroundFiller } from '../../src/core/entity/background-filler';
@@ -77,10 +77,10 @@ export function initGame() {
         [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
         [' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ',],
         [' ', ' ', '#', ' ', ' ', ' ', 'f', '#', ' ', ' ', ' ', ' ',],
-        [' ', ' ', '#', ' ', ' ', '#', '#', '#', ' ', ' ', ' ', ' ',],
+        [' ', ' ', '#', ' ', ' ', ' a', '#', '#', ' ', ' ', ' ', ' ',],
         [' ', ' ', '#', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ',],
-        [' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
         [' ', ' ', '#', '#', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
+        [' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
         [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'f', ' ', ' ', ' ',],
         [' ', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', ' ',],
         [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
@@ -107,12 +107,14 @@ export function initGame() {
 
     let collisions: RectCollision;
 
+    person.stateEntity.velocity.y = 1;
+
     person.onUpdate((dt, stateEntity) => {
-      if (state.controlState[Direction.LEFT]) {
+      if (state.controlState[Direction.LEFT] && !stateEntity.leftWall) {
         stateEntity.velocity.x = -MOVE_VELOCITY.x;
         person.changeState('move_left');
       }
-      if (state.controlState[Direction.RIGHT]) {
+      if (state.controlState[Direction.RIGHT] && !stateEntity.rightWall) {
         stateEntity.velocity.x = MOVE_VELOCITY.x;
         person.changeState('move_right');
       }
@@ -120,70 +122,101 @@ export function initGame() {
         stateEntity.velocity.x = 0;
         person.changeState('idle');
       }
-      if (state.controlState[Direction.UP] && collisions[Direction.DOWN].isCollided && stateEntity.velocity.y === 0) {
-        stateEntity.position.y--;
+      if (state.controlState[Direction.UP] && stateEntity.onGround) {
         stateEntity.velocity.y = JUMP_VELOCITY.y;
       }
 
-      collisions = {
-        [Direction.UP]: {
-          isCollided: false,
-        },
-        [Direction.DOWN]: {
-          isCollided: false,
-        },
-        [Direction.LEFT]: {
-          isCollided: false,
-        },
-        [Direction.RIGHT]: {
-          isCollided: false,
-        },
-      };
-
+      let untouchedWalls = 0;
       for (let platform of timeMap.tiles) {
         if (
-          intersect(
-            person.stateEntity.position,
-            person.stateEntity.size,
-            platform.stateEntity.position,
-            platform.stateEntity.size,
+          stateEntity.velocity.y > 0 &&
+          stateEntity.position.y < platform.position.y &&
+          stateEntity.position.y + stateEntity.size.y > platform.position.y &&
+          stateEntity.position.x < platform.position.x + platform.size.x &&
+          stateEntity.position.x + stateEntity.size.x > platform.position.x
+        ) {
+          stateEntity.velocity.y = 0;
+          stateEntity.position.y = platform.position.y - stateEntity.size.y - 1;
+          stateEntity.onGround = true;
+          stateEntity.spaceBottom = false;
+        }
+
+        if (
+          stateEntity.velocity.y < 0 &&
+          stateEntity.position.y < platform.position.y + platform.size.y  &&
+          stateEntity.position.y + stateEntity.size.y > platform.position.y &&
+          stateEntity.position.x < platform.position.x + platform.size.x &&
+          stateEntity.position.x + stateEntity.size.x > platform.position.x
+        ) {
+          console.log('ceil');
+          stateEntity.velocity.y = 0;
+          stateEntity.position.y = platform.position.y + stateEntity.size.y + 1;
+        }
+
+        if (
+          stateEntity.onGround &&
+          !(
+            stateEntity.position.y + 2 < platform.position.y &&
+            stateEntity.position.y + 2 + stateEntity.size.y > platform.position.y &&
+            stateEntity.position.x < platform.position.x + platform.size.x &&
+            stateEntity.position.x + stateEntity.size.x > platform.position.x
           )
         ) {
-          setCollisions(
-            collisions,
-            person.stateEntity.position,
-            person.stateEntity.size,
-            platform.stateEntity.position,
-            platform.stateEntity.size,
-          );
+          untouchedWalls++;
+
+          if (untouchedWalls === timeMap.tiles.length) {
+            stateEntity.onGround = false;
+          }
+        }
+
+        if (
+          stateEntity.position.x < platform.position.x + platform.size.x &&
+          stateEntity.position.x + stateEntity.size.x > platform.position.x + platform.size.x &&
+          stateEntity.position.y < platform.position.y + platform.size.y &&
+          stateEntity.position.y + stateEntity.size.y > platform.position.y
+        ) {
+          console.log('left wall');
+          stateEntity.leftWall = true;
+          stateEntity.position.x = platform.position.x + platform.size.x + 1;
+          stateEntity.velocity.x = 0;
+        }
+
+        if (
+          stateEntity.position.x + stateEntity.size.x > platform.position.x &&
+          stateEntity.position.x < platform.position.x &&
+          stateEntity.position.y < platform.position.y + platform.size.y &&
+          stateEntity.position.y + stateEntity.size.y > platform.position.y
+        ) {
+          console.log('right wall');
+          stateEntity.rightWall = true;
+          stateEntity.position.x = platform.position.x - platform.size.x - 1;
+          stateEntity.velocity.x = 0;
+        }
+
+        if (
+          stateEntity.position.y < platform.position.y &&
+          stateEntity.position.y + stateEntity.size.y > platform.position.y &&
+          stateEntity.position.x < platform.position.x + platform.size.x &&
+          stateEntity.position.x + stateEntity.size.x > platform.position.x
+        ) {
+          stateEntity.velocity.y = 0;
+          stateEntity.position.y = platform.position.y - stateEntity.size.y - 1;
+          stateEntity.onGround = true;
+          stateEntity.spaceBottom = false;
+        }
+
+        if (stateEntity.velocity.x > 0) {
+          stateEntity.leftWall = false;
+        }
+
+        if (stateEntity.velocity.x < 0) {
+          stateEntity.rightWall = false;
         }
       }
 
-
-      if (collisions[Direction.DOWN].isCollided && stateEntity.prevPosition.y < stateEntity.position.y) {
-        stateEntity.velocity.y = 0;
-        stateEntity.position.y = collisions[Direction.DOWN].coordinate - stateEntity.size.y + 1; // working
-      } else {
-        stateEntity.velocity = getFreeAccelerationVelocity(stateEntity.velocity, dt);
+      if(!stateEntity.onGround) {
+        stateEntity.velocity.y = getFreeAccelerationVelocity(stateEntity.velocity, dt).y;
       }
-
-      // if (collisions[Direction.LEFT].isCollided && stateEntity.prevPosition.x > stateEntity.position.x) {
-      //   console.log('LEFT')
-      //   stateEntity.velocity.x = 0;
-      //   // stateEntity.position.x = collisions[Direction.LEFT].coordinate + 1;
-      // }
-
-      // if (collisions[Direction.RIGHT].isCollided && stateEntity.prevPosition.x < stateEntity.position.x) {
-      //   console.log('RIGHT')
-      //   stateEntity.velocity.x = 0;
-      //   stateEntity.position.x = collisions[Direction.RIGHT].coordinate + 1;
-      // }
-
-      if (collisions[Direction.UP].isCollided) {
-        stateEntity.velocity.y = 0;
-        stateEntity.position.y = collisions[Direction.UP].coordinate;
-      }
-
     });
   }
 }

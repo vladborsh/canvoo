@@ -11,6 +11,10 @@ export class AbstractStateEntity {
   public position: Vector;
   public prevPosition: Vector;
   public velocity: Vector = { x: 0, y: 0 };
+  public onGround = false;
+  public spaceBottom = true;
+  public leftWall = false;
+  public rightWall = false;
   public update: (dt: number) => void;
 
   constructor(public stateController: StateController, position?: Vector, size?: Vector) {
