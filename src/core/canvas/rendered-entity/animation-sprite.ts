@@ -16,7 +16,8 @@ export class AnimationSprite extends AbstractRenderedEntity {
     public frameDuration: number,
     public image: HTMLImageElement,
     public layer: number,
-    private isBoomerang = false
+    private isBoomerang = false,
+    private withBoundingBox = false,
   ) {
     super(canvas, layer);
   }
@@ -54,13 +55,14 @@ export class AnimationSprite extends AbstractRenderedEntity {
       this.direction = 1;
     }
 
-
-    this.canvas.context.fillStyle = '#55ee44';
-    this.canvas.context.strokeRect(
-      this.stateEntity.position.x,
-      this.stateEntity.position.y,
-      this.frameSize.x,
-      this.frameSize.y
-    )
+    if (this.withBoundingBox) {
+      this.canvas.context.fillStyle = '#55ee44';
+      this.canvas.context.strokeRect(
+        this.stateEntity.position.x,
+        this.stateEntity.position.y,
+        this.frameSize.x,
+        this.frameSize.y
+      )
+    }
   }
 }

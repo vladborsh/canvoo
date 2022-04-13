@@ -52,18 +52,19 @@ export function initGame() {
           frameDuration: 200,
           image: mediaStorage.getSource('minion_idle'),
           isBoomerang: true,
+          withBoundingBox: true,
         },
         'move_right': {
           animationLength: 3,
           frameDuration: 200,
           image: mediaStorage.getSource('minion_move_right'),
-          isBoomerang: false,
+          withBoundingBox: true,
         },
         'move_left': {
           animationLength: 3,
           frameDuration: 200,
           image: mediaStorage.getSource('minion_move_left'),
-          isBoomerang: false,
+          withBoundingBox: true,
         },
       },
       'idle',
@@ -75,10 +76,10 @@ export function initGame() {
     const timeMap = new TileMapGenerator(
       [
         [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
-        [' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ',],
-        [' ', ' ', '#', ' ', ' ', ' ', 'f', '#', ' ', ' ', ' ', ' ',],
-        [' ', ' ', '#', ' ', ' ', ' a', '#', '#', ' ', ' ', ' ', ' ',],
-        [' ', ' ', '#', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ',],
+        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ',],
+        [' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ',],
+        [' ', ' ', '#', ' ', ' ', ' ', ' ', '#', '#', ' ', ' ', ' ',],
+        [' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ',],
         [' ', ' ', '#', '#', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
         [' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
         [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'f', ' ', ' ', ' ',],
@@ -126,7 +127,10 @@ export function initGame() {
         stateEntity.velocity.y = JUMP_VELOCITY.y;
       }
 
-      let untouchedWalls = 0;
+      let untouchedGroundWalls = 0;
+      let untouchedLeftWalls = 0;
+      let untouchedRightWalls = 0;
+
       for (let platform of timeMap.tiles) {
         if (
           stateEntity.velocity.y > 0 &&
@@ -142,18 +146,6 @@ export function initGame() {
         }
 
         if (
-          stateEntity.velocity.y < 0 &&
-          stateEntity.position.y < platform.position.y + platform.size.y  &&
-          stateEntity.position.y + stateEntity.size.y > platform.position.y &&
-          stateEntity.position.x < platform.position.x + platform.size.x &&
-          stateEntity.position.x + stateEntity.size.x > platform.position.x
-        ) {
-          console.log('ceil');
-          stateEntity.velocity.y = 0;
-          stateEntity.position.y = platform.position.y + stateEntity.size.y + 1;
-        }
-
-        if (
           stateEntity.onGround &&
           !(
             stateEntity.position.y + 2 < platform.position.y &&
@@ -162,14 +154,15 @@ export function initGame() {
             stateEntity.position.x + stateEntity.size.x > platform.position.x
           )
         ) {
-          untouchedWalls++;
+          untouchedGroundWalls++;
 
-          if (untouchedWalls === timeMap.tiles.length) {
+          if (untouchedGroundWalls === timeMap.tiles.length) {
             stateEntity.onGround = false;
           }
         }
 
         if (
+          stateEntity.velocity.x < 0 &&
           stateEntity.position.x < platform.position.x + platform.size.x &&
           stateEntity.position.x + stateEntity.size.x > platform.position.x + platform.size.x &&
           stateEntity.position.y < platform.position.y + platform.size.y &&
@@ -182,6 +175,23 @@ export function initGame() {
         }
 
         if (
+          stateEntity.leftWall &&
+          !(
+            stateEntity.position.x - 2 < platform.position.x + platform.size.x &&
+            stateEntity.position.x - 2 + stateEntity.size.x > platform.position.x + platform.size.x &&
+            stateEntity.position.y < platform.position.y + platform.size.y &&
+            stateEntity.position.y + stateEntity.size.y > platform.position.y
+          )
+        ) {
+          untouchedLeftWalls++;
+
+          if (untouchedLeftWalls === timeMap.tiles.length) {
+            stateEntity.leftWall = false;
+          }
+        }
+
+        if (
+          stateEntity.velocity.x > 0 &&
           stateEntity.position.x + stateEntity.size.x > platform.position.x &&
           stateEntity.position.x < platform.position.x &&
           stateEntity.position.y < platform.position.y + platform.size.y &&
@@ -194,23 +204,31 @@ export function initGame() {
         }
 
         if (
-          stateEntity.position.y < platform.position.y &&
+          stateEntity.rightWall &&
+          !(
+            stateEntity.position.x + stateEntity.size.x + 2 > platform.position.x &&
+            stateEntity.position.x + 2 < platform.position.x &&
+            stateEntity.position.y < platform.position.y + platform.size.y &&
+            stateEntity.position.y + stateEntity.size.y > platform.position.y
+          )
+        ) {
+          untouchedRightWalls++;
+
+          if (untouchedRightWalls === timeMap.tiles.length) {
+            stateEntity.rightWall = false;
+          }
+        }
+
+        if (
+          stateEntity.velocity.y < 0 &&
+          stateEntity.position.y < platform.position.y + platform.size.y  &&
           stateEntity.position.y + stateEntity.size.y > platform.position.y &&
           stateEntity.position.x < platform.position.x + platform.size.x &&
           stateEntity.position.x + stateEntity.size.x > platform.position.x
         ) {
+          console.log('ceil');
           stateEntity.velocity.y = 0;
-          stateEntity.position.y = platform.position.y - stateEntity.size.y - 1;
-          stateEntity.onGround = true;
-          stateEntity.spaceBottom = false;
-        }
-
-        if (stateEntity.velocity.x > 0) {
-          stateEntity.leftWall = false;
-        }
-
-        if (stateEntity.velocity.x < 0) {
-          stateEntity.rightWall = false;
+          stateEntity.position.y = platform.position.y + stateEntity.size.y + 1;
         }
       }
 

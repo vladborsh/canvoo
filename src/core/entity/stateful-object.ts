@@ -9,7 +9,8 @@ interface AnimatedEntityBlueprint {
   animationLength: number;
   frameDuration: number;
   image: HTMLImageElement;
-  isBoomerang: boolean;
+  isBoomerang?: boolean;
+  withBoundingBox?: boolean;
 }
 
 export class StatefulObject extends AbstractEntity {
@@ -44,7 +45,8 @@ export class StatefulObject extends AbstractEntity {
           blueprint.frameDuration,
           blueprint.image,
           layer,
-          blueprint.isBoomerang
+          blueprint.isBoomerang,
+          blueprint.withBoundingBox,
         )
       }),
       {}

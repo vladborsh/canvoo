@@ -11,7 +11,8 @@ export class AnimatedEntity extends AbstractEntity {
     frameDuration: number,
     image: HTMLImageElement,
     layer: number,
-    isBoomerang = false
+    isBoomerang = false,
+    withBoundingBox = false,
   ) {
     super(position, size);
     this.stateEntity = new AbstractStateEntity(
@@ -27,7 +28,8 @@ export class AnimatedEntity extends AbstractEntity {
       frameDuration,
       image,
       layer,
-      isBoomerang
+      isBoomerang,
+      withBoundingBox,
     );
     (<any>window).canvas.addEntity(this.renderedEntity);
     (<any>window).state.addEntity(this.stateEntity);
