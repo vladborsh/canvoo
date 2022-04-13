@@ -27,7 +27,7 @@ export function initGame() {
   new FpsEntity(canvas, loopController);
 
   function playGame() {
-    const JUMP_VELOCITY = { x: 0, y: -80 };
+  const JUMP_VELOCITY = { x: 0, y: -70 };
     const MOVE_VELOCITY = { x: 20, y: 0 };
     const PERSON_LAYER = 2;
 
@@ -79,11 +79,14 @@ export function initGame() {
         [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ',],
         [' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ',],
         [' ', ' ', '#', ' ', ' ', ' ', ' ', '#', '#', ' ', ' ', ' ',],
-        [' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ',],
+        [' ', ' ', '#', 'f', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ',],
         [' ', ' ', '#', '#', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
         [' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
-        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'f', ' ', ' ', ' ',],
-        [' ', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', ' ',],
+        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ', ' ',],
+        [' ', '#', '#', '#', '#', '#', ' ', ' ', ' ', ' ', ' ', ' ',],
+        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
+        [' ', ' ', ' ', ' ', ' ', ' ', '#', '#', '#', '#', '#', ' ',],
+        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
         [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
       ],
       {
@@ -103,10 +106,7 @@ export function initGame() {
       },
       { x: 60, y: 60 },
     );
-
     timeMap.generate();
-
-    let collisions: RectCollision;
 
     person.stateEntity.velocity.y = 1;
 
@@ -132,6 +132,7 @@ export function initGame() {
       let untouchedRightWalls = 0;
 
       for (let platform of timeMap.tiles) {
+        /* ground */
         if (
           stateEntity.velocity.y > 0 &&
           stateEntity.position.y < platform.position.y &&
@@ -161,6 +162,7 @@ export function initGame() {
           }
         }
 
+        /* left wall */
         if (
           stateEntity.velocity.x < 0 &&
           stateEntity.position.x < platform.position.x + platform.size.x &&
@@ -168,10 +170,15 @@ export function initGame() {
           stateEntity.position.y < platform.position.y + platform.size.y &&
           stateEntity.position.y + stateEntity.size.y > platform.position.y
         ) {
-          console.log('left wall');
-          stateEntity.leftWall = true;
-          stateEntity.position.x = platform.position.x + platform.size.x + 1;
-          stateEntity.velocity.x = 0;
+          const dy = Math.max(stateEntity.position.y, platform.position.y) -
+            Math.min(stateEntity.position.y + stateEntity.size.y , platform.position.y + platform.size.y);
+          const dx = Math.min(stateEntity.position.x + stateEntity.size.x, platform.position.x + platform.size.x) -
+            Math.max(stateEntity.position.x, platform.position.x);
+          if (Math.abs(dx) < Math.abs(dy)) {
+            stateEntity.leftWall = true;
+            stateEntity.position.x = platform.position.x + platform.size.x + 1;
+            stateEntity.velocity.x = 0;
+          }
         }
 
         if (
@@ -190,6 +197,7 @@ export function initGame() {
           }
         }
 
+        /* right wall */
         if (
           stateEntity.velocity.x > 0 &&
           stateEntity.position.x + stateEntity.size.x > platform.position.x &&
@@ -197,10 +205,15 @@ export function initGame() {
           stateEntity.position.y < platform.position.y + platform.size.y &&
           stateEntity.position.y + stateEntity.size.y > platform.position.y
         ) {
-          console.log('right wall');
-          stateEntity.rightWall = true;
-          stateEntity.position.x = platform.position.x - platform.size.x - 1;
-          stateEntity.velocity.x = 0;
+          const dy = Math.max(stateEntity.position.y, platform.position.y) -
+            Math.min(stateEntity.position.y + stateEntity.size.y , platform.position.y + platform.size.y);
+          const dx = Math.min(stateEntity.position.x + stateEntity.size.x, platform.position.x + platform.size.x) -
+            Math.max(stateEntity.position.x, platform.position.x);
+          if (Math.abs(dx) < Math.abs(dy)) {
+            stateEntity.rightWall = true;
+            stateEntity.position.x = platform.position.x - platform.size.x - 1;
+            stateEntity.velocity.x = 0;
+          }
         }
 
         if (
@@ -219,6 +232,7 @@ export function initGame() {
           }
         }
 
+        /* ceil */
         if (
           stateEntity.velocity.y < 0 &&
           stateEntity.position.y < platform.position.y + platform.size.y  &&
@@ -226,9 +240,14 @@ export function initGame() {
           stateEntity.position.x < platform.position.x + platform.size.x &&
           stateEntity.position.x + stateEntity.size.x > platform.position.x
         ) {
-          console.log('ceil');
-          stateEntity.velocity.y = 0;
-          stateEntity.position.y = platform.position.y + stateEntity.size.y + 1;
+          const dy = Math.max(stateEntity.position.y, platform.position.y) -
+            Math.min(stateEntity.position.y + stateEntity.size.y , platform.position.y + platform.size.y);
+          const dx = Math.min(stateEntity.position.x + stateEntity.size.x, platform.position.x + platform.size.x) -
+            Math.max(stateEntity.position.x, platform.position.x);
+          if (Math.abs(dx) > Math.abs(dy)) {
+            stateEntity.velocity.y = 0;
+            stateEntity.position.y = platform.position.y + stateEntity.size.y + 1;
+          }
         }
       }
 
