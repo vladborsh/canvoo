@@ -7,8 +7,6 @@ import { multiply, sum } from '../../../core/utils/calc';
 export class AbstractStateEntity {
   public readonly id = generateUuid();
   public readonly controlState: Record<Direction, boolean>;
-  public size: Vector;
-  public position: Vector;
   public prevPosition: Vector;
   public velocity: Vector = { x: 0, y: 0 };
   public onGround = false;
@@ -17,10 +15,12 @@ export class AbstractStateEntity {
   public rightWall = false;
   public update: (dt: number) => void;
 
-  constructor(public stateController: StateController, position?: Vector, size?: Vector) {
+  constructor(
+    public stateController: StateController,
+    public position: Vector = { x: 0, y: 0 },
+    public size: Vector = { x: 0, y: 0 },
+  ) {
     this.controlState = stateController.controlState;
-    this.size = size ? size : { x: 0, y: 0 };
-    this.position = position ? position : { x: 0, y: 0 };
     this.prevPosition = this.position;
   }
 
@@ -32,8 +32,11 @@ export class AbstractStateEntity {
     this.update = (dt: number) => {
       func(dt, this);
 
-      this.prevPosition = { ...this.position };
-      this.position = sum(this.position, multiply(this.velocity, dt / 100));
+      this.prevPosition.x = this.position.x;
+      this.prevPosition.y = this.position.y;
+      const dPosition = sum(this.position, multiply(this.velocity, dt / 100));
+      this.position.x = dPosition.x;
+      this.position.y = dPosition.y;
     };
   }
 }

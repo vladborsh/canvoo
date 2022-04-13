@@ -71,6 +71,8 @@ export function initGame() {
       PERSON_LAYER,
     );
 
+    canvas.cameraPosition = person.stateEntity.position;
+
     person.stateEntity.prevPosition.y--;
 
     const timeMap = new TileMapGenerator(

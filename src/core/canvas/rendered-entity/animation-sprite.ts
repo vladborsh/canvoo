@@ -29,8 +29,8 @@ export class AnimationSprite extends AbstractRenderedEntity {
       0,
       this.frameSize.x,
       this.frameSize.y,
-      this.stateEntity.position.x,
-      this.stateEntity.position.y,
+      this.stateEntity.position.x - (this.canvas.cameraPosition.x - this.canvas.canvasHalfSize.x),
+      this.stateEntity.position.y - (this.canvas.cameraPosition.y - this.canvas.canvasHalfSize.y),
       this.frameSize.x,
       this.frameSize.y
     );
@@ -55,14 +55,14 @@ export class AnimationSprite extends AbstractRenderedEntity {
       this.direction = 1;
     }
 
-    if (this.withBoundingBox) {
+    /* if (this.withBoundingBox) {
       this.canvas.context.fillStyle = '#55ee44';
       this.canvas.context.strokeRect(
-        this.stateEntity.position.x,
-        this.stateEntity.position.y,
+        this.canvas.cameraPosition.x -this.stateEntity.position.x,
+        this.canvas.cameraPosition.y -this.stateEntity.position.y,
         this.frameSize.x,
         this.frameSize.y
       )
-    }
+    } */
   }
 }

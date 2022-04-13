@@ -15,10 +15,18 @@ export class Sprite extends AbstractRenderedEntity {
   }
 
   public render() {
-    this.canvas.context.drawImage(
+    /* this.canvas.context.drawImage(
       this.image,
       this.stateEntity.position.x,
       this.stateEntity.position.y,
+      this.size.x,
+      this.size.y
+    ); */
+
+    this.canvas.context.drawImage(
+      this.image,
+      this.stateEntity.position.x - (this.canvas.cameraPosition.x - this.canvas.canvasHalfSize.x),
+      this.stateEntity.position.y - (this.canvas.cameraPosition.y - this.canvas.canvasHalfSize.y),
       this.size.x,
       this.size.y
     );

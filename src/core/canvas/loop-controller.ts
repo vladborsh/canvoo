@@ -54,7 +54,6 @@ export class LoopController {
 
         Object.values(this.canvas.renderedEntitiesStorage)
           .forEach((layer: AbstractRenderedEntity[]) => {
-            // console.log(layer)
             layer.forEach(
               (renderedObject: AbstractRenderedEntity) => {
                 renderedObject.render(this.elapsed);
