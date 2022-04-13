@@ -2,10 +2,11 @@ import { MediaStorageController } from '../../src/core/canvas/media/media-storag
 import { setup } from '../../src/core/setup/setup';
 import { StatefulObject } from '../../src/core/entity/stateful-object';
 import { Direction } from '../core/interfaces/direction';
-import { FREE_ACCELERATION, setCollisions, getFreeAccelerationVelocity, intersect, RectCollision, setCollisions2 } from '../core/physics/physics';
 import { TileMapGenerator } from '../../src/core/scene/tile-map-generator';
 import { FpsEntity } from '../../src/core/entity/fps-entity';
 import { BackgroundFiller } from '../../src/core/entity/background-filler';
+import { multiply, sum } from '../../src/core/utils/calc';
+import { Vector } from 'src/core/interfaces/vector';
 
 export function initGame() {
   const { canvas, state, loopController } = setup();
@@ -26,10 +27,14 @@ export function initGame() {
 
   new FpsEntity(canvas, loopController);
 
+  const MOVE_ACCELERATION: Vector = { x: 10, y: 40 };
+  const PERSON_LAYER = 2;
+  const FRICTION = 5;
+  const FREE_ACCELERATION: Vector = { x: 0, y: 80 };
+  const MAXIMUM_VELOCITY: Vector = { x: 30, y: 55 };
+
   function playGame() {
-  const JUMP_VELOCITY = { x: 0, y: -80 };
-    const MOVE_VELOCITY = { x: 20, y: 0 };
-    const PERSON_LAYER = 2;
+
 
     new BackgroundFiller(
       canvas,
@@ -77,19 +82,19 @@ export function initGame() {
 
     const timeMap = new TileMapGenerator(
       [
-        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
-        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ',],
-        [' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ',],
-        [' ', ' ', '#', ' ', ' ', ' ', ' ', '#', '#', ' ', ' ', ' ',],
-        [' ', ' ', '#', 'f', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ',],
-        [' ', ' ', '#', '#', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
-        [' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
-        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ', ' ',],
-        [' ', '#', '#', '#', '#', '#', ' ', ' ', ' ', ' ', ' ', ' ',],
-        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
-        [' ', ' ', ' ', ' ', ' ', ' ', '#', '#', '#', '#', '#', ' ',],
-        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
-        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
+        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
+        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
+        [' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
+        [' ', ' ', '#', ' ', ' ', ' ', ' ', '#', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
+        [' ', ' ', '#', 'f', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
+        [' ', '#', '#', '#', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
+        [' ', '#', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#',],
+        [' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#',],
+        [' ', '#', '#', '#', '#', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#',],
+        [' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#',],
+        [' ', ' ', ' ', ' ', ' ', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#',],
+        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
+        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
       ],
       {
         '#': {
@@ -114,19 +119,24 @@ export function initGame() {
 
     person.onUpdate((dt, stateEntity) => {
       if (state.controlState[Direction.LEFT] && !stateEntity.leftWall) {
-        stateEntity.velocity.x = -MOVE_VELOCITY.x;
+        // stateEntity.velocity.x = -MOVE_VELOCITY.x;
+        stateEntity.acceleration.x = -MOVE_ACCELERATION.x;
         person.changeState('move_left');
       }
       if (state.controlState[Direction.RIGHT] && !stateEntity.rightWall) {
-        stateEntity.velocity.x = MOVE_VELOCITY.x;
+        // stateEntity.velocity.x = MOVE_VELOCITY.x;
+        stateEntity.acceleration.x = MOVE_ACCELERATION.x;
         person.changeState('move_right');
       }
       if (!state.controlState[Direction.LEFT] && !state.controlState[Direction.RIGHT]) {
-        stateEntity.velocity.x = 0;
+        stateEntity.acceleration.x = 0;
         person.changeState('idle');
       }
       if (state.controlState[Direction.UP] && stateEntity.onGround) {
-        stateEntity.velocity.y = JUMP_VELOCITY.y;
+        stateEntity.acceleration.y = -MOVE_ACCELERATION.y;
+      }
+      if (!state.controlState[Direction.UP]) {
+        stateEntity.acceleration.y = 0;
       }
 
       let untouchedGroundWalls = 0;
@@ -254,13 +264,41 @@ export function initGame() {
             Math.max(stateEntity.position.x, platform.position.x);
           if (Math.abs(dx) > Math.abs(dy)) {
             stateEntity.velocity.y = 0;
+            stateEntity.acceleration.y = 0;
             stateEntity.position.y = platform.position.y + stateEntity.size.y + 1;
           }
         }
       }
 
-      if(!stateEntity.onGround) {
-        stateEntity.velocity.y = getFreeAccelerationVelocity(stateEntity.velocity, dt).y;
+
+      if(!stateEntity.onGround || Math.abs(stateEntity.velocity.y)) {
+        stateEntity.velocity.y = stateEntity.velocity.y + FREE_ACCELERATION.y * (dt / 500);
+      }
+
+      if (stateEntity.velocity.y < -MAXIMUM_VELOCITY.y && Math.abs(stateEntity.acceleration.y) > 0) {
+        stateEntity.acceleration.y = 0;
+      }
+
+      if(Math.abs(stateEntity.velocity.x)) {
+        if (stateEntity.velocity.x < 0) {
+          stateEntity.velocity.x = stateEntity.velocity.x + FRICTION * (dt / 100);
+        }
+        if (stateEntity.velocity.x > 0) {
+          stateEntity.velocity.x = stateEntity.velocity.x - FRICTION * (dt / 100);
+        }
+      }
+
+      if (Math.abs(stateEntity.velocity.x) < 1) {
+        stateEntity.velocity.x = 0;
+      }
+
+      if (Math.abs(stateEntity.velocity.x) > MAXIMUM_VELOCITY.x) {
+        if (stateEntity.velocity.x < 0) {
+          stateEntity.velocity.x = -MAXIMUM_VELOCITY.x;
+        }
+        if (stateEntity.velocity.x > 0) {
+          stateEntity.velocity.x = MAXIMUM_VELOCITY.x;
+        }
       }
     });
   }

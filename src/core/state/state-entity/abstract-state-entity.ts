@@ -9,6 +9,7 @@ export class AbstractStateEntity {
   public readonly controlState: Record<Direction, boolean>;
   public prevPosition: Vector;
   public velocity: Vector = { x: 0, y: 0 };
+  public acceleration: Vector = { x: 0, y: 0 };
   public onGround = false;
   public spaceBottom = true;
   public leftWall = false;
@@ -34,6 +35,10 @@ export class AbstractStateEntity {
 
       this.prevPosition.x = this.position.x;
       this.prevPosition.y = this.position.y;
+
+      const dVelocity = sum(this.velocity, multiply(this.acceleration, dt / 100));
+      this.velocity.x = dVelocity.x;
+      this.velocity.y = dVelocity.y;
       const dPosition = sum(this.position, multiply(this.velocity, dt / 100));
       this.position.x = dPosition.x;
       this.position.y = dPosition.y;
