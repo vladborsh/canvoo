@@ -2,7 +2,7 @@ import { Vector } from '../interfaces/vector';
 import { Direction } from '../interfaces/direction';
 import { multiply, sum } from '../utils/calc';
 
-export const FREE_ACCELERATION: Vector = { x: 0, y: 100 };
+export const FREE_ACCELERATION: Vector = { x: 0, y: 80 };
 
 export type RectCollision = Record<Direction, Collision>;
 

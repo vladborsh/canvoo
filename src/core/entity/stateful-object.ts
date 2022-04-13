@@ -32,7 +32,10 @@ export class StatefulObject extends AbstractEntity {
     this.stateEntity = new AbstractStateEntity(
       (<any>window).state,
       position,
-      size
+      {
+        x: size.x - 1,
+        y: size.y - 1,
+      }
     );
     this.stateStore = Object.entries(states).reduce(
       (acc, [key, blueprint]) => ({
