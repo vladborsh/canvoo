@@ -3,10 +3,10 @@ import { setup } from '../../src/core/setup/setup';
 import { StatefulObject } from '../../src/core/entity/stateful-object';
 import { Direction } from '../core/interfaces/direction';
 import { TileMapGenerator } from '../../src/core/scene/tile-map-generator';
-import { FpsEntity } from '../../src/core/entity/fps-entity';
 import { BackgroundFiller } from '../../src/core/entity/background-filler';
-import { multiply, sum } from '../../src/core/utils/calc';
 import { Vector } from 'src/core/interfaces/vector';
+
+const fpsPlaceholder = document.querySelector('#fps_placeholder');
 
 export function initGame() {
   const { canvas, state, loopController } = setup();
@@ -25,7 +25,9 @@ export function initGame() {
     })
     .subscribe(() => playGame());
 
-  new FpsEntity(canvas, loopController);
+  loopController.subscribe((dt: number) => {
+    fpsPlaceholder.textContent = `${Math.round(1000/dt)} fps`
+  })
 
   const MOVE_ACCELERATION: Vector = { x: 10, y: 40 };
   const PERSON_LAYER = 2;
