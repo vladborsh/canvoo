@@ -8,7 +8,8 @@
     "test": "karma start ./karma.conf.js --browsers PhantomJS",
     "test:chrome": "karma start ./karma.conf.js --browsers Chrome",
     "start": "webpack -w",
-    "build": "webpack --disable-bs"
+    "build:bundle": "webpack --disable-bs",
+    "build": "webpack"
   },
   "author": "Vlad Borsh <v.borsh.io@gmail.com>",
   "license": "ISC",
