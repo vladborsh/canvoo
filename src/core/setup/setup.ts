@@ -8,8 +8,6 @@ export function setup() {
     let state = new StateController();
     let loopController = new LoopController(canvas, state);
 
-    loopController.startLoop(60);
-
     patchWindowCanvas(canvas);
     patchWindowStateController(state);
 

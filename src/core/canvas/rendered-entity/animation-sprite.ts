@@ -56,7 +56,7 @@ export class AnimationSprite extends AbstractRenderedEntity {
     }
 
     if (this.withBoundingBox) {
-      this.canvas.context.fillStyle = '#55ee44';
+      this.canvas.context.strokeStyle = '#55ee44';
       this.canvas.context.strokeRect(
         this.canvas.cameraPosition.x - (this.canvas.cameraPosition.x - this.canvas.canvasHalfSize.x),
         this.canvas.cameraPosition.y - (this.canvas.cameraPosition.y - this.canvas.canvasHalfSize.y),

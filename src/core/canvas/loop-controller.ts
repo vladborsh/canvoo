@@ -3,6 +3,8 @@ import { throttle } from '../utils/throttle';
 import { Canvas } from './canvas';
 import { AbstractRenderedEntity } from './rendered-entity/abstract-rendered-entity';
 
+const DEFAULT_FPS = 60;
+
 export class LoopController {
   public stop: boolean = false;
   public frameCount: number = 0;
@@ -16,15 +18,19 @@ export class LoopController {
 
   constructor(public canvas: Canvas, public state: StateController) {}
 
-  public startLoop(fps: number): void {
+  public startLoop(): void {
+    this.stop = false;
     this.then = Date.now();
-    this.fpsInterval = 1000 / fps;
+    this.fpsInterval = 1000 / DEFAULT_FPS;
     this.startTime = this.then;
     this.loop();
   }
 
+  public stopLoop(): void {
+    this.stop = true;
+  }
+
   public loop() {
-    // stop
     if (this.stop) {
       return;
     }
