@@ -51,21 +51,8 @@ export class LoopController {
       }
       // animation stuff
       if (!!this.canvas) {
-        this.canvas.context.clearRect(
-          0,
-          0,
-          this.canvas.canvas.width,
-          this.canvas.canvas.height
-        );
-
-        Object.values(this.canvas.renderedEntitiesStorage)
-          .forEach((layer: AbstractRenderedEntity[]) => {
-            layer.forEach(
-              (renderedObject: AbstractRenderedEntity) => {
-                renderedObject.render(this.elapsed);
-              }
-            )
-          });
+        this.canvas.clear();
+        this.canvas.render(this.elapsed);
       }
 
       this.listeners.forEach(listener => listener(this.elapsed));

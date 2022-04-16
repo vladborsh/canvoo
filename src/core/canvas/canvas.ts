@@ -3,6 +3,7 @@ import { Observable } from 'rxjs';
 import { MediaStorage } from './media/media-storage';
 import { AbstractRenderedEntity } from './rendered-entity/abstract-rendered-entity';
 import { findIndex } from 'lodash';
+import { ScreenShake } from './screen-shake';
 
 export class Canvas {
   public canvas: HTMLCanvasElement;
@@ -11,6 +12,7 @@ export class Canvas {
   public renderedEntitiesStorage: Record<number, AbstractRenderedEntity[]> = {};
   public cameraPosition: Vector;
   public canvasHalfSize: Vector;
+  private screenShake = new ScreenShake(this);
 
   constructor() {
     this.createCanvas();
@@ -31,6 +33,33 @@ export class Canvas {
       y: this.canvas.height / 2,
     };
     document.body.appendChild(this.canvas);
+  }
+
+  public addShake(): void {
+    this.screenShake.addShake();
+  }
+
+  public clear(): void {
+    this.context.clearRect(
+      0,
+      0,
+      this.canvas.width,
+      this.canvas.height
+    );
+  }
+
+  public render(dt: number): void {
+    this.context.save();
+    this.screenShake.render();
+    Object.values(this.renderedEntitiesStorage)
+      .forEach((layer: AbstractRenderedEntity[]) => {
+        layer.forEach(
+          (renderedObject: AbstractRenderedEntity) => {
+            renderedObject.render(dt);
+          }
+        )
+      });
+    this.context.restore();
   }
 
   public addEntity(abstractRenderedEntity: AbstractRenderedEntity): void {

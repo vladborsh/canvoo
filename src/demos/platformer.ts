@@ -7,6 +7,7 @@ import { Vector } from '../../src/core/interfaces/vector';
 import { CommonState } from '../../src/core/entity/common-state';
 import { Missile } from '../../src/core/game-objects/missile';
 import './assets';
+import { ControlButton } from '../../src/core/state/state-controller';
 
 const fpsPlaceholder = document.querySelector('#fps_placeholder');
 
@@ -153,6 +154,9 @@ export function initGame() {
             }
             if (!state.controlState[Direction.UP]) {
               stateEntity.acceleration.y = 0;
+            }
+            if (state.controlState[ControlButton.SPACE]) {
+              canvas.addShake();
             }
 
             let untouchedGroundWalls = 0;
