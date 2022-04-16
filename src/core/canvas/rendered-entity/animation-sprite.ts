@@ -3,14 +3,17 @@ import { AbstractStateEntity } from 'src/core/state/state-entity/abstract-state-
 import { Canvas } from '../canvas';
 import { AbstractRenderedEntity } from './abstract-rendered-entity';
 
+const BOUNDING_BOX_STROKE_STYLE = '#55ee44';
+
 export class AnimationSprite extends AbstractRenderedEntity {
   private currentFrame = 0;
   private elapsedTimeBetweenFrames = 0;
   private direction = 1;
+  private halfSize: Vector;
 
   constructor(
     public canvas: Canvas,
-    public stateEntity: AbstractStateEntity,
+    public position: Vector,
     public frameSize: Vector,
     public animationLength: number,
     public frameDuration: number,
@@ -18,8 +21,13 @@ export class AnimationSprite extends AbstractRenderedEntity {
     public layer: number,
     private isBoomerang = false,
     private withBoundingBox = false,
+    private withCameraRelation = true
   ) {
     super(canvas, layer);
+    this.halfSize = {
+      x: frameSize.x / 2,
+      y: frameSize.y / 2,
+    };
   }
 
   public render(dt: number) {
@@ -29,8 +37,14 @@ export class AnimationSprite extends AbstractRenderedEntity {
       0,
       this.frameSize.x,
       this.frameSize.y,
-      this.stateEntity.position.x - (this.canvas.cameraPosition.x - this.canvas.canvasHalfSize.x),
-      this.stateEntity.position.y - (this.canvas.cameraPosition.y - this.canvas.canvasHalfSize.y),
+      this.position.x -
+        (this.withCameraRelation
+          ? this.canvas.cameraPosition.x - this.canvas.canvasHalfSize.x
+          : 0) - this.halfSize.x,
+      this.position.y -
+        (this.withCameraRelation
+          ? this.canvas.cameraPosition.y - this.canvas.canvasHalfSize.y
+          : 0) - this.halfSize.y,
       this.frameSize.x,
       this.frameSize.y
     );
@@ -56,13 +70,17 @@ export class AnimationSprite extends AbstractRenderedEntity {
     }
 
     if (this.withBoundingBox) {
-      this.canvas.context.strokeStyle = '#55ee44';
+      this.canvas.context.strokeStyle = BOUNDING_BOX_STROKE_STYLE;
       this.canvas.context.strokeRect(
-        this.canvas.cameraPosition.x - (this.canvas.cameraPosition.x - this.canvas.canvasHalfSize.x),
-        this.canvas.cameraPosition.y - (this.canvas.cameraPosition.y - this.canvas.canvasHalfSize.y),
+        this.canvas.cameraPosition.x -
+          (this.canvas.cameraPosition.x - this.canvas.canvasHalfSize.x) -
+          this.halfSize.x,
+        this.canvas.cameraPosition.y -
+          (this.canvas.cameraPosition.y - this.canvas.canvasHalfSize.y) -
+          this.halfSize.y,
         this.frameSize.x,
         this.frameSize.y
-      )
+      );
     }
   }
 }

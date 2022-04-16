@@ -42,7 +42,7 @@ export class StatefulObject extends AbstractEntity {
         ...acc,
         [key]: new AnimationSprite(
           canvas,
-          this.stateEntity,
+          this.stateEntity.position,
           size,
           blueprint.animationLength,
           blueprint.frameDuration,

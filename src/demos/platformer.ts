@@ -8,6 +8,7 @@ import { CommonState } from '../../src/core/entity/common-state';
 import { Missile } from '../../src/core/game-objects/missile';
 import './assets';
 import { ControlButton } from '../../src/core/state/state-controller';
+import { Cursor } from '../../src/core/game-objects/cursor';
 
 const fpsPlaceholder = document.querySelector('#fps_placeholder');
 
@@ -34,6 +35,7 @@ export function initGame() {
       wall_2: './src/demos/assets/wall_2.png',
       wall_3: './src/demos/assets/wall_3.png',
       missile: './src/demos/assets/missile_1.png',
+      aim_cursor: './src/demos/assets/aim_cursor.png',
     },
     () => {
       loopController.subscribe((dt: number) => {
@@ -53,7 +55,15 @@ export function initGame() {
               mediaStorage.getSource('wall_2'),
               mediaStorage.getSource('wall_3'),
             ]
-          )
+          );
+
+          new Cursor(
+            canvas,
+            { x: 27, y: 27 },
+            4,
+            200,
+            mediaStorage.getSource('aim_cursor'),
+          );
 
           const person = new StatefulObject(
             { x: 500, y: 300 },

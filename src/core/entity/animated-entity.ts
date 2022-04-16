@@ -22,7 +22,7 @@ export class AnimatedEntity extends AbstractEntity {
     );
     this.renderedEntity = new AnimationSprite(
       (<any>window).canvas,
-      this.stateEntity,
+      this.stateEntity.position,
       size,
       animationLength,
       frameDuration,
