@@ -14,7 +14,7 @@ export abstract class AbstractEntity {
     this.stateEntity.onUpdate(func);
   }
 
-  public onRender(func: () => void) {
-    this.renderedEntity.render = func.bind(this.renderedEntity);
+  public onRender(func: (dt: number, entity: AbstractRenderedEntity) => void) {
+    this.renderedEntity.onRender(func);
   }
 }

@@ -23,14 +23,15 @@ export class AnimationSprite extends AbstractRenderedEntity {
     private withBoundingBox = false,
     private withCameraRelation = true
   ) {
-    super(canvas, layer);
+    super(canvas, frameSize, layer);
     this.halfSize = {
       x: frameSize.x / 2,
       y: frameSize.y / 2,
     };
+    this.onRender((dt) => this.draw(dt));
   }
 
-  public render(dt: number) {
+  public draw(dt: number) {
     this.canvas.context.drawImage(
       this.image,
       this.currentFrame * this.frameSize.x,

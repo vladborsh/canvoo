@@ -17,7 +17,7 @@ export class BackgroundFiller extends AbstractRenderedEntity {
     public fragmentSize: Vector,
     public images: HTMLImageElement[],
   ) {
-    super(canvas, 0);
+    super(canvas, fragmentSize, 0);
     (<any>window).canvas.addEntity(this);
     for (let i = 0; i < this.canvas.canvas.width; i += this.fragmentSize.x) {
       const row = [];
@@ -28,9 +28,11 @@ export class BackgroundFiller extends AbstractRenderedEntity {
       }
       this.grid.push(row);
     }
+
+    this.onRender(() => this.draw());
   }
 
-  render(_dt: number): void {
+  public draw(): void {
     for (let i = 0; i < this.grid.length; i++) {
       for (let j = 0; j < this.grid[i].length; j++) {
         this.canvas.context.drawImage(

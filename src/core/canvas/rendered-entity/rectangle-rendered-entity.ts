@@ -1,24 +1,24 @@
 import { AbstractRenderedEntity } from './abstract-rendered-entity';
 import { Vector } from '../../interfaces/vector';
 import { Canvas } from '../canvas';
-import { AbstractStateEntity } from '../../state/state-entity/abstract-state-entity';
 
 export class RectangleRenderedEntity extends AbstractRenderedEntity {
   constructor(
     canvas: Canvas,
     public color: string,
     public size: Vector,
-    public stateEntity: AbstractStateEntity,
+    public position: Vector,
     public layer: number,
   ) {
-    super(canvas, layer);
+    super(canvas, size, layer);
+    this.onRender(() => this.draw());
   }
 
-  public render() {
+  public draw() {
     this.canvas.context.fillStyle = this.color;
     this.canvas.context.fillRect(
-      this.stateEntity.position.x - (this.canvas.cameraPosition.x - this.canvas.canvasHalfSize.x),
-      this.stateEntity.position.y - (this.canvas.cameraPosition.y - this.canvas.canvasHalfSize.y),
+      this.position.x - (this.canvas.cameraPosition.x - this.canvas.canvasHalfSize.x),
+      this.position.y - (this.canvas.cameraPosition.y - this.canvas.canvasHalfSize.y),
       this.size.x,
       this.size.y
     );

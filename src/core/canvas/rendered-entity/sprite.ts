@@ -9,19 +9,20 @@ export class Sprite extends AbstractRenderedEntity {
   constructor(
     public canvas: Canvas,
     private stateEntity: AbstractStateEntity,
-    private size: Vector,
+    public size: Vector,
     private image: HTMLImageElement,
     public layer: number,
     private angle?: { alpha: number }
   ) {
-    super(canvas, layer);
+    super(canvas, size, layer);
     this.halfSize = {
       x: size.x / 2,
       y: size.y / 2,
     };
+    this.onRender(() => this.draw());
   }
 
-  public render() {
+  public draw() {
     if (!this.angle) {
       this.drawImageWithShift();
       return;

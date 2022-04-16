@@ -3,10 +3,13 @@ import { Canvas } from '../canvas';
 
 export class BackgroundEntity extends AbstractRenderedEntity {
   constructor(canvas: Canvas, public color: string) {
-    super(canvas, 0);
+    super(canvas, {x: 0, y: 0}, 0);
+    this.onRender(() => {
+      this.draw();
+    });
   }
 
-  public render() {
+  public draw() {
     this.canvas.context.fillStyle = this.color;
     this.canvas.context.fillRect(
       0,

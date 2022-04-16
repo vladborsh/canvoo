@@ -1,11 +1,14 @@
+import { Vector } from 'src/core/interfaces/vector';
 import { generateUuid } from '../../utils/generate-uuid';
 import { Canvas } from '../canvas';
 
 export abstract class AbstractRenderedEntity {
   public readonly id = generateUuid();
+  public render: (dt: number) => void;
 
   constructor(
     public canvas: Canvas,
+    public size: Vector,
     public layer: number,
   ) {}
 
@@ -13,5 +16,9 @@ export abstract class AbstractRenderedEntity {
     this.canvas.destroy(this.layer, this.id);
   }
 
-  abstract render(dt: number): void;
+  onRender(func: (dt: number, entity: AbstractRenderedEntity) => void) {
+    this.render = (dt: number) => {
+      func(dt, this);
+    }
+  }
 }

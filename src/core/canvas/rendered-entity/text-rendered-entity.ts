@@ -13,10 +13,11 @@ export class TextRenderedEntity extends AbstractRenderedEntity {
     public horizontalAlign: CanvasTextAlign = 'center',
     public verticalAlign: CanvasTextBaseline = 'middle',
   ) {
-    super(canvas, layer);
+    super(canvas, {x: 0, y: 0}, layer);
+    this.onRender(() => this.draw());
   }
 
-  public render() {
+  public draw() {
     this.canvas.context.fillStyle = this.fillStyle;
     this.canvas.context.font = `bold ${this.fontSize}px Arial`;
 

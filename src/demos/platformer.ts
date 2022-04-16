@@ -9,6 +9,7 @@ import { Missile } from '../../src/core/game-objects/missile';
 import './assets';
 import { ControlButton } from '../../src/core/state/state-controller';
 import { Cursor } from '../../src/core/game-objects/cursor';
+import { ParticleSource } from '../../src/core/entity/particle-source';
 
 const fpsPlaceholder = document.querySelector('#fps_placeholder');
 
@@ -105,7 +106,7 @@ export function initGame() {
               [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ],
               [' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ],
               [' ', ' ', '#', ' ', ' ', ' ', ' ', '#', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ],
-              [' ', ' ', '#', 'f', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ],
+              [' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ],
               [' ', '#', '#', '#', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ],
               [' ', '#', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', '#', ],
               [' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ', ],
@@ -144,6 +145,30 @@ export function initGame() {
             12,
             mediaStorage.getSource('missile'),
             5,
+          );
+
+          new ParticleSource(
+            { x: 750, y: 560 },
+            { x: 10, y: 10 },
+            { x: 2, y: -5 },
+            '#ffee88',
+            true,
+            100,
+            true,
+            3,
+            10,
+          );
+
+          new ParticleSource(
+            { x: 1000, y: 320 },
+            { x: 10, y: 10 },
+            { x: 1, y: -7 },
+            '#ffee88d',
+            true,
+            100,
+            true,
+            5,
+            10,
           );
 
           person.onUpdate((dt, stateEntity) => {
