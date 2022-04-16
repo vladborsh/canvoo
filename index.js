@@ -30734,23 +30734,31 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Sprite = void 0;
 const abstract_rendered_entity_1 = __webpack_require__(/*! ./abstract-rendered-entity */ "./src/core/canvas/rendered-entity/abstract-rendered-entity.ts");
 class Sprite extends abstract_rendered_entity_1.AbstractRenderedEntity {
-    constructor(canvas, stateEntity, size, image, layer) {
+    constructor(canvas, stateEntity, size, image, layer, angle) {
         super(canvas, layer);
         this.canvas = canvas;
         this.stateEntity = stateEntity;
         this.size = size;
         this.image = image;
         this.layer = layer;
+        this.angle = angle;
     }
     render() {
-        /* this.canvas.context.drawImage(
-          this.image,
-          this.stateEntity.position.x,
-          this.stateEntity.position.y,
-          this.size.x,
-          this.size.y
-        ); */
+        if (!this.angle) {
+            this.drawImageWithShift();
+            return;
+        }
+        this.canvas.context.save();
+        this.canvas.context.translate(this.stateEntity.position.x - (this.canvas.cameraPosition.x - this.canvas.canvasHalfSize.x) + this.size.x / 2, this.stateEntity.position.y - (this.canvas.cameraPosition.y - this.canvas.canvasHalfSize.y) + this.size.y / 2);
+        this.canvas.context.rotate(this.angle.alpha);
+        this.drawImage();
+        this.canvas.context.restore();
+    }
+    drawImageWithShift() {
         this.canvas.context.drawImage(this.image, this.stateEntity.position.x - (this.canvas.cameraPosition.x - this.canvas.canvasHalfSize.x), this.stateEntity.position.y - (this.canvas.cameraPosition.y - this.canvas.canvasHalfSize.y), this.size.x, this.size.y);
+    }
+    drawImage() {
+        this.canvas.context.drawImage(this.image, 0, 0, this.size.x, this.size.y);
     }
 }
 exports.Sprite = Sprite;
@@ -30981,6 +30989,68 @@ class StatefulObject extends abstract_entity_1.AbstractEntity {
     }
 }
 exports.StatefulObject = StatefulObject;
+
+
+/***/ }),
+
+/***/ "./src/core/game-objects/missile.ts":
+/*!******************************************!*\
+  !*** ./src/core/game-objects/missile.ts ***!
+  \******************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Missile = void 0;
+const sprite_1 = __webpack_require__(/*! ../canvas/rendered-entity/sprite */ "./src/core/canvas/rendered-entity/sprite.ts");
+const abstract_entity_1 = __webpack_require__(/*! ../entity/abstract-entity */ "./src/core/entity/abstract-entity.ts");
+const abstract_state_entity_1 = __webpack_require__(/*! ../state/state-entity/abstract-state-entity */ "./src/core/state/state-entity/abstract-state-entity.ts");
+class Missile extends abstract_entity_1.AbstractEntity {
+    constructor(target, position, size, renderSize, velocityMagnitude, image, layer) {
+        super(position, size);
+        this.target = target;
+        this.position = position;
+        this.size = size;
+        this.renderSize = renderSize;
+        this.velocityMagnitude = velocityMagnitude;
+        this.currentAngle = 0;
+        this.angleContainer = { alpha: 0 };
+        this.ANGLE_VELOCITY = velocityMagnitude / 50;
+        this.velocity = {
+            x: this.velocityMagnitude * Math.cos(this.currentAngle),
+            y: this.velocityMagnitude * Math.sin(this.currentAngle),
+        };
+        this.setVelocity();
+        this.currentAngle = this.getTargetAngle();
+        this.stateEntity = new abstract_state_entity_1.AbstractStateEntity(window.state, position, size);
+        this.renderedEntity = new sprite_1.Sprite(window.canvas, this.stateEntity, renderSize, image, layer, this.angleContainer);
+        window.canvas.addEntity(this.renderedEntity);
+        window.state.addEntity(this.stateEntity);
+        this.stateEntity.onUpdate(() => this.update());
+    }
+    update() {
+        this.setVelocity();
+        this.position.x += this.velocity.x;
+        this.position.y += this.velocity.y;
+    }
+    setVelocity() {
+        this.currentAngle = this.getTargetAngle();
+        const newVelocityVec = {
+            x: this.velocityMagnitude * Math.cos(this.currentAngle),
+            y: this.velocityMagnitude * Math.sin(this.currentAngle),
+        };
+        this.velocity.x += this.velocity.x < newVelocityVec.x ? this.ANGLE_VELOCITY : -this.ANGLE_VELOCITY;
+        this.velocity.y += this.velocity.y < newVelocityVec.y ? this.ANGLE_VELOCITY : -this.ANGLE_VELOCITY;
+        /* for render */
+        this.angleContainer.alpha = this.currentAngle;
+    }
+    getTargetAngle() {
+        return Math.atan2(this.target.y - this.position.y, this.target.x - this.position.x);
+    }
+}
+exports.Missile = Missile;
 
 
 /***/ }),
@@ -31391,6 +31461,7 @@ const direction_1 = __webpack_require__(/*! ../core/interfaces/direction */ "./s
 const tile_map_generator_1 = __webpack_require__(/*! ../../src/core/scene/tile-map-generator */ "./src/core/scene/tile-map-generator.ts");
 const background_filler_1 = __webpack_require__(/*! ../../src/core/entity/background-filler */ "./src/core/entity/background-filler.ts");
 const common_state_1 = __webpack_require__(/*! ../../src/core/entity/common-state */ "./src/core/entity/common-state.ts");
+const missile_1 = __webpack_require__(/*! ../../src/core/game-objects/missile */ "./src/core/game-objects/missile.ts");
 const fpsPlaceholder = document.querySelector('#fps_placeholder');
 const MOVE_ACCELERATION = { x: 15, y: 40 };
 const PERSON_LAYER = 2;
@@ -31408,9 +31479,10 @@ function initGame() {
         wall_1: '../assets/wall_1.png',
         wall_2: '../assets/wall_2.png',
         wall_3: '../assets/wall_3.png',
+        missile: '../assets/missile_1.png',
     }, () => {
         loopController.subscribe((dt) => {
-            fpsPlaceholder.textContent = `${Math.round(1000 / dt)} fps`;
+            fpsPlaceholder.textContent = `${Math.round(dt * 100) / 100} dT`;
         });
     }, 'main', {
         main: {
@@ -31445,19 +31517,19 @@ function initGame() {
                 canvas.cameraPosition = person.stateEntity.position;
                 person.stateEntity.prevPosition.y--;
                 const timeMap = new tile_map_generator_1.TileMapGenerator([
-                    [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
-                    [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
-                    [' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
-                    [' ', ' ', '#', ' ', ' ', ' ', ' ', '#', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
-                    [' ', ' ', '#', 'f', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
-                    [' ', '#', '#', '#', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
-                    [' ', '#', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#',],
-                    [' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#',],
-                    [' ', '#', '#', '#', '#', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#',],
-                    [' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#',],
-                    [' ', ' ', ' ', ' ', ' ', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#',],
-                    [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
-                    [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
+                    [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
+                    [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
+                    [' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
+                    [' ', ' ', '#', ' ', ' ', ' ', ' ', '#', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
+                    [' ', ' ', '#', 'f', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
+                    [' ', '#', '#', '#', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
+                    [' ', '#', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', '#',],
+                    [' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ',],
+                    [' ', '#', '#', '#', '#', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ',],
+                    [' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ',],
+                    [' ', ' ', ' ', ' ', ' ', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', ' ',],
+                    [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
+                    [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
                 ], {
                     '#': {
                         image: mediaStorage.getSource('wall'),
@@ -31475,6 +31547,7 @@ function initGame() {
                 }, { x: 60, y: 60 });
                 timeMap.generate();
                 person.stateEntity.velocity.y = 1;
+                new missile_1.Missile(person.position, { x: 700, y: 500, }, { x: 10, y: 10, }, { x: 45, y: 15 }, 12, mediaStorage.getSource('missile'), 5);
                 person.onUpdate((dt, stateEntity) => {
                     if (state.controlState[direction_1.Direction.LEFT] && !stateEntity.leftWall) {
                         stateEntity.acceleration.x = -MOVE_ACCELERATION.x;
