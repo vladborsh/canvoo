@@ -1,9 +1,7 @@
 import { Observable } from 'rxjs';
-import { Direction } from '../../interfaces/direction';
 export declare class Control {
-    private mapper;
-    keydown$: Observable<Direction>;
-    keyup$: Observable<Direction>;
+    keydown$: Observable<Event>;
+    keyup$: Observable<Event>;
     constructor();
     initializeSource(): void;
 }

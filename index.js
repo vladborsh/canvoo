@@ -110,7 +110,7 @@ __webpack_require__.r(__webpack_exports__);
 var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_1___default()(_node_modules_css_loader_dist_runtime_cssWithMappingToString_js__WEBPACK_IMPORTED_MODULE_0___default.a);
 var ___CSS_LOADER_URL_REPLACEMENT_0___ = _node_modules_css_loader_dist_runtime_getUrl_js__WEBPACK_IMPORTED_MODULE_2___default()(_minecraft_font_ttf__WEBPACK_IMPORTED_MODULE_3__["default"]);
 // Module
-___CSS_LOADER_EXPORT___.push([module.i, "@font-face {\n  font-family: \"pixel\";\n  src: url(" + ___CSS_LOADER_URL_REPLACEMENT_0___ + ");\n}\n.overlay {\n  position: absolute;\n  right: 30px;\n  bottom: 30px;\n  color: white;\n  font-family: \"pixel\";\n  font-size: 25px;\n  text-shadow: 3px 3px #000000, -2px 1px #000000, 1px 1px #000000, 1px -2px #000000;\n}", "",{"version":3,"sources":["webpack://./src/styles/index.scss"],"names":[],"mappings":"AAAA;EACE,oBAAA;EACA,4CAAA;AACF;AAEA;EACE,kBAAA;EACA,WAAA;EACA,YAAA;EACA,YAAA;EACA,oBAAA;EACA,eAAA;EACA,iFAAA;AAAF","sourcesContent":["@font-face {\n  font-family: 'pixel';\n  src: url('minecraft_font.ttf');\n}\n\n.overlay {\n  position: absolute;\n  right: 30px;\n  bottom: 30px;\n  color: white;\n  font-family: 'pixel';\n  font-size: 25px;\n  text-shadow: 3px 3px #000000, -2px 1px #000000, 1px 1px #000000, 1px -2px #000000;\n}\n"],"sourceRoot":""}]);
+___CSS_LOADER_EXPORT___.push([module.i, "@font-face {\n  font-family: \"pixel\";\n  src: url(" + ___CSS_LOADER_URL_REPLACEMENT_0___ + ");\n}\n.overlay {\n  position: absolute;\n  right: 30px;\n  bottom: 30px;\n  color: white;\n  font-family: \"pixel\";\n  font-size: 25px;\n  text-shadow: 3px 3px #000000, -2px 1px #000000, 1px 1px #000000, 1px -2px #000000;\n}\n\ncanvas {\n  cursor: none;\n}", "",{"version":3,"sources":["webpack://./src/styles/index.scss"],"names":[],"mappings":"AAAA;EACE,oBAAA;EACA,4CAAA;AACF;AAEA;EACE,kBAAA;EACA,WAAA;EACA,YAAA;EACA,YAAA;EACA,oBAAA;EACA,eAAA;EACA,iFAAA;AAAF;;AAGA;EACE,YAAA;AAAF","sourcesContent":["@font-face {\n  font-family: 'pixel';\n  src: url('minecraft_font.ttf');\n}\n\n.overlay {\n  position: absolute;\n  right: 30px;\n  bottom: 30px;\n  color: white;\n  font-family: 'pixel';\n  font-size: 25px;\n  text-shadow: 3px 3px #000000, -2px 1px #000000, 1px 1px #000000, 1px -2px #000000;\n}\n\ncanvas {\n  cursor: none;\n}\n"],"sourceRoot":""}]);
 // Exports
 /* harmony default export */ __webpack_exports__["default"] = (___CSS_LOADER_EXPORT___);
 
@@ -30477,9 +30477,11 @@ module.exports = function(module) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Canvas = void 0;
 const lodash_1 = __webpack_require__(/*! lodash */ "./node_modules/lodash/lodash.js");
+const screen_shake_1 = __webpack_require__(/*! ./screen-shake */ "./src/core/canvas/screen-shake.ts");
 class Canvas {
     constructor() {
         this.renderedEntitiesStorage = {};
+        this.screenShake = new screen_shake_1.ScreenShake(this);
         this.createCanvas();
     }
     createCanvas(w, h) {
@@ -30497,6 +30499,23 @@ class Canvas {
             y: this.canvas.height / 2,
         };
         document.body.appendChild(this.canvas);
+    }
+    addShake() {
+        this.screenShake.addShake();
+    }
+    clear() {
+        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    }
+    render(dt) {
+        this.context.save();
+        this.screenShake.render();
+        Object.values(this.renderedEntitiesStorage)
+            .forEach((layer) => {
+            layer.forEach((renderedObject) => {
+                renderedObject.render(dt);
+            });
+        });
+        this.context.restore();
     }
     addEntity(abstractRenderedEntity) {
         if (!this.renderedEntitiesStorage[abstractRenderedEntity.layer]) {
@@ -30564,13 +30583,8 @@ class LoopController {
             }
             // animation stuff
             if (!!this.canvas) {
-                this.canvas.context.clearRect(0, 0, this.canvas.canvas.width, this.canvas.canvas.height);
-                Object.values(this.canvas.renderedEntitiesStorage)
-                    .forEach((layer) => {
-                    layer.forEach((renderedObject) => {
-                        renderedObject.render(this.elapsed);
-                    });
-                });
+                this.canvas.clear();
+                this.canvas.render(this.elapsed);
             }
             this.listeners.forEach(listener => listener(this.elapsed));
         }
@@ -30675,11 +30689,12 @@ exports.AbstractRenderedEntity = AbstractRenderedEntity;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AnimationSprite = void 0;
 const abstract_rendered_entity_1 = __webpack_require__(/*! ./abstract-rendered-entity */ "./src/core/canvas/rendered-entity/abstract-rendered-entity.ts");
+const BOUNDING_BOX_STROKE_STYLE = '#55ee44';
 class AnimationSprite extends abstract_rendered_entity_1.AbstractRenderedEntity {
-    constructor(canvas, stateEntity, frameSize, animationLength, frameDuration, image, layer, isBoomerang = false, withBoundingBox = false) {
+    constructor(canvas, position, frameSize, animationLength, frameDuration, image, layer, isBoomerang = false, withBoundingBox = false, withCameraRelation = true) {
         super(canvas, layer);
         this.canvas = canvas;
-        this.stateEntity = stateEntity;
+        this.position = position;
         this.frameSize = frameSize;
         this.animationLength = animationLength;
         this.frameDuration = frameDuration;
@@ -30687,12 +30702,23 @@ class AnimationSprite extends abstract_rendered_entity_1.AbstractRenderedEntity 
         this.layer = layer;
         this.isBoomerang = isBoomerang;
         this.withBoundingBox = withBoundingBox;
+        this.withCameraRelation = withCameraRelation;
         this.currentFrame = 0;
         this.elapsedTimeBetweenFrames = 0;
         this.direction = 1;
+        this.halfSize = {
+            x: frameSize.x / 2,
+            y: frameSize.y / 2,
+        };
     }
     render(dt) {
-        this.canvas.context.drawImage(this.image, this.currentFrame * this.frameSize.x, 0, this.frameSize.x, this.frameSize.y, this.stateEntity.position.x - (this.canvas.cameraPosition.x - this.canvas.canvasHalfSize.x), this.stateEntity.position.y - (this.canvas.cameraPosition.y - this.canvas.canvasHalfSize.y), this.frameSize.x, this.frameSize.y);
+        this.canvas.context.drawImage(this.image, this.currentFrame * this.frameSize.x, 0, this.frameSize.x, this.frameSize.y, this.position.x -
+            (this.withCameraRelation
+                ? this.canvas.cameraPosition.x - this.canvas.canvasHalfSize.x
+                : 0) - this.halfSize.x, this.position.y -
+            (this.withCameraRelation
+                ? this.canvas.cameraPosition.y - this.canvas.canvasHalfSize.y
+                : 0) - this.halfSize.y, this.frameSize.x, this.frameSize.y);
         this.elapsedTimeBetweenFrames += dt;
         if (this.elapsedTimeBetweenFrames > this.frameDuration) {
             this.currentFrame += this.direction;
@@ -30711,8 +30737,12 @@ class AnimationSprite extends abstract_rendered_entity_1.AbstractRenderedEntity 
             this.direction = 1;
         }
         if (this.withBoundingBox) {
-            this.canvas.context.strokeStyle = '#55ee44';
-            this.canvas.context.strokeRect(this.canvas.cameraPosition.x - (this.canvas.cameraPosition.x - this.canvas.canvasHalfSize.x), this.canvas.cameraPosition.y - (this.canvas.cameraPosition.y - this.canvas.canvasHalfSize.y), this.frameSize.x, this.frameSize.y);
+            this.canvas.context.strokeStyle = BOUNDING_BOX_STROKE_STYLE;
+            this.canvas.context.strokeRect(this.canvas.cameraPosition.x -
+                (this.canvas.cameraPosition.x - this.canvas.canvasHalfSize.x) -
+                this.halfSize.x, this.canvas.cameraPosition.y -
+                (this.canvas.cameraPosition.y - this.canvas.canvasHalfSize.y) -
+                this.halfSize.y, this.frameSize.x, this.frameSize.y);
         }
     }
 }
@@ -30742,6 +30772,10 @@ class Sprite extends abstract_rendered_entity_1.AbstractRenderedEntity {
         this.image = image;
         this.layer = layer;
         this.angle = angle;
+        this.halfSize = {
+            x: size.x / 2,
+            y: size.y / 2,
+        };
     }
     render() {
         if (!this.angle) {
@@ -30749,19 +30783,72 @@ class Sprite extends abstract_rendered_entity_1.AbstractRenderedEntity {
             return;
         }
         this.canvas.context.save();
-        this.canvas.context.translate(this.stateEntity.position.x - (this.canvas.cameraPosition.x - this.canvas.canvasHalfSize.x) + this.size.x / 2, this.stateEntity.position.y - (this.canvas.cameraPosition.y - this.canvas.canvasHalfSize.y) + this.size.y / 2);
+        this.canvas.context.translate(this.stateEntity.position.x -
+            (this.canvas.cameraPosition.x - this.canvas.canvasHalfSize.x) +
+            this.halfSize.x, this.stateEntity.position.y -
+            (this.canvas.cameraPosition.y - this.canvas.canvasHalfSize.y) +
+            this.halfSize.y);
         this.canvas.context.rotate(this.angle.alpha);
         this.drawImage();
         this.canvas.context.restore();
     }
     drawImageWithShift() {
-        this.canvas.context.drawImage(this.image, this.stateEntity.position.x - (this.canvas.cameraPosition.x - this.canvas.canvasHalfSize.x), this.stateEntity.position.y - (this.canvas.cameraPosition.y - this.canvas.canvasHalfSize.y), this.size.x, this.size.y);
+        this.canvas.context.drawImage(this.image, this.stateEntity.position.x -
+            (this.canvas.cameraPosition.x - this.canvas.canvasHalfSize.x) -
+            this.halfSize.x, this.stateEntity.position.y -
+            (this.canvas.cameraPosition.y - this.canvas.canvasHalfSize.y) -
+            this.halfSize.y, this.size.x, this.size.y);
     }
     drawImage() {
         this.canvas.context.drawImage(this.image, 0, 0, this.size.x, this.size.y);
     }
 }
 exports.Sprite = Sprite;
+
+
+/***/ }),
+
+/***/ "./src/core/canvas/screen-shake.ts":
+/*!*****************************************!*\
+  !*** ./src/core/canvas/screen-shake.ts ***!
+  \*****************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.ScreenShake = void 0;
+const SHAKE_AMPLITUDE = 6;
+class ScreenShake {
+    constructor(canvas) {
+        this.canvas = canvas;
+        this.shake = 0;
+        this.isShakeEnabled = false;
+        this.isUpDirection = false;
+    }
+    addShake() {
+        if (!this.isShakeEnabled) {
+            this.isShakeEnabled = true;
+            this.isUpDirection = false;
+            this.shake = SHAKE_AMPLITUDE;
+        }
+    }
+    render() {
+        if (!this.isShakeEnabled) {
+            return;
+        }
+        if (this.shake > 0) {
+            this.canvas.context.translate(0, this.isUpDirection ? this.shake : -this.shake);
+            this.shake--;
+            this.isUpDirection = !this.isUpDirection;
+        }
+        else {
+            this.isShakeEnabled = false;
+        }
+    }
+}
+exports.ScreenShake = ScreenShake;
 
 
 /***/ }),
@@ -30814,7 +30901,7 @@ class AnimatedEntity extends abstract_entity_1.AbstractEntity {
     constructor(position, size, animationLength, frameDuration, image, layer, isBoomerang = false, withBoundingBox = false) {
         super(position, size);
         this.stateEntity = new abstract_state_entity_1.AbstractStateEntity(window.state, position, size);
-        this.renderedEntity = new animation_sprite_1.AnimationSprite(window.canvas, this.stateEntity, size, animationLength, frameDuration, image, layer, isBoomerang, withBoundingBox);
+        this.renderedEntity = new animation_sprite_1.AnimationSprite(window.canvas, this.stateEntity.position, size, animationLength, frameDuration, image, layer, isBoomerang, withBoundingBox);
         window.canvas.addEntity(this.renderedEntity);
         window.state.addEntity(this.stateEntity);
         this.onUpdate(() => { });
@@ -30970,7 +31057,7 @@ class StatefulObject extends abstract_entity_1.AbstractEntity {
         });
         this.stateStore = Object.entries(states).reduce((acc, [key, blueprint]) => ({
             ...acc,
-            [key]: new animation_sprite_1.AnimationSprite(canvas, this.stateEntity, size, blueprint.animationLength, blueprint.frameDuration, blueprint.image, layer, blueprint.isBoomerang, blueprint.withBoundingBox)
+            [key]: new animation_sprite_1.AnimationSprite(canvas, this.stateEntity.position, size, blueprint.animationLength, blueprint.frameDuration, blueprint.image, layer, blueprint.isBoomerang, blueprint.withBoundingBox)
         }), {});
         this.activeStateName = defaultState;
         this.activeState = this.stateStore[defaultState];
@@ -30989,6 +31076,37 @@ class StatefulObject extends abstract_entity_1.AbstractEntity {
     }
 }
 exports.StatefulObject = StatefulObject;
+
+
+/***/ }),
+
+/***/ "./src/core/game-objects/cursor.ts":
+/*!*****************************************!*\
+  !*** ./src/core/game-objects/cursor.ts ***!
+  \*****************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Cursor = void 0;
+const rxjs_1 = __webpack_require__(/*! rxjs */ "./node_modules/rxjs/_esm5/index.js");
+const animation_sprite_1 = __webpack_require__(/*! ../canvas/rendered-entity/animation-sprite */ "./src/core/canvas/rendered-entity/animation-sprite.ts");
+class Cursor {
+    constructor(canvas, size, animationLength, frameDuration, image) {
+        this.canvas = canvas;
+        this.position = { x: 0, y: 0 };
+        rxjs_1.fromEvent(this.canvas.canvas, 'mousemove')
+            .subscribe((event) => {
+            this.position.x = event.clientX;
+            this.position.y = event.clientY;
+        });
+        this.renderedEntity = new animation_sprite_1.AnimationSprite(window.canvas, this.position, size, animationLength, frameDuration, image, 1000, false, false, false);
+        canvas.addEntity(this.renderedEntity);
+    }
+}
+exports.Cursor = Cursor;
 
 
 /***/ }),
@@ -31203,18 +31321,13 @@ exports.setup = setup;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Control = void 0;
 const rxjs_1 = __webpack_require__(/*! rxjs */ "./node_modules/rxjs/_esm5/index.js");
-const operators_1 = __webpack_require__(/*! rxjs/operators */ "./node_modules/rxjs/_esm5/operators/index.js");
-const direction_1 = __webpack_require__(/*! ../../interfaces/direction */ "./src/core/interfaces/direction.ts");
 class Control {
     constructor() {
         this.initializeSource();
     }
     initializeSource() {
-        this.mapper = operators_1.map((event) => {
-            return direction_1.DIRECTIONS[event.keyCode];
-        });
-        this.keydown$ = rxjs_1.fromEvent(document, 'keydown').pipe(this.mapper);
-        this.keyup$ = rxjs_1.fromEvent(document, 'keyup').pipe(this.mapper);
+        this.keydown$ = rxjs_1.fromEvent(document, 'keydown');
+        this.keyup$ = rxjs_1.fromEvent(document, 'keyup');
     }
 }
 exports.Control = Control;
@@ -31232,10 +31345,15 @@ exports.Control = Control;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.StateController = void 0;
+exports.StateController = exports.ControlButton = void 0;
 const lodash_1 = __webpack_require__(/*! lodash */ "./node_modules/lodash/lodash.js");
 const control_1 = __webpack_require__(/*! ./control/control */ "./src/core/state/control/control.ts");
 const direction_1 = __webpack_require__(/*! ../interfaces/direction */ "./src/core/interfaces/direction.ts");
+const operators_1 = __webpack_require__(/*! rxjs/operators */ "./node_modules/rxjs/_esm5/operators/index.js");
+var ControlButton;
+(function (ControlButton) {
+    ControlButton["SPACE"] = "SPACE";
+})(ControlButton = exports.ControlButton || (exports.ControlButton = {}));
 class StateController {
     constructor() {
         this.entities = [];
@@ -31244,10 +31362,21 @@ class StateController {
             [direction_1.Direction.DOWN]: false,
             [direction_1.Direction.LEFT]: false,
             [direction_1.Direction.RIGHT]: false,
+            [ControlButton.SPACE]: false,
         };
         let control = new control_1.Control();
-        control.keydown$.subscribe((dir) => (this.controlState[dir] = true));
-        control.keyup$.subscribe((dir) => (this.controlState[dir] = false));
+        control.keydown$
+            .pipe(operators_1.map((event) => event.key), operators_1.filter(key => key === ' '))
+            .subscribe(() => this.controlState[ControlButton.SPACE] = true);
+        control.keyup$
+            .pipe(operators_1.map((event) => event.key), operators_1.filter(key => key === ' '))
+            .subscribe(() => this.controlState[ControlButton.SPACE] = false);
+        control.keydown$
+            .pipe(operators_1.map((event) => direction_1.DIRECTIONS[event.keyCode]))
+            .subscribe((dir) => (this.controlState[dir] = true));
+        control.keyup$
+            .pipe(operators_1.map((event) => direction_1.DIRECTIONS[event.keyCode]))
+            .subscribe((dir) => (this.controlState[dir] = false));
     }
     addEntity(entity) {
         entity.stateController = this;
@@ -31444,6 +31573,19 @@ exports.throttle = throttle;
 
 /***/ }),
 
+/***/ "./src/demos/assets/aim_cursor.png":
+/*!*****************************************!*\
+  !*** ./src/demos/assets/aim_cursor.png ***!
+  \*****************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony default export */ __webpack_exports__["default"] = (__webpack_require__.p + "src/demos/assets/aim_cursor.png");
+
+/***/ }),
+
 /***/ "./src/demos/assets/fire.png":
 /*!***********************************!*\
   !*** ./src/demos/assets/fire.png ***!
@@ -31476,6 +31618,7 @@ __webpack_require__(/*! ./wall_1.png */ "./src/demos/assets/wall_1.png");
 __webpack_require__(/*! ./wall_2.png */ "./src/demos/assets/wall_2.png");
 __webpack_require__(/*! ./wall_3.png */ "./src/demos/assets/wall_3.png");
 __webpack_require__(/*! ./missile_1.png */ "./src/demos/assets/missile_1.png");
+__webpack_require__(/*! ./aim_cursor.png */ "./src/demos/assets/aim_cursor.png");
 
 
 /***/ }),
@@ -31603,6 +31746,8 @@ const background_filler_1 = __webpack_require__(/*! ../../src/core/entity/backgr
 const common_state_1 = __webpack_require__(/*! ../../src/core/entity/common-state */ "./src/core/entity/common-state.ts");
 const missile_1 = __webpack_require__(/*! ../../src/core/game-objects/missile */ "./src/core/game-objects/missile.ts");
 __webpack_require__(/*! ./assets */ "./src/demos/assets/index.ts");
+const state_controller_1 = __webpack_require__(/*! ../../src/core/state/state-controller */ "./src/core/state/state-controller.ts");
+const cursor_1 = __webpack_require__(/*! ../../src/core/game-objects/cursor */ "./src/core/game-objects/cursor.ts");
 const fpsPlaceholder = document.querySelector('#fps_placeholder');
 const MOVE_ACCELERATION = { x: 15, y: 40 };
 const PERSON_LAYER = 2;
@@ -31621,6 +31766,7 @@ function initGame() {
         wall_2: './src/demos/assets/wall_2.png',
         wall_3: './src/demos/assets/wall_3.png',
         missile: './src/demos/assets/missile_1.png',
+        aim_cursor: './src/demos/assets/aim_cursor.png',
     }, () => {
         loopController.subscribe((dt) => {
             fpsPlaceholder.textContent = `${Math.round(dt * 100) / 100} dT`;
@@ -31634,6 +31780,7 @@ function initGame() {
                     mediaStorage.getSource('wall_2'),
                     mediaStorage.getSource('wall_3'),
                 ]);
+                new cursor_1.Cursor(canvas, { x: 27, y: 27 }, 4, 200, mediaStorage.getSource('aim_cursor'));
                 const person = new stateful_object_1.StatefulObject({ x: 500, y: 300 }, { x: 60, y: 60 }, state, canvas, {
                     'idle': {
                         animationLength: 3,
@@ -31707,6 +31854,9 @@ function initGame() {
                     }
                     if (!state.controlState[direction_1.Direction.UP]) {
                         stateEntity.acceleration.y = 0;
+                    }
+                    if (state.controlState[state_controller_1.ControlButton.SPACE]) {
+                        canvas.addShake();
                     }
                     let untouchedGroundWalls = 0;
                     let untouchedLeftWalls = 0;

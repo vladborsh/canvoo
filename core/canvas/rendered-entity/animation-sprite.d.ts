@@ -1,10 +1,9 @@
 import { Vector } from 'src/core/interfaces/vector';
-import { AbstractStateEntity } from 'src/core/state/state-entity/abstract-state-entity';
 import { Canvas } from '../canvas';
 import { AbstractRenderedEntity } from './abstract-rendered-entity';
 export declare class AnimationSprite extends AbstractRenderedEntity {
     canvas: Canvas;
-    stateEntity: AbstractStateEntity;
+    position: Vector;
     frameSize: Vector;
     animationLength: number;
     frameDuration: number;
@@ -12,9 +11,11 @@ export declare class AnimationSprite extends AbstractRenderedEntity {
     layer: number;
     private isBoomerang;
     private withBoundingBox;
+    private withCameraRelation;
     private currentFrame;
     private elapsedTimeBetweenFrames;
     private direction;
-    constructor(canvas: Canvas, stateEntity: AbstractStateEntity, frameSize: Vector, animationLength: number, frameDuration: number, image: HTMLImageElement, layer: number, isBoomerang?: boolean, withBoundingBox?: boolean);
+    private halfSize;
+    constructor(canvas: Canvas, position: Vector, frameSize: Vector, animationLength: number, frameDuration: number, image: HTMLImageElement, layer: number, isBoomerang?: boolean, withBoundingBox?: boolean, withCameraRelation?: boolean);
     render(dt: number): void;
 }

@@ -9,8 +9,12 @@ export declare class Canvas {
     renderedEntitiesStorage: Record<number, AbstractRenderedEntity[]>;
     cameraPosition: Vector;
     canvasHalfSize: Vector;
+    private screenShake;
     constructor();
     createCanvas(w?: number, h?: number): void;
+    addShake(): void;
+    clear(): void;
+    render(dt: number): void;
     addEntity(abstractRenderedEntity: AbstractRenderedEntity): void;
     destroy(layer: number, id: string): void;
 }
