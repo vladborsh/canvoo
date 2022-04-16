@@ -1,4 +1,3 @@
-import { MediaStorageController } from '../../src/core/canvas/media/media-storage-controller';
 import { setup } from '../../src/core/setup/setup';
 import { StatefulObject } from '../../src/core/entity/stateful-object';
 import { Direction } from '../core/interfaces/direction';
@@ -7,6 +6,7 @@ import { BackgroundFiller } from '../../src/core/entity/background-filler';
 import { Vector } from '../../src/core/interfaces/vector';
 import { CommonState } from '../../src/core/entity/common-state';
 import { Missile } from '../../src/core/game-objects/missile';
+import './assets';
 
 const fpsPlaceholder = document.querySelector('#fps_placeholder');
 
@@ -24,15 +24,15 @@ export function initGame() {
     state,
     loopController,
     {
-      minion_idle: '../assets/minion_idle.png',
-      minion_move_right: '../assets/minion_move.png',
-      minion_move_left: '../assets/minion_move_left.png',
-      wall: '../assets/wall_fragment.png',
-      fire: '../assets/fire.png',
-      wall_1: '../assets/wall_1.png',
-      wall_2: '../assets/wall_2.png',
-      wall_3: '../assets/wall_3.png',
-      missile: '../assets/missile_1.png',
+      minion_idle: './src/demos/assets/minion_idle.png',
+      minion_move_right: './src/demos/assets/minion_move.png',
+      minion_move_left: './src/demos/assets/minion_move_left.png',
+      wall: './src/demos/assets/wall_fragment.png',
+      fire: './src/demos/assets/fire.png',
+      wall_1: './src/demos/assets/wall_1.png',
+      wall_2: './src/demos/assets/wall_2.png',
+      wall_3: './src/demos/assets/wall_3.png',
+      missile: './src/demos/assets/missile_1.png',
     },
     () => {
       loopController.subscribe((dt: number) => {

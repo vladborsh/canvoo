@@ -61,7 +61,6 @@ export class Missile extends AbstractEntity {
 
     /* for render */
     this.angleContainer.alpha = this.currentAngle;
-
   }
 
   private getTargetAngle(): number {
