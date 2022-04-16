@@ -17,8 +17,8 @@ export class RectangleRenderedEntity extends AbstractRenderedEntity {
   public render() {
     this.canvas.context.fillStyle = this.color;
     this.canvas.context.fillRect(
-      this.stateEntity.position.x,
-      this.stateEntity.position.y,
+      this.stateEntity.position.x - (this.canvas.cameraPosition.x - this.canvas.canvasHalfSize.x),
+      this.stateEntity.position.y - (this.canvas.cameraPosition.y - this.canvas.canvasHalfSize.y),
       this.size.x,
       this.size.y
     );
