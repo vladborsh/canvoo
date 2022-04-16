@@ -31444,6 +31444,146 @@ exports.throttle = throttle;
 
 /***/ }),
 
+/***/ "./src/demos/assets/fire.png":
+/*!***********************************!*\
+  !*** ./src/demos/assets/fire.png ***!
+  \***********************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony default export */ __webpack_exports__["default"] = (__webpack_require__.p + "src/demos/assets/fire.png");
+
+/***/ }),
+
+/***/ "./src/demos/assets/index.ts":
+/*!***********************************!*\
+  !*** ./src/demos/assets/index.ts ***!
+  \***********************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+__webpack_require__(/*! ./minion_idle.png */ "./src/demos/assets/minion_idle.png");
+__webpack_require__(/*! ./minion_move.png */ "./src/demos/assets/minion_move.png");
+__webpack_require__(/*! ./minion_move_left.png */ "./src/demos/assets/minion_move_left.png");
+__webpack_require__(/*! ./wall_fragment.png */ "./src/demos/assets/wall_fragment.png");
+__webpack_require__(/*! ./fire.png */ "./src/demos/assets/fire.png");
+__webpack_require__(/*! ./wall_1.png */ "./src/demos/assets/wall_1.png");
+__webpack_require__(/*! ./wall_2.png */ "./src/demos/assets/wall_2.png");
+__webpack_require__(/*! ./wall_3.png */ "./src/demos/assets/wall_3.png");
+__webpack_require__(/*! ./missile_1.png */ "./src/demos/assets/missile_1.png");
+
+
+/***/ }),
+
+/***/ "./src/demos/assets/minion_idle.png":
+/*!******************************************!*\
+  !*** ./src/demos/assets/minion_idle.png ***!
+  \******************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony default export */ __webpack_exports__["default"] = (__webpack_require__.p + "src/demos/assets/minion_idle.png");
+
+/***/ }),
+
+/***/ "./src/demos/assets/minion_move.png":
+/*!******************************************!*\
+  !*** ./src/demos/assets/minion_move.png ***!
+  \******************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony default export */ __webpack_exports__["default"] = (__webpack_require__.p + "src/demos/assets/minion_move.png");
+
+/***/ }),
+
+/***/ "./src/demos/assets/minion_move_left.png":
+/*!***********************************************!*\
+  !*** ./src/demos/assets/minion_move_left.png ***!
+  \***********************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony default export */ __webpack_exports__["default"] = (__webpack_require__.p + "src/demos/assets/minion_move_left.png");
+
+/***/ }),
+
+/***/ "./src/demos/assets/missile_1.png":
+/*!****************************************!*\
+  !*** ./src/demos/assets/missile_1.png ***!
+  \****************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony default export */ __webpack_exports__["default"] = (__webpack_require__.p + "src/demos/assets/missile_1.png");
+
+/***/ }),
+
+/***/ "./src/demos/assets/wall_1.png":
+/*!*************************************!*\
+  !*** ./src/demos/assets/wall_1.png ***!
+  \*************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony default export */ __webpack_exports__["default"] = (__webpack_require__.p + "src/demos/assets/wall_1.png");
+
+/***/ }),
+
+/***/ "./src/demos/assets/wall_2.png":
+/*!*************************************!*\
+  !*** ./src/demos/assets/wall_2.png ***!
+  \*************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony default export */ __webpack_exports__["default"] = (__webpack_require__.p + "src/demos/assets/wall_2.png");
+
+/***/ }),
+
+/***/ "./src/demos/assets/wall_3.png":
+/*!*************************************!*\
+  !*** ./src/demos/assets/wall_3.png ***!
+  \*************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony default export */ __webpack_exports__["default"] = (__webpack_require__.p + "src/demos/assets/wall_3.png");
+
+/***/ }),
+
+/***/ "./src/demos/assets/wall_fragment.png":
+/*!********************************************!*\
+  !*** ./src/demos/assets/wall_fragment.png ***!
+  \********************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony default export */ __webpack_exports__["default"] = (__webpack_require__.p + "src/demos/assets/wall_fragment.png");
+
+/***/ }),
+
 /***/ "./src/demos/platformer.ts":
 /*!*********************************!*\
   !*** ./src/demos/platformer.ts ***!
@@ -31462,6 +31602,7 @@ const tile_map_generator_1 = __webpack_require__(/*! ../../src/core/scene/tile-m
 const background_filler_1 = __webpack_require__(/*! ../../src/core/entity/background-filler */ "./src/core/entity/background-filler.ts");
 const common_state_1 = __webpack_require__(/*! ../../src/core/entity/common-state */ "./src/core/entity/common-state.ts");
 const missile_1 = __webpack_require__(/*! ../../src/core/game-objects/missile */ "./src/core/game-objects/missile.ts");
+__webpack_require__(/*! ./assets */ "./src/demos/assets/index.ts");
 const fpsPlaceholder = document.querySelector('#fps_placeholder');
 const MOVE_ACCELERATION = { x: 15, y: 40 };
 const PERSON_LAYER = 2;
@@ -31471,15 +31612,15 @@ const MAXIMUM_VELOCITY = { x: 35, y: 55 };
 function initGame() {
     const { canvas, state, loopController } = setup_1.setup();
     new common_state_1.CommonState(canvas, state, loopController, {
-        minion_idle: '../assets/minion_idle.png',
-        minion_move_right: '../assets/minion_move.png',
-        minion_move_left: '../assets/minion_move_left.png',
-        wall: '../assets/wall_fragment.png',
-        fire: '../assets/fire.png',
-        wall_1: '../assets/wall_1.png',
-        wall_2: '../assets/wall_2.png',
-        wall_3: '../assets/wall_3.png',
-        missile: '../assets/missile_1.png',
+        minion_idle: './src/demos/assets/minion_idle.png',
+        minion_move_right: './src/demos/assets/minion_move.png',
+        minion_move_left: './src/demos/assets/minion_move_left.png',
+        wall: './src/demos/assets/wall_fragment.png',
+        fire: './src/demos/assets/fire.png',
+        wall_1: './src/demos/assets/wall_1.png',
+        wall_2: './src/demos/assets/wall_2.png',
+        wall_3: './src/demos/assets/wall_3.png',
+        missile: './src/demos/assets/missile_1.png',
     }, () => {
         loopController.subscribe((dt) => {
             fpsPlaceholder.textContent = `${Math.round(dt * 100) / 100} dT`;
