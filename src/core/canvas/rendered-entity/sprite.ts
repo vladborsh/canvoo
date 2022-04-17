@@ -12,7 +12,8 @@ export class Sprite extends AbstractRenderedEntity {
     public size: Vector,
     private image: HTMLImageElement,
     public layer: number,
-    private angle?: { alpha: number }
+    private angle?: { alpha: number },
+    private drawBox?: boolean
   ) {
     super(canvas, size, layer);
     this.halfSize = {
@@ -23,6 +24,18 @@ export class Sprite extends AbstractRenderedEntity {
   }
 
   public draw() {
+    if (this.drawBox) {
+      this.canvas.context.strokeStyle = '#22cc22';
+      this.canvas.context.strokeRect(
+        this.canvas.cameraPosition.x -
+          (this.canvas.cameraPosition.x - this.canvas.canvasHalfSize.x),
+        this.canvas.cameraPosition.y -
+          (this.canvas.cameraPosition.y - this.canvas.canvasHalfSize.y),
+        5,
+        5
+      );
+    }
+
     if (!this.angle) {
       this.drawImageWithShift();
       return;
@@ -31,11 +44,9 @@ export class Sprite extends AbstractRenderedEntity {
     this.canvas.context.save();
     this.canvas.context.translate(
       this.stateEntity.position.x -
-        (this.canvas.cameraPosition.x - this.canvas.canvasHalfSize.x) +
-        this.halfSize.x,
+        (this.canvas.cameraPosition.x - this.canvas.canvasHalfSize.x),
       this.stateEntity.position.y -
-        (this.canvas.cameraPosition.y - this.canvas.canvasHalfSize.y) +
-        this.halfSize.y
+        (this.canvas.cameraPosition.y - this.canvas.canvasHalfSize.y)
     );
     this.canvas.context.rotate(this.angle.alpha);
     this.drawImage();
@@ -57,6 +68,12 @@ export class Sprite extends AbstractRenderedEntity {
   }
 
   private drawImage(): void {
-    this.canvas.context.drawImage(this.image, 0, 0, this.size.x, this.size.y);
+    this.canvas.context.drawImage(
+      this.image,
+      -this.halfSize.x,
+      -this.halfSize.y,
+      this.size.x,
+      this.size.y,
+    );
   }
 }

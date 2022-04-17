@@ -1,5 +1,6 @@
 import { RectangleRenderedEntity } from "../canvas/rendered-entity/rectangle-rendered-entity";
 import { Vector } from "../interfaces/vector";
+import { multiply, sum } from "../utils/calc";
 import { RectangleEntity } from "./rectangle-entity";
 
 const MAX_PARTICLES = 30;
@@ -58,6 +59,10 @@ export class ParticleSource {
             stateEntity.velocity.y = this.velocity.y + this.getRandomVelDiff();
             iteration = 0
           }
+
+          const dPosition = sum(stateEntity.position, multiply(stateEntity.velocity, dt / 100));
+          stateEntity.position.x = dPosition.x;
+          stateEntity.position.y = dPosition.y;
         }
       })())
 

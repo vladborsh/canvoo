@@ -12,14 +12,13 @@ export class RectangleRenderedEntity extends AbstractRenderedEntity {
     public position: Vector,
     public layer: number,
     private shadow?: string,
-    private angle?: { alpha: number }
+    private angle?: { alpha: number },
   ) {
     super(canvas, size, layer);
     this.halfSize = {
       x: size.x / 2,
       y: size.y / 2,
     };
-    console.log(this.shadow);
     this.onRender(() => this.draw());
   }
 
@@ -37,11 +36,9 @@ export class RectangleRenderedEntity extends AbstractRenderedEntity {
       this.canvas.context.save();
       this.canvas.context.translate(
         this.position.x -
-          (this.canvas.cameraPosition.x - this.canvas.canvasHalfSize.x) +
-          this.halfSize.x,
+          (this.canvas.cameraPosition.x - this.canvas.canvasHalfSize.x),
         this.position.y -
-          (this.canvas.cameraPosition.y - this.canvas.canvasHalfSize.y) +
-          this.halfSize.y
+          (this.canvas.cameraPosition.y - this.canvas.canvasHalfSize.y)
       );
       this.canvas.context.rotate(this.angle.alpha);
       this.drawRect();
@@ -62,8 +59,8 @@ export class RectangleRenderedEntity extends AbstractRenderedEntity {
 
   private drawRect(): void {
     this.canvas.context.fillRect(
-      0,
-      0,
+      -this.halfSize.x,
+      -this.halfSize.y,
       this.size.x,
       this.size.y
     );

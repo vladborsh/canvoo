@@ -11,6 +11,8 @@ import { Controls } from '../../src/core/state/state-controller';
 import { Cursor } from '../../src/core/game-objects/cursor';
 import { ParticleSource } from '../../src/core/entity/particle-source';
 import { Bullet } from '../../src/core/game-objects/bullet';
+import { multiply, sum } from '../../src/core/utils/calc';
+import { Weapon } from '../../src/core/game-objects/weapon';
 
 const fpsPlaceholder = document.querySelector('#fps_placeholder');
 
@@ -38,6 +40,7 @@ export function initGame() {
       wall_3: './src/demos/assets/wall_3.png',
       missile: './src/demos/assets/missile_1.png',
       aim_cursor: './src/demos/assets/aim_cursor.png',
+      weapon_1: './src/demos/assets/weapon_1.png',
     },
     () => {
       loopController.subscribe((dt: number) => {
@@ -106,7 +109,7 @@ export function initGame() {
               [' ', ' ', '#', ' ', ' ', ' ', ' ', '#', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ],
               [' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ],
               [' ', '#', '#', '#', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ],
-              [' ', '#', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', '#', ],
+              [' ', '#', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', '#', ' ', ' ', '#', '#', ],
               [' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ', ],
               [' ', '#', '#', '#', '#', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ', ],
               [' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ', ],
@@ -140,10 +143,19 @@ export function initGame() {
             { x: 700, y: 500, },
             { x: 10, y: 10, },
             { x: 45, y: 15},
-            12,
+            35,
             mediaStorage.getSource('missile'),
             5,
           );
+
+          new Weapon(
+            cursor.position,
+            person.position,
+            { x:45, y: 15 },
+            mediaStorage.getSource('weapon_1'),
+            20,
+            canvas,
+          )
 
           new ParticleSource(
             { x: 750, y: 560 },
@@ -193,12 +205,9 @@ export function initGame() {
             if (state.controlState[Controls.MOUSE_LEFT]) {
               canvas.addShake();
               new Bullet(
-                {
-                  x: cursor.position.x + (canvas.cameraPosition.x - canvas.canvasHalfSize.x),
-                  y: cursor.position.y + (canvas.cameraPosition.y - canvas.canvasHalfSize.y),
-                },
+                { ...cursor.position },
                 { ...person.stateEntity.position },
-                { x: 7, y: 5 },
+                { x: 10, y: 4 },
                 10,
                 10,
                '#ffffff',
@@ -366,6 +375,17 @@ export function initGame() {
                 stateEntity.velocity.x = MAXIMUM_VELOCITY.x;
               }
             }
+
+
+            stateEntity.prevPosition.x = stateEntity.position.x;
+            stateEntity.prevPosition.y = stateEntity.position.y;
+
+            const dVelocity = sum(stateEntity.velocity, multiply(stateEntity.acceleration, dt / 100));
+            stateEntity.velocity.x = dVelocity.x;
+            stateEntity.velocity.y = dVelocity.y;
+            const dPosition = sum(stateEntity.position, multiply(stateEntity.velocity, dt / 100));
+            stateEntity.position.x = dPosition.x;
+            stateEntity.position.y = dPosition.y;
           });
         }
       }

@@ -20,7 +20,6 @@ export class Bullet extends AbstractEntity {
     shadow?: string
   ) {
     super(position, size);
-    console.log(target);
     this.currentAngle = this.getTargetAngle();
     this.angleContainer.alpha = this.currentAngle;
     this.velocity = {

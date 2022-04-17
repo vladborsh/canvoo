@@ -1,7 +1,8 @@
-import { Sprite } from "../canvas/rendered-entity/sprite";
-import { AbstractEntity } from "../entity/abstract-entity";
-import { Vector } from "../interfaces/vector";
-import { AbstractStateEntity } from "../state/state-entity/abstract-state-entity";
+import { Sprite } from '../canvas/rendered-entity/sprite';
+import { AbstractEntity } from '../entity/abstract-entity';
+import { Vector } from '../interfaces/vector';
+import { AbstractStateEntity } from '../state/state-entity/abstract-state-entity';
+import { multiply, sum } from '../utils/calc';
 
 export class Missile extends AbstractEntity {
   public velocity: Vector;
@@ -16,14 +17,14 @@ export class Missile extends AbstractEntity {
     public renderSize: Vector,
     public velocityMagnitude: number,
     image: HTMLImageElement,
-    layer: number,
-    ) {
+    layer: number
+  ) {
     super(position, size);
-    this.ANGLE_VELOCITY = velocityMagnitude/50;
+    this.ANGLE_VELOCITY = velocityMagnitude / 50;
     this.velocity = {
       x: this.velocityMagnitude * Math.cos(this.currentAngle),
       y: this.velocityMagnitude * Math.sin(this.currentAngle),
-    }
+    };
     this.setVelocity();
     this.currentAngle = this.getTargetAngle();
     this.stateEntity = new AbstractStateEntity((<any>window).state, position, size);
@@ -33,19 +34,22 @@ export class Missile extends AbstractEntity {
       renderSize,
       image,
       layer,
-      this.angleContainer,
+      this.angleContainer
     );
 
     (<any>window).canvas.addEntity(this.renderedEntity);
     (<any>window).state.addEntity(this.stateEntity);
-    this.stateEntity.onUpdate(() => this.update());
+    this.stateEntity.onUpdate((dt, stateEntity) => this.update(dt, stateEntity));
   }
 
-  public update(): void {
+  public update(dt: number, stateEntity: AbstractStateEntity): void {
     this.setVelocity();
 
-    this.position.x += this.velocity.x;
-    this.position.y += this.velocity.y;
+    const dPosition = sum(stateEntity.position, multiply(this.velocity, dt / 100));
+    this.position.x += dPosition.x;
+    this.position.y += dPosition.y;
+    stateEntity.position.x = dPosition.x;
+    stateEntity.position.y = dPosition.y;
   }
 
   private setVelocity(): void {
@@ -56,17 +60,16 @@ export class Missile extends AbstractEntity {
       y: this.velocityMagnitude * Math.sin(this.currentAngle),
     };
 
-    this.velocity.x += this.velocity.x < newVelocityVec.x ? this.ANGLE_VELOCITY : -this.ANGLE_VELOCITY;
-    this.velocity.y += this.velocity.y < newVelocityVec.y ? this.ANGLE_VELOCITY : -this.ANGLE_VELOCITY;
+    this.velocity.x +=
+      this.velocity.x < newVelocityVec.x ? this.ANGLE_VELOCITY : -this.ANGLE_VELOCITY;
+    this.velocity.y +=
+      this.velocity.y < newVelocityVec.y ? this.ANGLE_VELOCITY : -this.ANGLE_VELOCITY;
 
     /* for render */
     this.angleContainer.alpha = this.currentAngle;
   }
 
   private getTargetAngle(): number {
-    return Math.atan2(
-      this.target.y - this.position.y,
-      this.target.x - this.position.x
-    )
+    return Math.atan2(this.target.y - this.position.y, this.target.x - this.position.x);
   }
 }

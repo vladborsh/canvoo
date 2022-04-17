@@ -32,16 +32,6 @@ export class AbstractStateEntity {
   public onUpdate(func: (dt: number, stateEntity: AbstractStateEntity) => void) {
     this.update = (dt: number) => {
       func(dt, this);
-
-      this.prevPosition.x = this.position.x;
-      this.prevPosition.y = this.position.y;
-
-      const dVelocity = sum(this.velocity, multiply(this.acceleration, dt / 100));
-      this.velocity.x = dVelocity.x;
-      this.velocity.y = dVelocity.y;
-      const dPosition = sum(this.position, multiply(this.velocity, dt / 100));
-      this.position.x = dPosition.x;
-      this.position.y = dPosition.y;
     };
   }
 }
