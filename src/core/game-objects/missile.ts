@@ -1,5 +1,6 @@
 import { Sprite } from '../canvas/rendered-entity/sprite';
 import { AbstractEntity } from '../entity/abstract-entity';
+import { ParticleSource } from '../entity/particle-source';
 import { Vector } from '../interfaces/vector';
 import { AbstractStateEntity } from '../state/state-entity/abstract-state-entity';
 import { multiply, sum } from '../utils/calc';
@@ -9,6 +10,7 @@ export class Missile extends AbstractEntity {
   private currentAngle: number = 0;
   private ANGLE_VELOCITY;
   private angleContainer = { alpha: 0 };
+  private fireTail: ParticleSource;
 
   constructor(
     public target: Vector,
@@ -37,6 +39,19 @@ export class Missile extends AbstractEntity {
       this.angleContainer
     );
 
+    this.fireTail = new ParticleSource(
+      this.stateEntity.position,
+      { x: 7, y: 7 },
+      { x: 0, y: 0 },
+      '#ffffff',
+      true,
+      20,
+      true,
+      10,
+      1,
+      '#ffee88',
+    );
+
     (<any>window).canvas.addEntity(this.renderedEntity);
     (<any>window).state.addEntity(this.stateEntity);
     this.stateEntity.onUpdate((dt, stateEntity) => this.update(dt, stateEntity));
@@ -50,6 +65,12 @@ export class Missile extends AbstractEntity {
     this.position.y += dPosition.y;
     stateEntity.position.x = dPosition.x;
     stateEntity.position.y = dPosition.y;
+
+    /* for render */
+    this.angleContainer.alpha = this.currentAngle;
+
+    this.fireTail.velocity.x = -this.velocity.x;
+    this.fireTail.velocity.y = -this.velocity.y;
   }
 
   private setVelocity(): void {
@@ -65,8 +86,6 @@ export class Missile extends AbstractEntity {
     this.velocity.y +=
       this.velocity.y < newVelocityVec.y ? this.ANGLE_VELOCITY : -this.ANGLE_VELOCITY;
 
-    /* for render */
-    this.angleContainer.alpha = this.currentAngle;
   }
 
   private getTargetAngle(): number {

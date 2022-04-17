@@ -138,7 +138,7 @@ export function initGame() {
 
           person.stateEntity.velocity.y = 1;
 
-          new Missile(
+          const missile = new Missile(
             person.position,
             { x: 700, y: 500, },
             { x: 10, y: 10, },
@@ -155,32 +155,19 @@ export function initGame() {
             mediaStorage.getSource('weapon_1'),
             20,
             canvas,
-          )
-
-          new ParticleSource(
-            { x: 750, y: 560 },
-            { x: 10, y: 10 },
-            { x: 2, y: -5 },
-            '#ffffff', /* '#ffee88d' */
-            true,
-            100,
-            true,
-            3,
-            10,
-            '#ffee88',
           );
 
           new ParticleSource(
             { x: 1000, y: 320 },
             { x: 10, y: 10 },
             { x: 1, y: -7 },
-            '#ffffff', /* '#ffee88d' */
+            '#ffffff',
             true,
             100,
             true,
             5,
             10,
-            '#ffee88',
+            '#ee77ff',
           );
 
           person.onUpdate((dt, stateEntity) => {
