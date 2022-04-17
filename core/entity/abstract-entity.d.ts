@@ -9,5 +9,5 @@ export declare abstract class AbstractEntity {
     renderedEntity: AbstractRenderedEntity;
     constructor(position: Vector, size?: Vector);
     onUpdate(func: (dt: number, stateEntity: AbstractStateEntity) => void): void;
-    onRender(func: () => void): void;
+    onRender(func: (dt: number, entity: AbstractRenderedEntity) => void): void;
 }

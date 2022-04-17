@@ -5,7 +5,7 @@ import { AbstractRenderedEntity } from './abstract-rendered-entity';
 export declare class Sprite extends AbstractRenderedEntity {
     canvas: Canvas;
     private stateEntity;
-    private size;
+    size: Vector;
     private image;
     layer: number;
     private angle?;
@@ -13,7 +13,7 @@ export declare class Sprite extends AbstractRenderedEntity {
     constructor(canvas: Canvas, stateEntity: AbstractStateEntity, size: Vector, image: HTMLImageElement, layer: number, angle?: {
         alpha: number;
     });
-    render(): void;
+    draw(): void;
     private drawImageWithShift;
     private drawImage;
 }

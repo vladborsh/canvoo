@@ -17,5 +17,5 @@ export declare class AnimationSprite extends AbstractRenderedEntity {
     private direction;
     private halfSize;
     constructor(canvas: Canvas, position: Vector, frameSize: Vector, animationLength: number, frameDuration: number, image: HTMLImageElement, layer: number, isBoomerang?: boolean, withBoundingBox?: boolean, withCameraRelation?: boolean);
-    render(dt: number): void;
+    draw(dt: number): void;
 }

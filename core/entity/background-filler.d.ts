@@ -6,5 +6,5 @@ export declare class BackgroundFiller extends AbstractRenderedEntity {
     images: HTMLImageElement[];
     private grid;
     constructor(canvas: Canvas, fragmentSize: Vector, images: HTMLImageElement[]);
-    render(_dt: number): void;
+    draw(): void;
 }

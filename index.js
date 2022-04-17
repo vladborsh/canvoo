@@ -110,7 +110,7 @@ __webpack_require__.r(__webpack_exports__);
 var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_1___default()(_node_modules_css_loader_dist_runtime_cssWithMappingToString_js__WEBPACK_IMPORTED_MODULE_0___default.a);
 var ___CSS_LOADER_URL_REPLACEMENT_0___ = _node_modules_css_loader_dist_runtime_getUrl_js__WEBPACK_IMPORTED_MODULE_2___default()(_minecraft_font_ttf__WEBPACK_IMPORTED_MODULE_3__["default"]);
 // Module
-___CSS_LOADER_EXPORT___.push([module.i, "@font-face {\n  font-family: \"pixel\";\n  src: url(" + ___CSS_LOADER_URL_REPLACEMENT_0___ + ");\n}\n.overlay {\n  position: absolute;\n  right: 30px;\n  bottom: 30px;\n  color: white;\n  font-family: \"pixel\";\n  font-size: 25px;\n  text-shadow: 3px 3px #000000, -2px 1px #000000, 1px 1px #000000, 1px -2px #000000;\n}\n\ncanvas {\n  cursor: none;\n}", "",{"version":3,"sources":["webpack://./src/styles/index.scss"],"names":[],"mappings":"AAAA;EACE,oBAAA;EACA,4CAAA;AACF;AAEA;EACE,kBAAA;EACA,WAAA;EACA,YAAA;EACA,YAAA;EACA,oBAAA;EACA,eAAA;EACA,iFAAA;AAAF;;AAGA;EACE,YAAA;AAAF","sourcesContent":["@font-face {\n  font-family: 'pixel';\n  src: url('minecraft_font.ttf');\n}\n\n.overlay {\n  position: absolute;\n  right: 30px;\n  bottom: 30px;\n  color: white;\n  font-family: 'pixel';\n  font-size: 25px;\n  text-shadow: 3px 3px #000000, -2px 1px #000000, 1px 1px #000000, 1px -2px #000000;\n}\n\ncanvas {\n  cursor: none;\n}\n"],"sourceRoot":""}]);
+___CSS_LOADER_EXPORT___.push([module.i, "@font-face {\n  font-family: \"pixel\";\n  src: url(" + ___CSS_LOADER_URL_REPLACEMENT_0___ + ");\n}\nbody, html {\n  -webkit-touch-callout: none;\n  /* iOS Safari */\n  -webkit-user-select: none;\n  /* Safari */\n  -khtml-user-select: none;\n  /* Konqueror HTML */\n  -moz-user-select: none;\n  /* Old versions of Firefox */\n  -ms-user-select: none;\n  /* Internet Explorer/Edge */\n  user-select: none;\n  /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */\n}\n\n.overlay {\n  position: absolute;\n  right: 30px;\n  bottom: 30px;\n  color: white;\n  font-family: \"pixel\";\n  font-size: 25px;\n  text-shadow: 3px 3px #000000, -2px 1px #000000, 1px 1px #000000, 1px -2px #000000;\n}\n\ncanvas {\n  cursor: none;\n}", "",{"version":3,"sources":["webpack://./src/styles/index.scss"],"names":[],"mappings":"AAAA;EACE,oBAAA;EACA,4CAAA;AACF;AAEA;EACE,2BAAA;EAA6B,eAAA;EAC3B,yBAAA;EAA2B,WAAA;EAC1B,wBAAA;EAA0B,mBAAA;EACxB,sBAAA;EAAwB,4BAAA;EACvB,qBAAA;EAAuB,2BAAA;EACnB,iBAAA;EAAmB,iFAAA;AAM/B;;AAHA;EACE,kBAAA;EACA,WAAA;EACA,YAAA;EACA,YAAA;EACA,oBAAA;EACA,eAAA;EACA,iFAAA;AAMF;;AAHA;EACE,YAAA;AAMF","sourcesContent":["@font-face {\n  font-family: 'pixel';\n  src: url('minecraft_font.ttf');\n}\n\nbody, html {\n  -webkit-touch-callout: none; /* iOS Safari */\n    -webkit-user-select: none; /* Safari */\n     -khtml-user-select: none; /* Konqueror HTML */\n       -moz-user-select: none; /* Old versions of Firefox */\n        -ms-user-select: none; /* Internet Explorer/Edge */\n            user-select: none; /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */\n}\n\n.overlay {\n  position: absolute;\n  right: 30px;\n  bottom: 30px;\n  color: white;\n  font-family: 'pixel';\n  font-size: 25px;\n  text-shadow: 3px 3px #000000, -2px 1px #000000, 1px 1px #000000, 1px -2px #000000;\n}\n\ncanvas {\n  cursor: none;\n}\n"],"sourceRoot":""}]);
 // Exports
 /* harmony default export */ __webpack_exports__["default"] = (___CSS_LOADER_EXPORT___);
 
@@ -30663,13 +30663,19 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AbstractRenderedEntity = void 0;
 const generate_uuid_1 = __webpack_require__(/*! ../../utils/generate-uuid */ "./src/core/utils/generate-uuid.ts");
 class AbstractRenderedEntity {
-    constructor(canvas, layer) {
+    constructor(canvas, size, layer) {
         this.canvas = canvas;
+        this.size = size;
         this.layer = layer;
         this.id = generate_uuid_1.generateUuid();
     }
     destroy() {
         this.canvas.destroy(this.layer, this.id);
+    }
+    onRender(func) {
+        this.render = (dt) => {
+            func(dt, this);
+        };
     }
 }
 exports.AbstractRenderedEntity = AbstractRenderedEntity;
@@ -30692,7 +30698,7 @@ const abstract_rendered_entity_1 = __webpack_require__(/*! ./abstract-rendered-e
 const BOUNDING_BOX_STROKE_STYLE = '#55ee44';
 class AnimationSprite extends abstract_rendered_entity_1.AbstractRenderedEntity {
     constructor(canvas, position, frameSize, animationLength, frameDuration, image, layer, isBoomerang = false, withBoundingBox = false, withCameraRelation = true) {
-        super(canvas, layer);
+        super(canvas, frameSize, layer);
         this.canvas = canvas;
         this.position = position;
         this.frameSize = frameSize;
@@ -30710,8 +30716,9 @@ class AnimationSprite extends abstract_rendered_entity_1.AbstractRenderedEntity 
             x: frameSize.x / 2,
             y: frameSize.y / 2,
         };
+        this.onRender((dt) => this.draw(dt));
     }
-    render(dt) {
+    draw(dt) {
         this.canvas.context.drawImage(this.image, this.currentFrame * this.frameSize.x, 0, this.frameSize.x, this.frameSize.y, this.position.x -
             (this.withCameraRelation
                 ? this.canvas.cameraPosition.x - this.canvas.canvasHalfSize.x
@@ -30751,6 +30758,68 @@ exports.AnimationSprite = AnimationSprite;
 
 /***/ }),
 
+/***/ "./src/core/canvas/rendered-entity/rectangle-rendered-entity.ts":
+/*!**********************************************************************!*\
+  !*** ./src/core/canvas/rendered-entity/rectangle-rendered-entity.ts ***!
+  \**********************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.RectangleRenderedEntity = void 0;
+const abstract_rendered_entity_1 = __webpack_require__(/*! ./abstract-rendered-entity */ "./src/core/canvas/rendered-entity/abstract-rendered-entity.ts");
+class RectangleRenderedEntity extends abstract_rendered_entity_1.AbstractRenderedEntity {
+    constructor(canvas, color, size, position, layer, shadow, angle) {
+        super(canvas, size, layer);
+        this.color = color;
+        this.size = size;
+        this.position = position;
+        this.layer = layer;
+        this.shadow = shadow;
+        this.angle = angle;
+        this.halfSize = {
+            x: size.x / 2,
+            y: size.y / 2,
+        };
+        console.log(this.shadow);
+        this.onRender(() => this.draw());
+    }
+    draw() {
+        this.canvas.context.fillStyle = this.color;
+        if (this.shadow) {
+            this.canvas.context.shadowColor = this.shadow;
+            this.canvas.context.shadowBlur = 16;
+        }
+        if (!this.angle) {
+            this.drawRectWithShift();
+        }
+        else {
+            this.canvas.context.save();
+            this.canvas.context.translate(this.position.x -
+                (this.canvas.cameraPosition.x - this.canvas.canvasHalfSize.x) +
+                this.halfSize.x, this.position.y -
+                (this.canvas.cameraPosition.y - this.canvas.canvasHalfSize.y) +
+                this.halfSize.y);
+            this.canvas.context.rotate(this.angle.alpha);
+            this.drawRect();
+            this.canvas.context.restore();
+        }
+        this.canvas.context.shadowBlur = 0;
+    }
+    drawRectWithShift() {
+        this.canvas.context.fillRect(this.position.x - (this.canvas.cameraPosition.x - this.canvas.canvasHalfSize.x), this.position.y - (this.canvas.cameraPosition.y - this.canvas.canvasHalfSize.y), this.size.x, this.size.y);
+    }
+    drawRect() {
+        this.canvas.context.fillRect(0, 0, this.size.x, this.size.y);
+    }
+}
+exports.RectangleRenderedEntity = RectangleRenderedEntity;
+
+
+/***/ }),
+
 /***/ "./src/core/canvas/rendered-entity/sprite.ts":
 /*!***************************************************!*\
   !*** ./src/core/canvas/rendered-entity/sprite.ts ***!
@@ -30765,7 +30834,7 @@ exports.Sprite = void 0;
 const abstract_rendered_entity_1 = __webpack_require__(/*! ./abstract-rendered-entity */ "./src/core/canvas/rendered-entity/abstract-rendered-entity.ts");
 class Sprite extends abstract_rendered_entity_1.AbstractRenderedEntity {
     constructor(canvas, stateEntity, size, image, layer, angle) {
-        super(canvas, layer);
+        super(canvas, size, layer);
         this.canvas = canvas;
         this.stateEntity = stateEntity;
         this.size = size;
@@ -30776,8 +30845,9 @@ class Sprite extends abstract_rendered_entity_1.AbstractRenderedEntity {
             x: size.x / 2,
             y: size.y / 2,
         };
+        this.onRender(() => this.draw());
     }
-    render() {
+    draw() {
         if (!this.angle) {
             this.drawImageWithShift();
             return;
@@ -30875,7 +30945,7 @@ class AbstractEntity {
         this.stateEntity.onUpdate(func);
     }
     onRender(func) {
-        this.renderedEntity.render = func.bind(this.renderedEntity);
+        this.renderedEntity.onRender(func);
     }
 }
 exports.AbstractEntity = AbstractEntity;
@@ -30927,7 +30997,7 @@ const abstract_rendered_entity_1 = __webpack_require__(/*! ../canvas/rendered-en
 const random_1 = __webpack_require__(/*! ../utils/random */ "./src/core/utils/random.ts");
 class BackgroundFiller extends abstract_rendered_entity_1.AbstractRenderedEntity {
     constructor(canvas, fragmentSize, images) {
-        super(canvas, 0);
+        super(canvas, fragmentSize, 0);
         this.fragmentSize = fragmentSize;
         this.images = images;
         this.grid = [];
@@ -30941,8 +31011,9 @@ class BackgroundFiller extends abstract_rendered_entity_1.AbstractRenderedEntity
             }
             this.grid.push(row);
         }
+        this.onRender(() => this.draw());
     }
-    render(_dt) {
+    draw() {
         for (let i = 0; i < this.grid.length; i++) {
             for (let j = 0; j < this.grid[i].length; j++) {
                 this.canvas.context.drawImage(this.grid[i][j].image, i * this.fragmentSize.x, j * this.fragmentSize.y, this.fragmentSize.x, this.fragmentSize.y);
@@ -30999,6 +31070,108 @@ class CommonState {
     }
 }
 exports.CommonState = CommonState;
+
+
+/***/ }),
+
+/***/ "./src/core/entity/particle-source.ts":
+/*!********************************************!*\
+  !*** ./src/core/entity/particle-source.ts ***!
+  \********************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.ParticleSource = void 0;
+const rectangle_entity_1 = __webpack_require__(/*! ./rectangle-entity */ "./src/core/entity/rectangle-entity.ts");
+const MAX_PARTICLES = 30;
+const SIZE_REDUCING_SPEED = 0.1;
+class ParticleSource {
+    constructor(position, singleParticleSize, velocity, color, reduceSize, particleLifetime, isInfinite, velocityDiffRange, layer, shadow) {
+        this.position = position;
+        this.singleParticleSize = singleParticleSize;
+        this.velocity = velocity;
+        this.color = color;
+        this.reduceSize = reduceSize;
+        this.particleLifetime = particleLifetime;
+        this.isInfinite = isInfinite;
+        this.velocityDiffRange = velocityDiffRange;
+        this.layer = layer;
+        this.shadow = shadow;
+        this.particles = [];
+        for (let i = 0; i < MAX_PARTICLES; i++) {
+            const rect = new rectangle_entity_1.RectangleEntity({ x: this.position.x, y: this.position.y }, { x: singleParticleSize.x, y: singleParticleSize.y }, layer, color, shadow);
+            this.particles.push(rect);
+            rect.stateEntity.velocity = {
+                x: this.velocity.x + this.getRandomVelDiff(),
+                y: this.velocity.y + this.getRandomVelDiff(),
+            };
+            const sizeReducing = SIZE_REDUCING_SPEED;
+            const concreteParticleLifetime = Math.random() * particleLifetime;
+            rect.onUpdate((() => {
+                let iteration = 0;
+                return (dt, stateEntity) => {
+                    if (this.reduceSize && stateEntity.size.x > 0 || stateEntity.size.x > 0) {
+                        stateEntity.size.x -= sizeReducing;
+                        stateEntity.size.y -= sizeReducing;
+                    }
+                    iteration++;
+                    if ((stateEntity.size.x <= 0 || stateEntity.size.x <= 0 || iteration >= concreteParticleLifetime) && isInfinite) {
+                        stateEntity.size.x = singleParticleSize.x;
+                        stateEntity.size.y = singleParticleSize.y;
+                        stateEntity.position.x = this.position.x;
+                        stateEntity.position.y = this.position.y;
+                        stateEntity.velocity.x = this.velocity.x + this.getRandomVelDiff();
+                        stateEntity.velocity.y = this.velocity.y + this.getRandomVelDiff();
+                        iteration = 0;
+                    }
+                };
+            })());
+            rect.onRender((dt, renderedEntity) => {
+                if (renderedEntity.size.x <= 0 || renderedEntity.size.x <= 0) {
+                    return;
+                }
+                rect.renderedEntity.draw();
+            });
+        }
+    }
+    getRandomVelDiff() {
+        const sign = Math.random() > 0.5 ? 1 : -1;
+        return sign * Math.random() * this.velocityDiffRange;
+    }
+}
+exports.ParticleSource = ParticleSource;
+
+
+/***/ }),
+
+/***/ "./src/core/entity/rectangle-entity.ts":
+/*!*********************************************!*\
+  !*** ./src/core/entity/rectangle-entity.ts ***!
+  \*********************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.RectangleEntity = void 0;
+const abstract_entity_1 = __webpack_require__(/*! ./abstract-entity */ "./src/core/entity/abstract-entity.ts");
+const rectangle_rendered_entity_1 = __webpack_require__(/*! ../canvas/rendered-entity/rectangle-rendered-entity */ "./src/core/canvas/rendered-entity/rectangle-rendered-entity.ts");
+const abstract_state_entity_1 = __webpack_require__(/*! ../state/state-entity/abstract-state-entity */ "./src/core/state/state-entity/abstract-state-entity.ts");
+class RectangleEntity extends abstract_entity_1.AbstractEntity {
+    constructor(position, size, layer, color, shadow) {
+        super(position, size);
+        this.stateEntity = new abstract_state_entity_1.AbstractStateEntity(window.state, position, size);
+        this.renderedEntity = new rectangle_rendered_entity_1.RectangleRenderedEntity(window.canvas, color, size, this.stateEntity.position, layer, shadow);
+        window.canvas.addEntity(this.renderedEntity);
+        window.state.addEntity(this.stateEntity);
+        this.stateEntity.onUpdate(() => { });
+    }
+}
+exports.RectangleEntity = RectangleEntity;
 
 
 /***/ }),
@@ -31076,6 +31249,60 @@ class StatefulObject extends abstract_entity_1.AbstractEntity {
     }
 }
 exports.StatefulObject = StatefulObject;
+
+
+/***/ }),
+
+/***/ "./src/core/game-objects/bullet.ts":
+/*!*****************************************!*\
+  !*** ./src/core/game-objects/bullet.ts ***!
+  \*****************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Bullet = void 0;
+const rectangle_rendered_entity_1 = __webpack_require__(/*! ../canvas/rendered-entity/rectangle-rendered-entity */ "./src/core/canvas/rendered-entity/rectangle-rendered-entity.ts");
+const abstract_entity_1 = __webpack_require__(/*! ../entity/abstract-entity */ "./src/core/entity/abstract-entity.ts");
+const abstract_state_entity_1 = __webpack_require__(/*! ../state/state-entity/abstract-state-entity */ "./src/core/state/state-entity/abstract-state-entity.ts");
+const BULLET_VELOCITY_DIFF = 0.7;
+class Bullet extends abstract_entity_1.AbstractEntity {
+    constructor(target, position, size, velocityMagnitude, layer, color, shadow) {
+        super(position, size);
+        this.target = target;
+        this.position = position;
+        this.size = size;
+        this.velocityMagnitude = velocityMagnitude;
+        this.currentAngle = 0;
+        this.angleContainer = { alpha: 0 };
+        console.log(target);
+        this.currentAngle = this.getTargetAngle();
+        this.angleContainer.alpha = this.currentAngle;
+        this.velocity = {
+            x: this.velocityMagnitude * Math.cos(this.currentAngle) + this.getRandomVelDiff(),
+            y: this.velocityMagnitude * Math.sin(this.currentAngle) + this.getRandomVelDiff(),
+        };
+        this.stateEntity = new abstract_state_entity_1.AbstractStateEntity(window.state, position, size);
+        this.renderedEntity = new rectangle_rendered_entity_1.RectangleRenderedEntity(window.canvas, color, size, this.stateEntity.position, layer, shadow, this.angleContainer);
+        window.canvas.addEntity(this.renderedEntity);
+        window.state.addEntity(this.stateEntity);
+        this.stateEntity.onUpdate(() => this.update());
+    }
+    update() {
+        this.position.x += this.velocity.x;
+        this.position.y += this.velocity.y;
+    }
+    getTargetAngle() {
+        return Math.atan2(this.target.y - this.position.y, this.target.x - this.position.x);
+    }
+    getRandomVelDiff() {
+        const sign = Math.random() > 0.5 ? 1 : -1;
+        return sign * Math.random() * BULLET_VELOCITY_DIFF;
+    }
+}
+exports.Bullet = Bullet;
 
 
 /***/ }),
@@ -31328,6 +31555,8 @@ class Control {
     initializeSource() {
         this.keydown$ = rxjs_1.fromEvent(document, 'keydown');
         this.keyup$ = rxjs_1.fromEvent(document, 'keyup');
+        this.mouseDown$ = rxjs_1.fromEvent(document, 'mousedown');
+        this.mouseUp$ = rxjs_1.fromEvent(document, 'mouseup');
     }
 }
 exports.Control = Control;
@@ -31345,15 +31574,16 @@ exports.Control = Control;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.StateController = exports.ControlButton = void 0;
+exports.StateController = exports.Controls = void 0;
 const lodash_1 = __webpack_require__(/*! lodash */ "./node_modules/lodash/lodash.js");
 const control_1 = __webpack_require__(/*! ./control/control */ "./src/core/state/control/control.ts");
 const direction_1 = __webpack_require__(/*! ../interfaces/direction */ "./src/core/interfaces/direction.ts");
 const operators_1 = __webpack_require__(/*! rxjs/operators */ "./node_modules/rxjs/_esm5/operators/index.js");
-var ControlButton;
-(function (ControlButton) {
-    ControlButton["SPACE"] = "SPACE";
-})(ControlButton = exports.ControlButton || (exports.ControlButton = {}));
+var Controls;
+(function (Controls) {
+    Controls["SPACE"] = "SPACE";
+    Controls["MOUSE_LEFT"] = "MOUSE_LEFT";
+})(Controls = exports.Controls || (exports.Controls = {}));
 class StateController {
     constructor() {
         this.entities = [];
@@ -31362,15 +31592,18 @@ class StateController {
             [direction_1.Direction.DOWN]: false,
             [direction_1.Direction.LEFT]: false,
             [direction_1.Direction.RIGHT]: false,
-            [ControlButton.SPACE]: false,
+            [Controls.SPACE]: false,
+            [Controls.MOUSE_LEFT]: false,
         };
         let control = new control_1.Control();
         control.keydown$
-            .pipe(operators_1.map((event) => event.key), operators_1.filter(key => key === ' '))
-            .subscribe(() => this.controlState[ControlButton.SPACE] = true);
+            .pipe(operators_1.map((event) => event.key), operators_1.filter((key) => key === ' '))
+            .subscribe(() => (this.controlState[Controls.SPACE] = true));
         control.keyup$
-            .pipe(operators_1.map((event) => event.key), operators_1.filter(key => key === ' '))
-            .subscribe(() => this.controlState[ControlButton.SPACE] = false);
+            .pipe(operators_1.map((event) => event.key), operators_1.filter((key) => key === ' '))
+            .subscribe(() => (this.controlState[Controls.SPACE] = false));
+        control.mouseDown$.subscribe(() => (this.controlState[Controls.MOUSE_LEFT] = true));
+        control.mouseUp$.subscribe(() => (this.controlState[Controls.MOUSE_LEFT] = false));
         control.keydown$
             .pipe(operators_1.map((event) => direction_1.DIRECTIONS[event.keyCode]))
             .subscribe((dir) => (this.controlState[dir] = true));
@@ -31748,6 +31981,8 @@ const missile_1 = __webpack_require__(/*! ../../src/core/game-objects/missile */
 __webpack_require__(/*! ./assets */ "./src/demos/assets/index.ts");
 const state_controller_1 = __webpack_require__(/*! ../../src/core/state/state-controller */ "./src/core/state/state-controller.ts");
 const cursor_1 = __webpack_require__(/*! ../../src/core/game-objects/cursor */ "./src/core/game-objects/cursor.ts");
+const particle_source_1 = __webpack_require__(/*! ../../src/core/entity/particle-source */ "./src/core/entity/particle-source.ts");
+const bullet_1 = __webpack_require__(/*! ../../src/core/game-objects/bullet */ "./src/core/game-objects/bullet.ts");
 const fpsPlaceholder = document.querySelector('#fps_placeholder');
 const MOVE_ACCELERATION = { x: 15, y: 40 };
 const PERSON_LAYER = 2;
@@ -31780,26 +32015,23 @@ function initGame() {
                     mediaStorage.getSource('wall_2'),
                     mediaStorage.getSource('wall_3'),
                 ]);
-                new cursor_1.Cursor(canvas, { x: 27, y: 27 }, 4, 200, mediaStorage.getSource('aim_cursor'));
+                const cursor = new cursor_1.Cursor(canvas, { x: 27, y: 27 }, 4, 200, mediaStorage.getSource('aim_cursor'));
                 const person = new stateful_object_1.StatefulObject({ x: 500, y: 300 }, { x: 60, y: 60 }, state, canvas, {
                     'idle': {
                         animationLength: 3,
                         frameDuration: 200,
                         image: mediaStorage.getSource('minion_idle'),
                         isBoomerang: true,
-                        withBoundingBox: true,
                     },
                     'move_right': {
                         animationLength: 3,
                         frameDuration: 200,
                         image: mediaStorage.getSource('minion_move_right'),
-                        withBoundingBox: true,
                     },
                     'move_left': {
                         animationLength: 3,
                         frameDuration: 200,
                         image: mediaStorage.getSource('minion_move_left'),
-                        withBoundingBox: true,
                     },
                 }, 'idle', PERSON_LAYER);
                 canvas.cameraPosition = person.stateEntity.position;
@@ -31809,7 +32041,7 @@ function initGame() {
                     [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
                     [' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
                     [' ', ' ', '#', ' ', ' ', ' ', ' ', '#', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
-                    [' ', ' ', '#', 'f', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
+                    [' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
                     [' ', '#', '#', '#', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
                     [' ', '#', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', '#',],
                     [' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ',],
@@ -31836,6 +32068,8 @@ function initGame() {
                 timeMap.generate();
                 person.stateEntity.velocity.y = 1;
                 new missile_1.Missile(person.position, { x: 700, y: 500, }, { x: 10, y: 10, }, { x: 45, y: 15 }, 12, mediaStorage.getSource('missile'), 5);
+                new particle_source_1.ParticleSource({ x: 750, y: 560 }, { x: 10, y: 10 }, { x: 2, y: -5 }, '#ffffff', /* '#ffee88d' */ true, 100, true, 3, 10, '#ffee88');
+                new particle_source_1.ParticleSource({ x: 1000, y: 320 }, { x: 10, y: 10 }, { x: 1, y: -7 }, '#ffffff', /* '#ffee88d' */ true, 100, true, 5, 10, '#ffee88');
                 person.onUpdate((dt, stateEntity) => {
                     if (state.controlState[direction_1.Direction.LEFT] && !stateEntity.leftWall) {
                         stateEntity.acceleration.x = -MOVE_ACCELERATION.x;
@@ -31855,8 +32089,12 @@ function initGame() {
                     if (!state.controlState[direction_1.Direction.UP]) {
                         stateEntity.acceleration.y = 0;
                     }
-                    if (state.controlState[state_controller_1.ControlButton.SPACE]) {
+                    if (state.controlState[state_controller_1.Controls.MOUSE_LEFT]) {
                         canvas.addShake();
+                        new bullet_1.Bullet({
+                            x: cursor.position.x + (canvas.cameraPosition.x - canvas.canvasHalfSize.x),
+                            y: cursor.position.y + (canvas.cameraPosition.y - canvas.canvasHalfSize.y),
+                        }, { ...person.stateEntity.position }, { x: 7, y: 5 }, 10, 10, '#ffffff', '#3377ff');
                     }
                     let untouchedGroundWalls = 0;
                     let untouchedLeftWalls = 0;

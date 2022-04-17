@@ -1,9 +1,12 @@
+import { Vector } from 'src/core/interfaces/vector';
 import { Canvas } from '../canvas';
 export declare abstract class AbstractRenderedEntity {
     canvas: Canvas;
+    size: Vector;
     layer: number;
     readonly id: string;
-    constructor(canvas: Canvas, layer: number);
+    render: (dt: number) => void;
+    constructor(canvas: Canvas, size: Vector, layer: number);
     destroy(): void;
-    abstract render(dt: number): void;
+    onRender(func: (dt: number, entity: AbstractRenderedEntity) => void): void;
 }

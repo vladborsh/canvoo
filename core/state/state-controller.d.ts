@@ -1,6 +1,7 @@
 import { AbstractStateEntity } from './state-entity/abstract-state-entity';
-export declare enum ControlButton {
-    SPACE = "SPACE"
+export declare enum Controls {
+    SPACE = "SPACE",
+    MOUSE_LEFT = "MOUSE_LEFT"
 }
 export declare class StateController {
     entities: AbstractStateEntity[];
