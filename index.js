@@ -30783,7 +30783,6 @@ class RectangleRenderedEntity extends abstract_rendered_entity_1.AbstractRendere
             x: size.x / 2,
             y: size.y / 2,
         };
-        console.log(this.shadow);
         this.onRender(() => this.draw());
     }
     draw() {
@@ -30798,10 +30797,8 @@ class RectangleRenderedEntity extends abstract_rendered_entity_1.AbstractRendere
         else {
             this.canvas.context.save();
             this.canvas.context.translate(this.position.x -
-                (this.canvas.cameraPosition.x - this.canvas.canvasHalfSize.x) +
-                this.halfSize.x, this.position.y -
-                (this.canvas.cameraPosition.y - this.canvas.canvasHalfSize.y) +
-                this.halfSize.y);
+                (this.canvas.cameraPosition.x - this.canvas.canvasHalfSize.x), this.position.y -
+                (this.canvas.cameraPosition.y - this.canvas.canvasHalfSize.y));
             this.canvas.context.rotate(this.angle.alpha);
             this.drawRect();
             this.canvas.context.restore();
@@ -30812,7 +30809,7 @@ class RectangleRenderedEntity extends abstract_rendered_entity_1.AbstractRendere
         this.canvas.context.fillRect(this.position.x - (this.canvas.cameraPosition.x - this.canvas.canvasHalfSize.x), this.position.y - (this.canvas.cameraPosition.y - this.canvas.canvasHalfSize.y), this.size.x, this.size.y);
     }
     drawRect() {
-        this.canvas.context.fillRect(0, 0, this.size.x, this.size.y);
+        this.canvas.context.fillRect(-this.halfSize.x, -this.halfSize.y, this.size.x, this.size.y);
     }
 }
 exports.RectangleRenderedEntity = RectangleRenderedEntity;
@@ -30833,7 +30830,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Sprite = void 0;
 const abstract_rendered_entity_1 = __webpack_require__(/*! ./abstract-rendered-entity */ "./src/core/canvas/rendered-entity/abstract-rendered-entity.ts");
 class Sprite extends abstract_rendered_entity_1.AbstractRenderedEntity {
-    constructor(canvas, stateEntity, size, image, layer, angle) {
+    constructor(canvas, stateEntity, size, image, layer, angle, drawBox) {
         super(canvas, size, layer);
         this.canvas = canvas;
         this.stateEntity = stateEntity;
@@ -30841,6 +30838,7 @@ class Sprite extends abstract_rendered_entity_1.AbstractRenderedEntity {
         this.image = image;
         this.layer = layer;
         this.angle = angle;
+        this.drawBox = drawBox;
         this.halfSize = {
             x: size.x / 2,
             y: size.y / 2,
@@ -30848,16 +30846,20 @@ class Sprite extends abstract_rendered_entity_1.AbstractRenderedEntity {
         this.onRender(() => this.draw());
     }
     draw() {
+        if (this.drawBox) {
+            this.canvas.context.strokeStyle = '#22cc22';
+            this.canvas.context.strokeRect(this.canvas.cameraPosition.x -
+                (this.canvas.cameraPosition.x - this.canvas.canvasHalfSize.x), this.canvas.cameraPosition.y -
+                (this.canvas.cameraPosition.y - this.canvas.canvasHalfSize.y), 5, 5);
+        }
         if (!this.angle) {
             this.drawImageWithShift();
             return;
         }
         this.canvas.context.save();
         this.canvas.context.translate(this.stateEntity.position.x -
-            (this.canvas.cameraPosition.x - this.canvas.canvasHalfSize.x) +
-            this.halfSize.x, this.stateEntity.position.y -
-            (this.canvas.cameraPosition.y - this.canvas.canvasHalfSize.y) +
-            this.halfSize.y);
+            (this.canvas.cameraPosition.x - this.canvas.canvasHalfSize.x), this.stateEntity.position.y -
+            (this.canvas.cameraPosition.y - this.canvas.canvasHalfSize.y));
         this.canvas.context.rotate(this.angle.alpha);
         this.drawImage();
         this.canvas.context.restore();
@@ -30870,7 +30872,7 @@ class Sprite extends abstract_rendered_entity_1.AbstractRenderedEntity {
             this.halfSize.y, this.size.x, this.size.y);
     }
     drawImage() {
-        this.canvas.context.drawImage(this.image, 0, 0, this.size.x, this.size.y);
+        this.canvas.context.drawImage(this.image, -this.halfSize.x, -this.halfSize.y, this.size.x, this.size.y);
     }
 }
 exports.Sprite = Sprite;
@@ -31085,6 +31087,7 @@ exports.CommonState = CommonState;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ParticleSource = void 0;
+const calc_1 = __webpack_require__(/*! ../utils/calc */ "./src/core/utils/calc.ts");
 const rectangle_entity_1 = __webpack_require__(/*! ./rectangle-entity */ "./src/core/entity/rectangle-entity.ts");
 const MAX_PARTICLES = 30;
 const SIZE_REDUCING_SPEED = 0.1;
@@ -31127,6 +31130,9 @@ class ParticleSource {
                         stateEntity.velocity.y = this.velocity.y + this.getRandomVelDiff();
                         iteration = 0;
                     }
+                    const dPosition = calc_1.sum(stateEntity.position, calc_1.multiply(stateEntity.velocity, dt / 100));
+                    stateEntity.position.x = dPosition.x;
+                    stateEntity.position.y = dPosition.y;
                 };
             })());
             rect.onRender((dt, renderedEntity) => {
@@ -31277,7 +31283,6 @@ class Bullet extends abstract_entity_1.AbstractEntity {
         this.velocityMagnitude = velocityMagnitude;
         this.currentAngle = 0;
         this.angleContainer = { alpha: 0 };
-        console.log(target);
         this.currentAngle = this.getTargetAngle();
         this.angleContainer.alpha = this.currentAngle;
         this.velocity = {
@@ -31320,17 +31325,34 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Cursor = void 0;
 const rxjs_1 = __webpack_require__(/*! rxjs */ "./node_modules/rxjs/_esm5/index.js");
 const animation_sprite_1 = __webpack_require__(/*! ../canvas/rendered-entity/animation-sprite */ "./src/core/canvas/rendered-entity/animation-sprite.ts");
-class Cursor {
+const abstract_entity_1 = __webpack_require__(/*! ../entity/abstract-entity */ "./src/core/entity/abstract-entity.ts");
+const abstract_state_entity_1 = __webpack_require__(/*! ../state/state-entity/abstract-state-entity */ "./src/core/state/state-entity/abstract-state-entity.ts");
+class Cursor extends abstract_entity_1.AbstractEntity {
     constructor(canvas, size, animationLength, frameDuration, image) {
+        super({ x: 0, y: 0 }, size);
         this.canvas = canvas;
+        this.cursorPosition = { x: 0, y: 0 };
         this.position = { x: 0, y: 0 };
-        rxjs_1.fromEvent(this.canvas.canvas, 'mousemove')
-            .subscribe((event) => {
-            this.position.x = event.clientX;
-            this.position.y = event.clientY;
+        rxjs_1.fromEvent(this.canvas.canvas, 'mousemove').subscribe((event) => {
+            this.cursorPosition.x = event.clientX;
+            this.cursorPosition.y = event.clientY;
         });
-        this.renderedEntity = new animation_sprite_1.AnimationSprite(window.canvas, this.position, size, animationLength, frameDuration, image, 1000, false, false, false);
+        this.renderedEntity = new animation_sprite_1.AnimationSprite(window.canvas, this.cursorPosition, size, animationLength, frameDuration, image, 1000, false, false, false);
+        this.stateEntity = new abstract_state_entity_1.AbstractStateEntity(window.state, this.position, {
+            x: 1,
+            y: 1,
+        });
         canvas.addEntity(this.renderedEntity);
+        window.state.addEntity(this.stateEntity);
+        this.stateEntity.onUpdate(() => this.update());
+    }
+    update() {
+        this.position.x =
+            this.cursorPosition.x +
+                (this.canvas.cameraPosition.x - this.canvas.canvasHalfSize.x);
+        this.position.y =
+            this.cursorPosition.y +
+                (this.canvas.cameraPosition.y - this.canvas.canvasHalfSize.y);
     }
 }
 exports.Cursor = Cursor;
@@ -31351,7 +31373,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Missile = void 0;
 const sprite_1 = __webpack_require__(/*! ../canvas/rendered-entity/sprite */ "./src/core/canvas/rendered-entity/sprite.ts");
 const abstract_entity_1 = __webpack_require__(/*! ../entity/abstract-entity */ "./src/core/entity/abstract-entity.ts");
+const particle_source_1 = __webpack_require__(/*! ../entity/particle-source */ "./src/core/entity/particle-source.ts");
 const abstract_state_entity_1 = __webpack_require__(/*! ../state/state-entity/abstract-state-entity */ "./src/core/state/state-entity/abstract-state-entity.ts");
+const calc_1 = __webpack_require__(/*! ../utils/calc */ "./src/core/utils/calc.ts");
 class Missile extends abstract_entity_1.AbstractEntity {
     constructor(target, position, size, renderSize, velocityMagnitude, image, layer) {
         super(position, size);
@@ -31371,14 +31395,22 @@ class Missile extends abstract_entity_1.AbstractEntity {
         this.currentAngle = this.getTargetAngle();
         this.stateEntity = new abstract_state_entity_1.AbstractStateEntity(window.state, position, size);
         this.renderedEntity = new sprite_1.Sprite(window.canvas, this.stateEntity, renderSize, image, layer, this.angleContainer);
+        this.fireTail = new particle_source_1.ParticleSource(this.stateEntity.position, { x: 7, y: 7 }, { x: 0, y: 0 }, '#ffffff', true, 20, true, 10, 1, '#ffee88');
         window.canvas.addEntity(this.renderedEntity);
         window.state.addEntity(this.stateEntity);
-        this.stateEntity.onUpdate(() => this.update());
+        this.stateEntity.onUpdate((dt, stateEntity) => this.update(dt, stateEntity));
     }
-    update() {
+    update(dt, stateEntity) {
         this.setVelocity();
-        this.position.x += this.velocity.x;
-        this.position.y += this.velocity.y;
+        const dPosition = calc_1.sum(stateEntity.position, calc_1.multiply(this.velocity, dt / 100));
+        this.position.x += dPosition.x;
+        this.position.y += dPosition.y;
+        stateEntity.position.x = dPosition.x;
+        stateEntity.position.y = dPosition.y;
+        /* for render */
+        this.angleContainer.alpha = this.currentAngle;
+        this.fireTail.velocity.x = -this.velocity.x;
+        this.fireTail.velocity.y = -this.velocity.y;
     }
     setVelocity() {
         this.currentAngle = this.getTargetAngle();
@@ -31386,16 +31418,58 @@ class Missile extends abstract_entity_1.AbstractEntity {
             x: this.velocityMagnitude * Math.cos(this.currentAngle),
             y: this.velocityMagnitude * Math.sin(this.currentAngle),
         };
-        this.velocity.x += this.velocity.x < newVelocityVec.x ? this.ANGLE_VELOCITY : -this.ANGLE_VELOCITY;
-        this.velocity.y += this.velocity.y < newVelocityVec.y ? this.ANGLE_VELOCITY : -this.ANGLE_VELOCITY;
-        /* for render */
-        this.angleContainer.alpha = this.currentAngle;
+        this.velocity.x +=
+            this.velocity.x < newVelocityVec.x ? this.ANGLE_VELOCITY : -this.ANGLE_VELOCITY;
+        this.velocity.y +=
+            this.velocity.y < newVelocityVec.y ? this.ANGLE_VELOCITY : -this.ANGLE_VELOCITY;
     }
     getTargetAngle() {
         return Math.atan2(this.target.y - this.position.y, this.target.x - this.position.x);
     }
 }
 exports.Missile = Missile;
+
+
+/***/ }),
+
+/***/ "./src/core/game-objects/weapon.ts":
+/*!*****************************************!*\
+  !*** ./src/core/game-objects/weapon.ts ***!
+  \*****************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Weapon = void 0;
+const sprite_1 = __webpack_require__(/*! ../canvas/rendered-entity/sprite */ "./src/core/canvas/rendered-entity/sprite.ts");
+const abstract_entity_1 = __webpack_require__(/*! ../entity/abstract-entity */ "./src/core/entity/abstract-entity.ts");
+const abstract_state_entity_1 = __webpack_require__(/*! ../state/state-entity/abstract-state-entity */ "./src/core/state/state-entity/abstract-state-entity.ts");
+class Weapon extends abstract_entity_1.AbstractEntity {
+    constructor(target, position, size, image, layer, canvas) {
+        super(position, size);
+        this.target = target;
+        this.position = position;
+        this.size = size;
+        this.currentAngle = 0;
+        this.angleContainer = { alpha: 0 };
+        this.currentAngle = this.getTargetAngle();
+        this.stateEntity = new abstract_state_entity_1.AbstractStateEntity(window.state, position, size);
+        this.renderedEntity = new sprite_1.Sprite(window.canvas, this.stateEntity, size, image, layer, this.angleContainer, false);
+        canvas.addEntity(this.renderedEntity);
+        window.state.addEntity(this.stateEntity);
+        this.stateEntity.onUpdate(() => this.update());
+    }
+    update() {
+        this.currentAngle = this.getTargetAngle();
+        this.angleContainer.alpha = this.currentAngle;
+    }
+    getTargetAngle() {
+        return Math.atan2(this.target.y - this.position.y, this.target.x - this.position.x);
+    }
+}
+exports.Weapon = Weapon;
 
 
 /***/ }),
@@ -31496,12 +31570,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.patchWindowStateController = exports.patchWindowCanvas = void 0;
 function patchWindowCanvas(canvas) {
     window.canvas = canvas;
-    console.log('canvas patched');
 }
 exports.patchWindowCanvas = patchWindowCanvas;
 function patchWindowStateController(state) {
     window.state = state;
-    console.log('state patched');
 }
 exports.patchWindowStateController = patchWindowStateController;
 
@@ -31644,7 +31716,6 @@ exports.StateController = StateController;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AbstractStateEntity = void 0;
 const generate_uuid_1 = __webpack_require__(/*! ../../utils/generate-uuid */ "./src/core/utils/generate-uuid.ts");
-const calc_1 = __webpack_require__(/*! ../../../core/utils/calc */ "./src/core/utils/calc.ts");
 class AbstractStateEntity {
     constructor(stateController, position = { x: 0, y: 0 }, size = { x: 0, y: 0 }) {
         this.stateController = stateController;
@@ -31666,14 +31737,6 @@ class AbstractStateEntity {
     onUpdate(func) {
         this.update = (dt) => {
             func(dt, this);
-            this.prevPosition.x = this.position.x;
-            this.prevPosition.y = this.position.y;
-            const dVelocity = calc_1.sum(this.velocity, calc_1.multiply(this.acceleration, dt / 100));
-            this.velocity.x = dVelocity.x;
-            this.velocity.y = dVelocity.y;
-            const dPosition = calc_1.sum(this.position, calc_1.multiply(this.velocity, dt / 100));
-            this.position.x = dPosition.x;
-            this.position.y = dPosition.y;
         };
     }
 }
@@ -31852,6 +31915,7 @@ __webpack_require__(/*! ./wall_2.png */ "./src/demos/assets/wall_2.png");
 __webpack_require__(/*! ./wall_3.png */ "./src/demos/assets/wall_3.png");
 __webpack_require__(/*! ./missile_1.png */ "./src/demos/assets/missile_1.png");
 __webpack_require__(/*! ./aim_cursor.png */ "./src/demos/assets/aim_cursor.png");
+__webpack_require__(/*! ./weapon_1.png */ "./src/demos/assets/weapon_1.png");
 
 
 /***/ }),
@@ -31960,6 +32024,19 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
+/***/ "./src/demos/assets/weapon_1.png":
+/*!***************************************!*\
+  !*** ./src/demos/assets/weapon_1.png ***!
+  \***************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony default export */ __webpack_exports__["default"] = (__webpack_require__.p + "src/demos/assets/weapon_1.png");
+
+/***/ }),
+
 /***/ "./src/demos/platformer.ts":
 /*!*********************************!*\
   !*** ./src/demos/platformer.ts ***!
@@ -31983,6 +32060,8 @@ const state_controller_1 = __webpack_require__(/*! ../../src/core/state/state-co
 const cursor_1 = __webpack_require__(/*! ../../src/core/game-objects/cursor */ "./src/core/game-objects/cursor.ts");
 const particle_source_1 = __webpack_require__(/*! ../../src/core/entity/particle-source */ "./src/core/entity/particle-source.ts");
 const bullet_1 = __webpack_require__(/*! ../../src/core/game-objects/bullet */ "./src/core/game-objects/bullet.ts");
+const calc_1 = __webpack_require__(/*! ../../src/core/utils/calc */ "./src/core/utils/calc.ts");
+const weapon_2 = __webpack_require__(/*! ../../src/core/game-objects/weapon */ "./src/core/game-objects/weapon.ts");
 const fpsPlaceholder = document.querySelector('#fps_placeholder');
 const MOVE_ACCELERATION = { x: 15, y: 40 };
 const PERSON_LAYER = 2;
@@ -32002,6 +32081,7 @@ function initGame() {
         wall_3: './src/demos/assets/wall_3.png',
         missile: './src/demos/assets/missile_1.png',
         aim_cursor: './src/demos/assets/aim_cursor.png',
+        weapon_1: './src/demos/assets/weapon_1.png',
     }, () => {
         loopController.subscribe((dt) => {
             fpsPlaceholder.textContent = `${Math.round(dt * 100) / 100} dT`;
@@ -32043,7 +32123,7 @@ function initGame() {
                     [' ', ' ', '#', ' ', ' ', ' ', ' ', '#', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
                     [' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
                     [' ', '#', '#', '#', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
-                    [' ', '#', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', '#',],
+                    [' ', '#', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', '#', ' ', ' ', '#', '#',],
                     [' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ',],
                     [' ', '#', '#', '#', '#', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ',],
                     [' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ',],
@@ -32067,9 +32147,9 @@ function initGame() {
                 }, { x: 60, y: 60 });
                 timeMap.generate();
                 person.stateEntity.velocity.y = 1;
-                new missile_1.Missile(person.position, { x: 700, y: 500, }, { x: 10, y: 10, }, { x: 45, y: 15 }, 12, mediaStorage.getSource('missile'), 5);
-                new particle_source_1.ParticleSource({ x: 750, y: 560 }, { x: 10, y: 10 }, { x: 2, y: -5 }, '#ffffff', /* '#ffee88d' */ true, 100, true, 3, 10, '#ffee88');
-                new particle_source_1.ParticleSource({ x: 1000, y: 320 }, { x: 10, y: 10 }, { x: 1, y: -7 }, '#ffffff', /* '#ffee88d' */ true, 100, true, 5, 10, '#ffee88');
+                const missile = new missile_1.Missile(person.position, { x: 700, y: 500, }, { x: 10, y: 10, }, { x: 45, y: 15 }, 35, mediaStorage.getSource('missile'), 5);
+                new weapon_2.Weapon(cursor.position, person.position, { x: 45, y: 15 }, mediaStorage.getSource('weapon_1'), 20, canvas);
+                new particle_source_1.ParticleSource({ x: 1000, y: 320 }, { x: 10, y: 10 }, { x: 1, y: -7 }, '#ffffff', true, 100, true, 5, 10, '#ee77ff');
                 person.onUpdate((dt, stateEntity) => {
                     if (state.controlState[direction_1.Direction.LEFT] && !stateEntity.leftWall) {
                         stateEntity.acceleration.x = -MOVE_ACCELERATION.x;
@@ -32091,10 +32171,7 @@ function initGame() {
                     }
                     if (state.controlState[state_controller_1.Controls.MOUSE_LEFT]) {
                         canvas.addShake();
-                        new bullet_1.Bullet({
-                            x: cursor.position.x + (canvas.cameraPosition.x - canvas.canvasHalfSize.x),
-                            y: cursor.position.y + (canvas.cameraPosition.y - canvas.canvasHalfSize.y),
-                        }, { ...person.stateEntity.position }, { x: 7, y: 5 }, 10, 10, '#ffffff', '#3377ff');
+                        new bullet_1.Bullet({ ...cursor.position }, { ...person.stateEntity.position }, { x: 10, y: 4 }, 10, 10, '#ffffff', '#3377ff');
                     }
                     let untouchedGroundWalls = 0;
                     let untouchedLeftWalls = 0;
@@ -32221,6 +32298,14 @@ function initGame() {
                             stateEntity.velocity.x = MAXIMUM_VELOCITY.x;
                         }
                     }
+                    stateEntity.prevPosition.x = stateEntity.position.x;
+                    stateEntity.prevPosition.y = stateEntity.position.y;
+                    const dVelocity = calc_1.sum(stateEntity.velocity, calc_1.multiply(stateEntity.acceleration, dt / 100));
+                    stateEntity.velocity.x = dVelocity.x;
+                    stateEntity.velocity.y = dVelocity.y;
+                    const dPosition = calc_1.sum(stateEntity.position, calc_1.multiply(stateEntity.velocity, dt / 100));
+                    stateEntity.position.x = dPosition.x;
+                    stateEntity.position.y = dPosition.y;
                 });
             }
         }

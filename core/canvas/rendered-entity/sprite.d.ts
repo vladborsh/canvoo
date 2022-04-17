@@ -9,10 +9,11 @@ export declare class Sprite extends AbstractRenderedEntity {
     private image;
     layer: number;
     private angle?;
+    private drawBox?;
     private halfSize;
     constructor(canvas: Canvas, stateEntity: AbstractStateEntity, size: Vector, image: HTMLImageElement, layer: number, angle?: {
         alpha: number;
-    });
+    }, drawBox?: boolean);
     draw(): void;
     private drawImageWithShift;
     private drawImage;

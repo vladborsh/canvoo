@@ -1,9 +1,10 @@
-import { Canvas } from "../canvas/canvas";
-import { AbstractRenderedEntity } from "../canvas/rendered-entity/abstract-rendered-entity";
-import { Vector } from "../interfaces/vector";
-export declare class Cursor {
+import { Canvas } from '../canvas/canvas';
+import { AbstractEntity } from '../entity/abstract-entity';
+import { Vector } from '../interfaces/vector';
+export declare class Cursor extends AbstractEntity {
     private canvas;
+    cursorPosition: Vector;
     position: Vector;
-    renderedEntity: AbstractRenderedEntity;
     constructor(canvas: Canvas, size: Vector, animationLength: number, frameDuration: number, image: HTMLImageElement);
+    private update;
 }
