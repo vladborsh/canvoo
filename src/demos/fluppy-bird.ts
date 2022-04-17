@@ -5,7 +5,7 @@ import { setup } from '../../src/core/setup/setup';
 import { Direction } from '../core/interfaces/direction';
 import { AbstractStateEntity } from '../../src/core/state/state-entity/abstract-state-entity';
 import { multiply, sum } from '../../src/core/utils/calc';
-import { intersect } from '../core/physics/physics';
+import { intersect } from '../core/physics/intersect';
 
 export function initGame() {
   const { canvas, state } = setup();
