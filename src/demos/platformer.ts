@@ -7,9 +7,10 @@ import { Vector } from '../../src/core/interfaces/vector';
 import { CommonState } from '../../src/core/entity/common-state';
 import { Missile } from '../../src/core/game-objects/missile';
 import './assets';
-import { ControlButton } from '../../src/core/state/state-controller';
+import { Controls } from '../../src/core/state/state-controller';
 import { Cursor } from '../../src/core/game-objects/cursor';
 import { ParticleSource } from '../../src/core/entity/particle-source';
+import { Bullet } from '../../src/core/game-objects/bullet';
 
 const fpsPlaceholder = document.querySelector('#fps_placeholder');
 
@@ -58,7 +59,7 @@ export function initGame() {
             ]
           );
 
-          new Cursor(
+          const cursor = new Cursor(
             canvas,
             { x: 27, y: 27 },
             4,
@@ -77,19 +78,16 @@ export function initGame() {
                 frameDuration: 200,
                 image: mediaStorage.getSource('minion_idle'),
                 isBoomerang: true,
-                withBoundingBox: true,
               },
               'move_right': {
                 animationLength: 3,
                 frameDuration: 200,
                 image: mediaStorage.getSource('minion_move_right'),
-                withBoundingBox: true,
               },
               'move_left': {
                 animationLength: 3,
                 frameDuration: 200,
                 image: mediaStorage.getSource('minion_move_left'),
-                withBoundingBox: true,
               },
             },
             'idle',
@@ -192,8 +190,20 @@ export function initGame() {
             if (!state.controlState[Direction.UP]) {
               stateEntity.acceleration.y = 0;
             }
-            if (state.controlState[ControlButton.SPACE]) {
+            if (state.controlState[Controls.MOUSE_LEFT]) {
               canvas.addShake();
+              new Bullet(
+                {
+                  x: cursor.position.x + (canvas.cameraPosition.x - canvas.canvasHalfSize.x),
+                  y: cursor.position.y + (canvas.cameraPosition.y - canvas.canvasHalfSize.y),
+                },
+                { ...person.stateEntity.position },
+                { x: 7, y: 5 },
+                10,
+                10,
+               '#ffffff',
+               '#3377ff',
+              );
             }
 
             let untouchedGroundWalls = 0;
