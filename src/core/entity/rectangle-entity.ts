@@ -8,7 +8,8 @@ export class RectangleEntity extends AbstractEntity {
     position: Vector,
     size: Vector,
     layer: number,
-    color: string = '#444444'
+    color: string,
+    shadow?: string,
   ) {
     super(position, size);
     this.stateEntity = new AbstractStateEntity((<any>window).state, position, size);
@@ -17,7 +18,8 @@ export class RectangleEntity extends AbstractEntity {
       color,
       size,
       this.stateEntity.position,
-      layer
+      layer,
+      shadow,
     );
 
     (<any>window).canvas.addEntity(this.renderedEntity);

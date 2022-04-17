@@ -151,24 +151,26 @@ export function initGame() {
             { x: 750, y: 560 },
             { x: 10, y: 10 },
             { x: 2, y: -5 },
-            '#ffee88',
+            '#ffffff', /* '#ffee88d' */
             true,
             100,
             true,
             3,
             10,
+            '#ffee88',
           );
 
           new ParticleSource(
             { x: 1000, y: 320 },
             { x: 10, y: 10 },
             { x: 1, y: -7 },
-            '#ffee88d',
+            '#ffffff', /* '#ffee88d' */
             true,
             100,
             true,
             5,
             10,
+            '#ffee88',
           );
 
           person.onUpdate((dt, stateEntity) => {

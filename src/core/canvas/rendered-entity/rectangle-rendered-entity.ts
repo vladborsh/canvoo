@@ -9,12 +9,18 @@ export class RectangleRenderedEntity extends AbstractRenderedEntity {
     public size: Vector,
     public position: Vector,
     public layer: number,
+    private shadow?: string,
   ) {
     super(canvas, size, layer);
     this.onRender(() => this.draw());
   }
 
   public draw() {
+    console.log(this.shadow)
+    if (this.shadow) {
+      this.canvas.context.shadowColor = this.shadow;
+      this.canvas.context.shadowBlur = 6;
+    }
     this.canvas.context.fillStyle = this.color;
     this.canvas.context.fillRect(
       this.position.x - (this.canvas.cameraPosition.x - this.canvas.canvasHalfSize.x),
@@ -22,5 +28,6 @@ export class RectangleRenderedEntity extends AbstractRenderedEntity {
       this.size.x,
       this.size.y
     );
+    this.canvas.context.shadowBlur = 0;
   }
 }

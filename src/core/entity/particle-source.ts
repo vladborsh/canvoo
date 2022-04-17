@@ -18,6 +18,7 @@ export class ParticleSource {
     public isInfinite: boolean,
     public velocityDiffRange: number,
     public layer: number,
+    public shadow?: string,
   ) {
     for (let i = 0; i < MAX_PARTICLES; i++) {
       const rect = new RectangleEntity(
@@ -25,6 +26,7 @@ export class ParticleSource {
         { x: singleParticleSize.x, y: singleParticleSize.y },
         layer,
         color,
+        shadow,
       );
       this.particles.push(rect);
 
