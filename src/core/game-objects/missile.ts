@@ -48,7 +48,7 @@ export class Missile extends AbstractEntity {
       20,
       true,
       10,
-      1,
+      layer,
       '#ffee88',
     );
 
