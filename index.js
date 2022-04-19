@@ -31395,7 +31395,7 @@ class Missile extends abstract_entity_1.AbstractEntity {
         this.currentAngle = this.getTargetAngle();
         this.stateEntity = new abstract_state_entity_1.AbstractStateEntity(window.state, position, size);
         this.renderedEntity = new sprite_1.Sprite(window.canvas, this.stateEntity, renderSize, image, layer, this.angleContainer);
-        this.fireTail = new particle_source_1.ParticleSource(this.stateEntity.position, { x: 7, y: 7 }, { x: 0, y: 0 }, '#ffffff', true, 20, true, 10, 1, '#ffee88');
+        this.fireTail = new particle_source_1.ParticleSource(this.stateEntity.position, { x: 7, y: 7 }, { x: 0, y: 0 }, '#ffffff', true, 20, true, 10, layer, '#ffee88');
         window.canvas.addEntity(this.renderedEntity);
         window.state.addEntity(this.stateEntity);
         this.stateEntity.onUpdate((dt, stateEntity) => this.update(dt, stateEntity));
