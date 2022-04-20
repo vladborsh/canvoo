@@ -8,7 +8,7 @@ export class Sprite extends AbstractRenderedEntity {
 
   constructor(
     public canvas: Canvas,
-    private stateEntity: AbstractStateEntity,
+    private position: Vector,
     public size: Vector,
     private image: HTMLImageElement,
     public layer: number,
@@ -43,9 +43,9 @@ export class Sprite extends AbstractRenderedEntity {
 
     this.canvas.context.save();
     this.canvas.context.translate(
-      this.stateEntity.position.x -
+      this.position.x -
         (this.canvas.cameraPosition.x - this.canvas.canvasHalfSize.x),
-      this.stateEntity.position.y -
+      this.position.y -
         (this.canvas.cameraPosition.y - this.canvas.canvasHalfSize.y)
     );
     this.canvas.context.rotate(this.angle.alpha);
@@ -56,10 +56,10 @@ export class Sprite extends AbstractRenderedEntity {
   private drawImageWithShift(): void {
     this.canvas.context.drawImage(
       this.image,
-      this.stateEntity.position.x -
+      this.position.x -
         (this.canvas.cameraPosition.x - this.canvas.canvasHalfSize.x) -
         this.halfSize.x,
-      this.stateEntity.position.y -
+      this.position.y -
         (this.canvas.cameraPosition.y - this.canvas.canvasHalfSize.y) -
         this.halfSize.y,
       this.size.x,

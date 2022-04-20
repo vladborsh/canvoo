@@ -18,7 +18,7 @@ export class SpriteEntity extends AbstractEntity {
     );
     this.renderedEntity = new Sprite(
       (<any>window).canvas,
-      this.stateEntity,
+      this.stateEntity.position,
       size,
       image,
       layer,

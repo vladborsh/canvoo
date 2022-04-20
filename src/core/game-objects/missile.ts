@@ -22,6 +22,7 @@ export class Missile extends AbstractEntity {
     layer: number
   ) {
     super(position, size);
+
     this.ANGLE_VELOCITY = velocityMagnitude / 50;
     this.velocity = {
       x: this.velocityMagnitude * Math.cos(this.currentAngle),
@@ -32,7 +33,7 @@ export class Missile extends AbstractEntity {
     this.stateEntity = new AbstractStateEntity((<any>window).state, position, size);
     this.renderedEntity = new Sprite(
       (<any>window).canvas,
-      this.stateEntity,
+      this.stateEntity.position,
       renderSize,
       image,
       layer,
@@ -58,6 +59,7 @@ export class Missile extends AbstractEntity {
   }
 
   public update(dt: number, stateEntity: AbstractStateEntity): void {
+    this.currentAngle = this.getTargetAngle();
     this.setVelocity();
 
     const dPosition = sum(stateEntity.position, multiply(this.velocity, dt / 100));
@@ -74,8 +76,6 @@ export class Missile extends AbstractEntity {
   }
 
   private setVelocity(): void {
-    this.currentAngle = this.getTargetAngle();
-
     const newVelocityVec = {
       x: this.velocityMagnitude * Math.cos(this.currentAngle),
       y: this.velocityMagnitude * Math.sin(this.currentAngle),

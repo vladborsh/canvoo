@@ -22,7 +22,7 @@ export class Weapon extends AbstractEntity {
     this.stateEntity = new AbstractStateEntity((<any>window).state, position, size);
     this.renderedEntity = new Sprite(
       (<any>window).canvas,
-      this.stateEntity,
+      this.stateEntity.position,
       size,
       image,
       layer,

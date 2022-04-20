@@ -14,6 +14,7 @@ import { Bullet } from '../../src/core/game-objects/bullet';
 import { multiply, sum } from '../../src/core/utils/calc';
 import { Weapon } from '../../src/core/game-objects/weapon';
 import { BallisticCollision } from '../../src/core/physics/ballistic-collision';
+import { Enemy } from '../../src/core/game-objects/enemy';
 
 const fpsPlaceholder = document.querySelector('#fps_placeholder');
 
@@ -42,6 +43,7 @@ export function initGame() {
       missile: './src/demos/assets/missile_1.png',
       aim_cursor: './src/demos/assets/aim_cursor.png',
       weapon_1: './src/demos/assets/weapon_1.png',
+      enemy: './src/demos/assets/enemy.png',
     },
     () => {
       loopController.subscribe((dt: number) => {
@@ -225,6 +227,15 @@ export function initGame() {
             stateEntity.position.x = dPosition.x;
             stateEntity.position.y = dPosition.y;
           });
+
+          const enemy = new Enemy(
+            person.stateEntity.position,
+            { x: 700, y: 700 },
+            { x: 60, y: 60 },
+            { x: 60, y: 60 },
+            mediaStorage.getSource('enemy'),
+            2,
+          );
         }
       }
     }
