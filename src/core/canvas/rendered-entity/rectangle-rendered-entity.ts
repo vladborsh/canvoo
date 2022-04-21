@@ -2,11 +2,12 @@ import { AbstractRenderedEntity } from './abstract-rendered-entity';
 import { Vector } from '../../interfaces/vector';
 import { Canvas } from '../canvas';
 
-export class RectangleRenderedEntity extends AbstractRenderedEntity {
+export class RectangleRenderedEntity implements AbstractRenderedEntity {
   private halfSize: Vector;
+  public isActive = true;
 
   constructor(
-    canvas: Canvas,
+    public canvas: Canvas,
     public color: string,
     public size: Vector,
     public position: Vector,
@@ -14,15 +15,13 @@ export class RectangleRenderedEntity extends AbstractRenderedEntity {
     private shadow?: string,
     private angle?: { alpha: number },
   ) {
-    super(canvas, size, layer);
     this.halfSize = {
       x: size.x / 2,
       y: size.y / 2,
     };
-    this.onRender(() => this.draw());
   }
 
-  public draw() {
+  public render() {
     this.canvas.context.fillStyle = this.color;
 
     if (this.shadow) {

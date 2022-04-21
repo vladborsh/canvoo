@@ -49,15 +49,7 @@ export class StateController {
   }
 
   public addEntity(entity: AbstractStateEntity) {
-    entity.stateController = this;
     this.entities.push(entity);
-  }
-
-  public destroy(id: string): void {
-    this.entities.splice(
-      findIndex(this.entities, (entity: AbstractStateEntity) => entity.id === id),
-      1
-    );
   }
 
   public update(dt: number): void {
@@ -65,7 +57,7 @@ export class StateController {
       if (!entity.update) {
         return;
       }
-      entity.update(dt);
+      entity.update(dt, entity);
     });
   }
 }

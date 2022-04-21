@@ -1,12 +1,15 @@
+import { AbstractRenderedEntity } from '../canvas/rendered-entity/abstract-rendered-entity';
 import { RectangleRenderedEntity } from '../canvas/rendered-entity/rectangle-rendered-entity';
-import { AbstractEntity } from '../entity/abstract-entity';
 import { Vector } from '../interfaces/vector';
 import { AbstractStateEntity } from '../state/state-entity/abstract-state-entity';
+import { RectangleStateEntity } from '../state/state-entity/rectangle-state.entity';
 
 const BULLET_VELOCITY_DIFF = 0.7;
 
-export class Bullet extends AbstractEntity {
+export class Bullet {
   public velocity: Vector;
+  public stateEntity: AbstractStateEntity;
+  public renderedEntity: AbstractRenderedEntity;
   private currentAngle: number = 0;
   private angleContainer = { alpha: 0 };
 
@@ -19,14 +22,13 @@ export class Bullet extends AbstractEntity {
     color: string,
     shadow?: string
   ) {
-    super(position, size);
     this.currentAngle = this.getTargetAngle();
     this.angleContainer.alpha = this.currentAngle;
     this.velocity = {
       x: this.velocityMagnitude * Math.cos(this.currentAngle) + this.getRandomVelDiff(),
       y: this.velocityMagnitude * Math.sin(this.currentAngle) + this.getRandomVelDiff(),
     };
-    this.stateEntity = new AbstractStateEntity((<any>window).state, position, size);
+    this.stateEntity = new RectangleStateEntity((<any>window).state, position, size);
     this.renderedEntity = new RectangleRenderedEntity(
       (<any>window).canvas,
       color,
@@ -39,7 +41,7 @@ export class Bullet extends AbstractEntity {
 
     (<any>window).canvas.addEntity(this.renderedEntity);
     (<any>window).state.addEntity(this.stateEntity);
-    this.stateEntity.onUpdate(() => this.update());
+    this.stateEntity.update = () => this.update();
   }
 
   public update(): void {

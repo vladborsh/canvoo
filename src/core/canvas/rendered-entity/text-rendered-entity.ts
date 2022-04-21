@@ -2,7 +2,9 @@ import { Vector } from "src/core/interfaces/vector";
 import { Canvas } from "../canvas";
 import { AbstractRenderedEntity } from "./abstract-rendered-entity";
 
-export class TextRenderedEntity extends AbstractRenderedEntity {
+export class TextRenderedEntity implements AbstractRenderedEntity {
+  public isActive = true;
+
   constructor(
     public canvas: Canvas,
     public text: string,
@@ -12,12 +14,9 @@ export class TextRenderedEntity extends AbstractRenderedEntity {
     public layer: number,
     public horizontalAlign: CanvasTextAlign = 'center',
     public verticalAlign: CanvasTextBaseline = 'middle',
-  ) {
-    super(canvas, {x: 0, y: 0}, layer);
-    this.onRender(() => this.draw());
-  }
+  ) {}
 
-  public draw() {
+  public render() {
     this.canvas.context.fillStyle = this.fillStyle;
     this.canvas.context.font = `bold ${this.fontSize}px Arial`;
 

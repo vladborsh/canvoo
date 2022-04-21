@@ -1,19 +1,22 @@
+import { AbstractRenderedEntity } from '../canvas/rendered-entity/abstract-rendered-entity';
 import { LineRenderedEntity } from '../canvas/rendered-entity/line-rendered-entity';
 import { Sprite } from '../canvas/rendered-entity/sprite';
-import { AbstractEntity } from '../entity/abstract-entity';
 import { Vector } from '../interfaces/vector';
 import { AbstractStateEntity } from '../state/state-entity/abstract-state-entity';
+import { RectangleStateEntity } from '../state/state-entity/rectangle-state.entity';
 
 const FIELD_OF_VIEW = Math.PI / 6;
 const ANGLE_CHANGE_VELOCITY = Math.PI / 100;
 const ALLOWED_INACCURACY = Math.PI / 100;
 
-export class Enemy extends AbstractEntity {
+export class Enemy {
   private angleContainer = { alpha: 0 };
   private currentAngle: number = 0;
   private currentAngleToTarget: number = 0;
   public velocity: Vector;
   private currentFieldOfView = { bottomAngle: 0, upAngle: 0 };
+  public stateEntity: RectangleStateEntity;
+  public renderedEntity: AbstractRenderedEntity;
 
   constructor(
     public target: Vector,
@@ -23,17 +26,15 @@ export class Enemy extends AbstractEntity {
     image: HTMLImageElement,
     layer: number
   ) {
-    super(position, size);
-
     this.currentAngleToTarget = this.getTargetAngle();
     this.currentAngle = this.currentAngleToTarget;
-    this.stateEntity = new AbstractStateEntity((<any>window).state, position, size);
+    this.stateEntity = new RectangleStateEntity((<any>window).state, position, size);
     this.renderedEntity = new Sprite(
       (<any>window).canvas,
       this.stateEntity.position,
       renderSize,
       image,
-      layer,
+      layer
     );
     const lineRenderedEntity = new LineRenderedEntity(
       (<any>window).canvas,
@@ -41,15 +42,14 @@ export class Enemy extends AbstractEntity {
       '#55ff99',
       10,
       300,
-      this.angleContainer,
+      this.angleContainer
     );
     (<any>window).canvas.addEntity(this.renderedEntity);
     (<any>window).canvas.addEntity(lineRenderedEntity);
     (<any>window).state.addEntity(this.stateEntity);
-    this.stateEntity.onUpdate((dt, stateEntity) => this.update(dt, stateEntity));
   }
 
-  public update(dt: number, stateEntity: AbstractStateEntity): void {
+  public findTarget(): void {
     this.currentAngleToTarget = this.getTargetAngle();
     this.currentAngle = this.adjustCurrentAngle();
     this.currentFieldOfView.bottomAngle = this.currentAngle - FIELD_OF_VIEW;
@@ -69,8 +69,8 @@ export class Enemy extends AbstractEntity {
 
     const newAngle = this.currentAngle + diff;
 
-    console.log(this.currentAngleToTarget, newAngle)
-
-    return Math.abs(this.currentAngleToTarget - newAngle) > ALLOWED_INACCURACY ? newAngle : this.currentAngleToTarget;
+    return Math.abs(this.currentAngleToTarget - newAngle) > ALLOWED_INACCURACY
+      ? newAngle
+      : this.currentAngleToTarget;
   }
 }

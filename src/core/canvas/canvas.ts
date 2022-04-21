@@ -55,7 +55,9 @@ export class Canvas {
       .forEach((layer: AbstractRenderedEntity[]) => {
         layer.forEach(
           (renderedObject: AbstractRenderedEntity) => {
-            renderedObject.render(dt);
+            if (renderedObject.isActive) {
+              renderedObject.render(dt, renderedObject);
+            }
           }
         )
       });
@@ -67,14 +69,5 @@ export class Canvas {
       this.renderedEntitiesStorage[abstractRenderedEntity.layer] = [];
     }
     this.renderedEntitiesStorage[abstractRenderedEntity.layer].push(abstractRenderedEntity);
-  }
-
-  public destroy(layer: number, id: string) {
-    this.renderedEntitiesStorage[layer].splice(
-      findIndex(this.renderedEntitiesStorage[layer], (entity: AbstractRenderedEntity) =>
-        entity.id === id
-      ),
-      1,
-    );
   }
 }

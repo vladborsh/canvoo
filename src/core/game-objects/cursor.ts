@@ -2,13 +2,15 @@ import { fromEvent } from 'rxjs';
 import { Canvas } from '../canvas/canvas';
 import { AbstractRenderedEntity } from '../canvas/rendered-entity/abstract-rendered-entity';
 import { AnimationSprite } from '../canvas/rendered-entity/animation-sprite';
-import { AbstractEntity } from '../entity/abstract-entity';
 import { Vector } from '../interfaces/vector';
 import { AbstractStateEntity } from '../state/state-entity/abstract-state-entity';
+import { RectangleStateEntity } from '../state/state-entity/rectangle-state.entity';
 
-export class Cursor extends AbstractEntity {
+export class Cursor {
   public cursorPosition: Vector = { x: 0, y: 0 };
   public position: Vector = { x: 0, y: 0 };
+  public stateEntity: AbstractStateEntity;
+  public renderedEntity: AbstractRenderedEntity;
 
   constructor(
     private canvas: Canvas,
@@ -17,7 +19,6 @@ export class Cursor extends AbstractEntity {
     frameDuration: number,
     image: HTMLImageElement
   ) {
-    super({ x: 0, y: 0 }, size);
     fromEvent(this.canvas.canvas, 'mousemove').subscribe((event: MouseEvent) => {
       this.cursorPosition.x = event.clientX;
       this.cursorPosition.y = event.clientY;
@@ -35,7 +36,7 @@ export class Cursor extends AbstractEntity {
       false,
       false
     );
-    this.stateEntity = new AbstractStateEntity((<any>window).state, this.position, {
+    this.stateEntity = new RectangleStateEntity((<any>window).state, this.position, {
       x: 1,
       y: 1,
     });
@@ -43,7 +44,7 @@ export class Cursor extends AbstractEntity {
     canvas.addEntity(this.renderedEntity);
     (<any>window).state.addEntity(this.stateEntity);
 
-    this.stateEntity.onUpdate(() => this.update());
+    this.stateEntity.update = () => this.update();
   }
 
   private update(): void {

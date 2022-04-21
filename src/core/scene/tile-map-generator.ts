@@ -1,6 +1,6 @@
-import { AbstractEntity } from "../entity/abstract-entity";
 import { AnimatedEntity } from "../entity/animated-entity";
 import { SpriteEntity } from "../entity/sprite-entity";
+import { Block } from "../interfaces/block";
 import { Vector } from "../interfaces/vector";
 
 export interface BlockBlueprint {
@@ -13,7 +13,7 @@ export interface BlockBlueprint {
 }
 
 export class TileMapGenerator {
-  public tiles: AbstractEntity[] = [];
+  public tiles: Block[] = [];
 
   constructor(
     public map: string[][],
@@ -25,9 +25,9 @@ export class TileMapGenerator {
     for (let i = 0; i < this.map.length; i++) {
       for (let j = 0; j < this.map[i].length; j++) {
         if (this.map[i][j] && this.blockSamples[this.map[i][j]]) {
-          let entity: AbstractEntity;
+          let tile: Block;
           if (this.blockSamples[this.map[i][j]].isAnimation) {
-            entity = new AnimatedEntity(
+            const animatedEntity = new AnimatedEntity(
               {
                 x: j * this.tileSize.x,
                 y: i * this.tileSize.y,
@@ -38,8 +38,9 @@ export class TileMapGenerator {
               this.blockSamples[this.map[i][j]].image,
               this.blockSamples[this.map[i][j]].layer,
             );
+            tile = animatedEntity.stateEntity;
           } else {
-            entity = new SpriteEntity(
+            const spriteEntity = new SpriteEntity(
               {
                 x: j * this.tileSize.x,
                 y: i * this.tileSize.y,
@@ -48,10 +49,11 @@ export class TileMapGenerator {
               this.blockSamples[this.map[i][j]].image,
               this.blockSamples[this.map[i][j]].layer,
             );
+            tile = spriteEntity.stateEntity;
           }
 
           if (this.blockSamples[this.map[i][j]].isBlock) {
-            this.tiles.push(entity);
+            this.tiles.push(tile);
           }
         }
       }

@@ -1,9 +1,13 @@
+import { AbstractRenderedEntity } from '../canvas/rendered-entity/abstract-rendered-entity';
 import { AnimationSprite } from '../canvas/rendered-entity/animation-sprite';
 import { Vector } from '../interfaces/vector';
 import { AbstractStateEntity } from '../state/state-entity/abstract-state-entity';
-import { AbstractEntity } from './abstract-entity';
+import { RectangleStateEntity } from '../state/state-entity/rectangle-state.entity';
 
-export class AnimatedEntity extends AbstractEntity {
+export class AnimatedEntity {
+  public stateEntity: AbstractStateEntity;
+  public renderedEntity: AbstractRenderedEntity;
+
   constructor(
     position: Vector,
     size: Vector,
@@ -14,9 +18,8 @@ export class AnimatedEntity extends AbstractEntity {
     isBoomerang = false,
     withBoundingBox = false,
   ) {
-    super(position, size);
-    this.stateEntity = new AbstractStateEntity(
-      (<any>window).state,
+    this.stateEntity = new RectangleStateEntity(
+      (<any>window).state.controlState,
       position,
       size
     );
@@ -33,6 +36,5 @@ export class AnimatedEntity extends AbstractEntity {
     );
     (<any>window).canvas.addEntity(this.renderedEntity);
     (<any>window).state.addEntity(this.stateEntity);
-    this.onUpdate(() => {});
   }
 }

@@ -1,6 +1,7 @@
-import { AbstractEntity } from "../entity/abstract-entity";
+import { Block } from "../interfaces/block";
 import { Vector } from "../interfaces/vector";
 import { AbstractStateEntity } from "../state/state-entity/abstract-state-entity";
+import { PhysicsState } from "../state/state-entity/physics-state";
 
 export class BallisticCollision {
   constructor(
@@ -9,7 +10,7 @@ export class BallisticCollision {
     private readonly FRICTION: number,
   ) {}
 
-  public track(stateEntity: AbstractStateEntity, blocks: AbstractEntity[], dt: number) {
+  public track(stateEntity: PhysicsState, blocks: Block[], dt: number) {
     let untouchedGroundWalls = 0;
     let untouchedLeftWalls = 0;
     let untouchedRightWalls = 0;

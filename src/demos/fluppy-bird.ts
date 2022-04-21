@@ -32,50 +32,41 @@ export function initGame() {
 
     let ACTIVE = true;
 
-    cube.onUpdate(
-      (() => {
-        return (dt: number, stateEntity: AbstractStateEntity) => {
-          if (!ACTIVE) {
-            return;
-          }
+    cube.stateEntity.update = (dt, stateEntity) => {
+      if (!ACTIVE) {
+        return;
+      }
 
-          if (state.controlState[Direction.UP]) {
-            stateEntity.velocity = jumpVelocity;
-          }
+      if (state.controlState[Direction.UP]) {
+        stateEntity.physicsState.velocity = jumpVelocity;
+      }
 
-          stateEntity.velocity = sum(
-            stateEntity.velocity,
-            multiply(freeAcceleration, dt / 1000)
-          );
+      stateEntity.physicsState.velocity = sum(
+        stateEntity.physicsState.velocity,
+        multiply(freeAcceleration, dt / 1000)
+      );
 
-          if (
-            intersect(
-              cube.stateEntity.position,
-              cube.stateEntity.size,
-              panel.stateEntity.position,
-              panel.stateEntity.size
-            )
-          ) {
-            ACTIVE = false;
-          }
-        };
-      })()
-    );
+      if (
+        intersect(
+          cube.stateEntity.position,
+          cube.stateEntity.size,
+          panel.stateEntity.position,
+          panel.stateEntity.size
+        )
+      ) {
+        ACTIVE = false;
+      }
+    };
 
-    panel.onUpdate(
-      (() => {
-        panel.stateEntity.velocity = { x: -10, y: 0 };
+    panel.stateEntity.physicsState.velocity = { x: -10, y: 0 };
+    panel.stateEntity.update = (dt: number, stateEntity: AbstractStateEntity) => {
+      if (!ACTIVE) {
+        return;
+      }
 
-        return (dt: number, stateEntity: AbstractStateEntity) => {
-          if (!ACTIVE) {
-            return;
-          }
-
-          if (stateEntity.position.x + stateEntity.size.x < 0) {
-            stateEntity.position.x = canvas.canvas.width;
-          }
-        };
-      })()
-    );
+      if (stateEntity.position.x + stateEntity.size.x < 0) {
+        stateEntity.position.x = canvas.canvas.width;
+      }
+    };
   }
 }

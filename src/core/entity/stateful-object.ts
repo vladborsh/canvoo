@@ -1,9 +1,10 @@
 import { Canvas } from '../canvas/canvas';
+import { AbstractRenderedEntity } from '../canvas/rendered-entity/abstract-rendered-entity';
 import { AnimationSprite } from '../canvas/rendered-entity/animation-sprite';
 import { Vector } from '../interfaces/vector';
 import { StateController } from '../state/state-controller';
 import { AbstractStateEntity } from '../state/state-entity/abstract-state-entity';
-import { AbstractEntity } from './abstract-entity';
+import { RectangleStateEntity } from '../state/state-entity/rectangle-state.entity';
 
 interface AnimatedEntityBlueprint {
   animationLength: number;
@@ -13,11 +14,12 @@ interface AnimatedEntityBlueprint {
   withBoundingBox?: boolean;
 }
 
-export class StatefulObject extends AbstractEntity {
+export class StatefulObject {
   public stateStore: Record<string, AnimationSprite>;
   public activeStateName: string;
   public activeState: AnimationSprite;
-  public update: (dt: number, stateEntity: AbstractStateEntity) => void;
+  public stateEntity: RectangleStateEntity;
+  public renderedEntity: AbstractRenderedEntity;
 
   constructor(
     position: Vector,
@@ -28,8 +30,7 @@ export class StatefulObject extends AbstractEntity {
     defaultState: string,
     layer: number,
   ) {
-    super(position, size);
-    this.stateEntity = new AbstractStateEntity(
+    this.stateEntity = new RectangleStateEntity(
       (<any>window).state,
       position,
       {
@@ -54,20 +55,23 @@ export class StatefulObject extends AbstractEntity {
       }),
       {}
     );
+    Object.values(this.stateStore).forEach(animatedSprite => {
+      animatedSprite.isActive = false;
+      this.canvas.addEntity(animatedSprite);
+    });
     this.activeStateName = defaultState;
     this.activeState = this.stateStore[defaultState];
+    this.activeState.isActive = true;
     this.state.addEntity(this.stateEntity);
-    this.canvas.addEntity(this.activeState);
     this.renderedEntity = this.activeState;
   }
 
   public changeState(newState: string): void {
     if (newState !== this.activeStateName && !!this.stateStore[newState]) {
-      this.canvas.destroy(this.activeState.layer, this.activeState.id);
-
+      this.activeState.isActive = false;
       this.activeStateName = newState;
       this.activeState = this.stateStore[newState];
-      this.canvas.addEntity(this.activeState);
+      this.activeState.isActive = true;
       this.renderedEntity = this.activeState;
     }
   }

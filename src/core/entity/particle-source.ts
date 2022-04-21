@@ -1,5 +1,6 @@
 import { RectangleRenderedEntity } from "../canvas/rendered-entity/rectangle-rendered-entity";
 import { Vector } from "../interfaces/vector";
+import { RectangleStateEntity } from "../state/state-entity/rectangle-state.entity";
 import { multiply, sum } from "../utils/calc";
 import { RectangleEntity } from "./rectangle-entity";
 
@@ -31,7 +32,7 @@ export class ParticleSource {
       );
       this.particles.push(rect);
 
-      rect.stateEntity.velocity = {
+      rect.stateEntity.physicsState.velocity = {
         x: this.velocity.x + this.getRandomVelDiff(),
         y: this.velocity.y + this.getRandomVelDiff(),
       }
@@ -39,10 +40,10 @@ export class ParticleSource {
       const sizeReducing = SIZE_REDUCING_SPEED;
       const concreteParticleLifetime = Math.random() * particleLifetime;
 
-      rect.onUpdate((() => {
+      rect.stateEntity.update = ((() => {
         let iteration = 0;
 
-        return (dt, stateEntity) => {
+        return (dt, stateEntity: RectangleStateEntity) => {
           if (this.reduceSize && stateEntity.size.x > 0 || stateEntity.size.x > 0) {
             stateEntity.size.x -= sizeReducing;
             stateEntity.size.y -= sizeReducing;
@@ -55,23 +56,23 @@ export class ParticleSource {
             stateEntity.size.y = singleParticleSize.y;
             stateEntity.position.x = this.position.x;
             stateEntity.position.y = this.position.y;
-            stateEntity.velocity.x = this.velocity.x + this.getRandomVelDiff();
-            stateEntity.velocity.y = this.velocity.y + this.getRandomVelDiff();
+            stateEntity.physicsState.velocity.x = this.velocity.x + this.getRandomVelDiff();
+            stateEntity.physicsState.velocity.y = this.velocity.y + this.getRandomVelDiff();
             iteration = 0
           }
 
-          const dPosition = sum(stateEntity.position, multiply(stateEntity.velocity, dt / 100));
+          const dPosition = sum(stateEntity.position, multiply(stateEntity.physicsState.velocity, dt / 100));
           stateEntity.position.x = dPosition.x;
           stateEntity.position.y = dPosition.y;
         }
       })())
 
-      rect.onRender((dt, renderedEntity) => {
+      /* rect.renderedEntity.onRender((dt, renderedEntity) => {
         if (renderedEntity.size.x <= 0 || renderedEntity.size.x <= 0) {
           return;
         }
         (<RectangleRenderedEntity>rect.renderedEntity).draw();
-      })
+      }) */
     }
   }
 

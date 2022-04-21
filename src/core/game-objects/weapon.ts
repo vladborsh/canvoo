@@ -1,13 +1,15 @@
 import { Canvas } from "../canvas/canvas";
 import { AbstractRenderedEntity } from "../canvas/rendered-entity/abstract-rendered-entity";
 import { Sprite } from "../canvas/rendered-entity/sprite";
-import { AbstractEntity } from "../entity/abstract-entity";
 import { Vector } from "../interfaces/vector";
 import { AbstractStateEntity } from "../state/state-entity/abstract-state-entity";
+import { RectangleStateEntity } from "../state/state-entity/rectangle-state.entity";
 
-export class Weapon extends AbstractEntity {
-  private currentAngle: number = 0;
+export class Weapon {
   private angleContainer = { alpha: 0 };
+  private currentAngle: number;
+  private stateEntity: AbstractStateEntity;
+  private renderedEntity: AbstractRenderedEntity;
 
   constructor(
     public target: Vector,
@@ -17,9 +19,8 @@ export class Weapon extends AbstractEntity {
     layer: number,
     canvas: Canvas,
   ) {
-    super(position, size);
     this.currentAngle = this.getTargetAngle();
-    this.stateEntity = new AbstractStateEntity((<any>window).state, position, size);
+    this.stateEntity = new RectangleStateEntity((<any>window).state, position, size);
     this.renderedEntity = new Sprite(
       (<any>window).canvas,
       this.stateEntity.position,
@@ -32,7 +33,7 @@ export class Weapon extends AbstractEntity {
 
     canvas.addEntity(this.renderedEntity);
     (<any>window).state.addEntity(this.stateEntity);
-    this.stateEntity.onUpdate(() => this.update());
+    this.stateEntity.update = () => this.update();
   }
 
   public update(): void {

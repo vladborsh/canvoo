@@ -1,10 +1,10 @@
 import { Vector } from 'src/core/interfaces/vector';
-import { AbstractStateEntity } from 'src/core/state/state-entity/abstract-state-entity';
 import { Canvas } from '../canvas';
 import { AbstractRenderedEntity } from './abstract-rendered-entity';
 
-export class Sprite extends AbstractRenderedEntity {
+export class Sprite implements AbstractRenderedEntity {
   private halfSize: Vector;
+  public isActive = true;
 
   constructor(
     public canvas: Canvas,
@@ -15,15 +15,13 @@ export class Sprite extends AbstractRenderedEntity {
     private angle?: { alpha: number },
     private drawBox?: boolean
   ) {
-    super(canvas, size, layer);
     this.halfSize = {
       x: size.x / 2,
       y: size.y / 2,
     };
-    this.onRender(() => this.draw());
   }
 
-  public draw() {
+  public render() {
     if (this.drawBox) {
       this.canvas.context.strokeStyle = '#22cc22';
       this.canvas.context.strokeRect(

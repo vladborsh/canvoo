@@ -1,14 +1,17 @@
+import { AbstractRenderedEntity } from '../canvas/rendered-entity/abstract-rendered-entity';
 import { Sprite } from '../canvas/rendered-entity/sprite';
-import { AbstractEntity } from '../entity/abstract-entity';
 import { ParticleSource } from '../entity/particle-source';
 import { Vector } from '../interfaces/vector';
 import { AbstractStateEntity } from '../state/state-entity/abstract-state-entity';
+import { RectangleStateEntity } from '../state/state-entity/rectangle-state.entity';
 import { multiply, sum } from '../utils/calc';
 
-export class Missile extends AbstractEntity {
+export class Missile {
   public velocity: Vector;
+  public stateEntity: AbstractStateEntity;
+  public renderedEntity: AbstractRenderedEntity;
   private currentAngle: number = 0;
-  private ANGLE_VELOCITY;
+  private angleChangeVelocity;
   private angleContainer = { alpha: 0 };
   private fireTail: ParticleSource;
 
@@ -21,16 +24,14 @@ export class Missile extends AbstractEntity {
     image: HTMLImageElement,
     layer: number
   ) {
-    super(position, size);
-
-    this.ANGLE_VELOCITY = velocityMagnitude / 50;
+    this.angleChangeVelocity = velocityMagnitude / 50;
     this.velocity = {
       x: this.velocityMagnitude * Math.cos(this.currentAngle),
       y: this.velocityMagnitude * Math.sin(this.currentAngle),
     };
     this.setVelocity();
     this.currentAngle = this.getTargetAngle();
-    this.stateEntity = new AbstractStateEntity((<any>window).state, position, size);
+    this.stateEntity = new RectangleStateEntity((<any>window).state, position, size);
     this.renderedEntity = new Sprite(
       (<any>window).canvas,
       this.stateEntity.position,
@@ -50,12 +51,12 @@ export class Missile extends AbstractEntity {
       true,
       10,
       layer,
-      '#ffee88',
+      '#ffee88'
     );
 
     (<any>window).canvas.addEntity(this.renderedEntity);
     (<any>window).state.addEntity(this.stateEntity);
-    this.stateEntity.onUpdate((dt, stateEntity) => this.update(dt, stateEntity));
+    this.stateEntity.update = (dt, stateEntity) => this.update(dt, stateEntity);
   }
 
   public update(dt: number, stateEntity: AbstractStateEntity): void {
@@ -82,10 +83,13 @@ export class Missile extends AbstractEntity {
     };
 
     this.velocity.x +=
-      this.velocity.x < newVelocityVec.x ? this.ANGLE_VELOCITY : -this.ANGLE_VELOCITY;
+      this.velocity.x < newVelocityVec.x
+        ? this.angleChangeVelocity
+        : -this.angleChangeVelocity;
     this.velocity.y +=
-      this.velocity.y < newVelocityVec.y ? this.ANGLE_VELOCITY : -this.ANGLE_VELOCITY;
-
+      this.velocity.y < newVelocityVec.y
+        ? this.angleChangeVelocity
+        : -this.angleChangeVelocity;
   }
 
   private getTargetAngle(): number {

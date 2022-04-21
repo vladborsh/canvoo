@@ -62,7 +62,8 @@ export function initGame() {
               mediaStorage.getSource('wall_1'),
               mediaStorage.getSource('wall_2'),
               mediaStorage.getSource('wall_3'),
-            ]
+            ],
+            0,
           );
 
           const cursor = new Cursor(
@@ -101,8 +102,6 @@ export function initGame() {
           );
 
           canvas.cameraPosition = person.stateEntity.position;
-
-          person.stateEntity.prevPosition.y--;
 
           const tileMap = new TileMapGenerator(
             [
@@ -147,10 +146,11 @@ export function initGame() {
           );
           tileMap.generate();
 
-          person.stateEntity.velocity.y = 1;
+          person.stateEntity.physicsState.prevPosition.y--;
+          person.stateEntity.physicsState.velocity.y = 1;
 
           const missile = new Missile(
-            person.position,
+            person.stateEntity.position,
             { x: 700, y: 500, },
             { x: 10, y: 10, },
             { x: 45, y: 15},
@@ -161,7 +161,7 @@ export function initGame() {
 
           new Weapon(
             cursor.position,
-            person.position,
+            person.stateEntity.position,
             { x:45, y: 15 },
             mediaStorage.getSource('weapon_1'),
             20,
@@ -183,24 +183,27 @@ export function initGame() {
 
           const ballisticCollision = new BallisticCollision(FREE_ACCELERATION, MAXIMUM_VELOCITY, FRICTION);
 
-          person.onUpdate((dt, stateEntity) => {
-            if (state.controlState[Direction.LEFT] && !stateEntity.leftWall) {
-              stateEntity.acceleration.x = -MOVE_ACCELERATION.x;
+          console.log(person.stateEntity.physicsState);
+          // debugger;
+
+          person.stateEntity.update = (dt, stateEntity) => {
+            if (state.controlState[Direction.LEFT] && !stateEntity.physicsState.leftWall) {
+              stateEntity.physicsState.acceleration.x = -MOVE_ACCELERATION.x;
               person.changeState('move_left');
             }
-            if (state.controlState[Direction.RIGHT] && !stateEntity.rightWall) {
-              stateEntity.acceleration.x = MOVE_ACCELERATION.x;
+            if (state.controlState[Direction.RIGHT] && !stateEntity.physicsState.rightWall) {
+              stateEntity.physicsState.acceleration.x = MOVE_ACCELERATION.x;
               person.changeState('move_right');
             }
             if (!state.controlState[Direction.LEFT] && !state.controlState[Direction.RIGHT]) {
-              stateEntity.acceleration.x = 0;
+              stateEntity.physicsState.acceleration.x = 0;
               person.changeState('idle');
             }
-            if (state.controlState[Direction.UP] && stateEntity.onGround) {
-              stateEntity.acceleration.y = -MOVE_ACCELERATION.y;
+            if (state.controlState[Direction.UP] && stateEntity.physicsState.onGround) {
+              stateEntity.physicsState.acceleration.y = -MOVE_ACCELERATION.y;
             }
             if (!state.controlState[Direction.UP]) {
-              stateEntity.acceleration.y = 0;
+              stateEntity.physicsState.acceleration.y = 0;
             }
             if (state.controlState[Controls.MOUSE_LEFT]) {
               canvas.addShake();
@@ -215,27 +218,42 @@ export function initGame() {
               );
             }
 
-            ballisticCollision.track(stateEntity, tileMap.tiles, dt);
+            ballisticCollision.track(stateEntity.physicsState, tileMap.tiles, dt);
 
-            stateEntity.prevPosition.x = stateEntity.position.x;
-            stateEntity.prevPosition.y = stateEntity.position.y;
+            stateEntity.physicsState.prevPosition.x = stateEntity.position.x;
+            stateEntity.physicsState.prevPosition.y = stateEntity.position.y;
 
-            const dVelocity = sum(stateEntity.velocity, multiply(stateEntity.acceleration, dt / 100));
-            stateEntity.velocity.x = dVelocity.x;
-            stateEntity.velocity.y = dVelocity.y;
-            const dPosition = sum(stateEntity.position, multiply(stateEntity.velocity, dt / 100));
+            const dVelocity = sum(stateEntity.physicsState.velocity, multiply(stateEntity.physicsState.acceleration, dt / 100));
+            stateEntity.physicsState.velocity.x = dVelocity.x;
+            stateEntity.physicsState.velocity.y = dVelocity.y;
+            const dPosition = sum(stateEntity.position, multiply(stateEntity.physicsState.velocity, dt / 100));
             stateEntity.position.x = dPosition.x;
             stateEntity.position.y = dPosition.y;
-          });
+          };
 
           const enemy = new Enemy(
             person.stateEntity.position,
-            { x: 700, y: 700 },
+            { x: 900, y: 550 },
             { x: 60, y: 60 },
             { x: 60, y: 60 },
             mediaStorage.getSource('enemy'),
             2,
           );
+
+          enemy.stateEntity.update = (dt, stateEntity) => {
+            ballisticCollision.track(stateEntity.physicsState, tileMap.tiles, dt);
+
+            enemy.findTarget();
+            stateEntity.physicsState.prevPosition.x = stateEntity.position.x;
+            stateEntity.physicsState.prevPosition.y = stateEntity.position.y;
+
+            const dVelocity = sum(stateEntity.physicsState.velocity, multiply(stateEntity.physicsState.acceleration, dt / 100));
+            stateEntity.physicsState.velocity.x = dVelocity.x;
+            stateEntity.physicsState.velocity.y = dVelocity.y;
+            const dPosition = sum(stateEntity.position, multiply(stateEntity.physicsState.velocity, dt / 100));
+            stateEntity.position.x = dPosition.x;
+            stateEntity.position.y = dPosition.y;
+          }
         }
       }
     }
