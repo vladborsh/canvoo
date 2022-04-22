@@ -18,11 +18,11 @@ import { Enemy } from '../../src/core/game-objects/enemy';
 
 const fpsPlaceholder = document.querySelector('#fps_placeholder');
 
-const MOVE_ACCELERATION: Vector = { x: 15, y: 40 };
+const MOVE_ACCELERATION: Vector = { x: 15, y: 70 };
 const PERSON_LAYER = 2;
-const FRICTION = 5;
-const FREE_ACCELERATION =  80;
-const MAXIMUM_VELOCITY = { x: 35, y: 55 };
+const FRICTION = 0.05;
+const GRAVITY =  0.1;
+const MAXIMUM_VELOCITY = { x: 35, y: 35 };
 
 export function initGame() {
   const { canvas, state, loopController } = setup();
@@ -181,7 +181,7 @@ export function initGame() {
             '#ee77ff',
           );
 
-          const ballisticCollision = new BallisticCollision(FREE_ACCELERATION, MAXIMUM_VELOCITY, FRICTION);
+          const ballisticCollision = new BallisticCollision(GRAVITY, MAXIMUM_VELOCITY, FRICTION);
 
           console.log(person.stateEntity.physicsState);
           // debugger;
@@ -200,10 +200,12 @@ export function initGame() {
               person.changeState('idle');
             }
             if (state.controlState[Direction.UP] && stateEntity.physicsState.onGround) {
-              stateEntity.physicsState.acceleration.y = -MOVE_ACCELERATION.y;
+              // stateEntity.physicsState.acceleration.y = -MOVE_ACCELERATION.y;
+              stateEntity.physicsState.velocity.y = -MOVE_ACCELERATION.y;
             }
-            if (!state.controlState[Direction.UP]) {
-              stateEntity.physicsState.acceleration.y = 0;
+            if (!state.controlState[Direction.UP] && !stateEntity.physicsState.onGround && stateEntity.physicsState.velocity.y < 0) {
+              // stateEntity.physicsState.acceleration.y = 0;
+              stateEntity.physicsState.velocity.y += 5;
             }
             if (state.controlState[Controls.MOUSE_LEFT]) {
               canvas.addShake();
@@ -225,7 +227,7 @@ export function initGame() {
 
             const dVelocity = sum(stateEntity.physicsState.velocity, multiply(stateEntity.physicsState.acceleration, dt / 100));
             stateEntity.physicsState.velocity.x = dVelocity.x;
-            stateEntity.physicsState.velocity.y = dVelocity.y;
+            // stateEntity.physicsState.velocity.y = dVelocity.y;
             const dPosition = sum(stateEntity.position, multiply(stateEntity.physicsState.velocity, dt / 100));
             stateEntity.position.x = dPosition.x;
             stateEntity.position.y = dPosition.y;
@@ -233,7 +235,7 @@ export function initGame() {
 
           const enemy = new Enemy(
             person.stateEntity.position,
-            { x: 900, y: 550 },
+            { x: 900, y: 450 },
             { x: 60, y: 60 },
             { x: 60, y: 60 },
             mediaStorage.getSource('enemy'),

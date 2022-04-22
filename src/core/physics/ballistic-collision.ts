@@ -5,7 +5,7 @@ import { PhysicsState } from "../state/state-entity/physics-state";
 
 export class BallisticCollision {
   constructor(
-    private readonly FREE_ACCELERATION: number,
+    private readonly GRAVITY: number,
     private readonly MAXIMUM_VELOCITY: Vector,
     private readonly FRICTION: number,
   ) {}
@@ -143,7 +143,13 @@ export class BallisticCollision {
     }
 
     if (!stateEntity.onGround || Math.abs(stateEntity.velocity.y)) {
-      stateEntity.velocity.y = stateEntity.velocity.y + this.FREE_ACCELERATION * (dt / 500);
+      stateEntity.velocity.y = stateEntity.velocity.y + this.GRAVITY * dt;
+    }
+
+    if (stateEntity.velocity.y > this.MAXIMUM_VELOCITY.y) {
+      if (stateEntity.velocity.y < 0) {
+        stateEntity.velocity.y = this.MAXIMUM_VELOCITY.y;
+      }
     }
 
     if (stateEntity.velocity.y < -this.MAXIMUM_VELOCITY.y && Math.abs(stateEntity.acceleration.y) > 0) {
@@ -152,10 +158,10 @@ export class BallisticCollision {
 
     if (Math.abs(stateEntity.velocity.x)) {
       if (stateEntity.velocity.x < 0) {
-        stateEntity.velocity.x = stateEntity.velocity.x + this.FRICTION * (dt / 100);
+        stateEntity.velocity.x = stateEntity.velocity.x + this.FRICTION * dt;
       }
       if (stateEntity.velocity.x > 0) {
-        stateEntity.velocity.x = stateEntity.velocity.x - this.FRICTION * (dt / 100);
+        stateEntity.velocity.x = stateEntity.velocity.x - this.FRICTION * dt;
       }
     }
 
