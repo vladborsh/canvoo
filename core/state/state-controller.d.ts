@@ -8,6 +8,5 @@ export declare class StateController {
     readonly controlState: Record<string, boolean>;
     constructor();
     addEntity(entity: AbstractStateEntity): void;
-    destroy(id: string): void;
     update(dt: number): void;
 }

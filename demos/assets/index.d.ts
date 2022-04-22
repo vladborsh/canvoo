@@ -9,3 +9,4 @@ import './wall_3.png';
 import './missile_1.png';
 import './aim_cursor.png';
 import './weapon_1.png';
+import './enemy.png';

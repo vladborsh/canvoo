@@ -16,5 +16,4 @@ export declare class Canvas {
     clear(): void;
     render(dt: number): void;
     addEntity(abstractRenderedEntity: AbstractRenderedEntity): void;
-    destroy(layer: number, id: string): void;
 }

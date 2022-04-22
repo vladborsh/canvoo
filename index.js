@@ -30476,7 +30476,6 @@ module.exports = function(module) {
 
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Canvas = void 0;
-const lodash_1 = __webpack_require__(/*! lodash */ "./node_modules/lodash/lodash.js");
 const screen_shake_1 = __webpack_require__(/*! ./screen-shake */ "./src/core/canvas/screen-shake.ts");
 class Canvas {
     constructor() {
@@ -30512,7 +30511,9 @@ class Canvas {
         Object.values(this.renderedEntitiesStorage)
             .forEach((layer) => {
             layer.forEach((renderedObject) => {
-                renderedObject.render(dt);
+                if (renderedObject.isActive) {
+                    renderedObject.render(dt, renderedObject);
+                }
             });
         });
         this.context.restore();
@@ -30522,9 +30523,6 @@ class Canvas {
             this.renderedEntitiesStorage[abstractRenderedEntity.layer] = [];
         }
         this.renderedEntitiesStorage[abstractRenderedEntity.layer].push(abstractRenderedEntity);
-    }
-    destroy(layer, id) {
-        this.renderedEntitiesStorage[layer].splice(lodash_1.findIndex(this.renderedEntitiesStorage[layer], (entity) => entity.id === id), 1);
     }
 }
 exports.Canvas = Canvas;
@@ -30650,39 +30648,6 @@ exports.MediaStorageController = MediaStorageController;
 
 /***/ }),
 
-/***/ "./src/core/canvas/rendered-entity/abstract-rendered-entity.ts":
-/*!*********************************************************************!*\
-  !*** ./src/core/canvas/rendered-entity/abstract-rendered-entity.ts ***!
-  \*********************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.AbstractRenderedEntity = void 0;
-const generate_uuid_1 = __webpack_require__(/*! ../../utils/generate-uuid */ "./src/core/utils/generate-uuid.ts");
-class AbstractRenderedEntity {
-    constructor(canvas, size, layer) {
-        this.canvas = canvas;
-        this.size = size;
-        this.layer = layer;
-        this.id = generate_uuid_1.generateUuid();
-    }
-    destroy() {
-        this.canvas.destroy(this.layer, this.id);
-    }
-    onRender(func) {
-        this.render = (dt) => {
-            func(dt, this);
-        };
-    }
-}
-exports.AbstractRenderedEntity = AbstractRenderedEntity;
-
-
-/***/ }),
-
 /***/ "./src/core/canvas/rendered-entity/animation-sprite.ts":
 /*!*************************************************************!*\
   !*** ./src/core/canvas/rendered-entity/animation-sprite.ts ***!
@@ -30694,11 +30659,9 @@ exports.AbstractRenderedEntity = AbstractRenderedEntity;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AnimationSprite = void 0;
-const abstract_rendered_entity_1 = __webpack_require__(/*! ./abstract-rendered-entity */ "./src/core/canvas/rendered-entity/abstract-rendered-entity.ts");
 const BOUNDING_BOX_STROKE_STYLE = '#55ee44';
-class AnimationSprite extends abstract_rendered_entity_1.AbstractRenderedEntity {
+class AnimationSprite {
     constructor(canvas, position, frameSize, animationLength, frameDuration, image, layer, isBoomerang = false, withBoundingBox = false, withCameraRelation = true) {
-        super(canvas, frameSize, layer);
         this.canvas = canvas;
         this.position = position;
         this.frameSize = frameSize;
@@ -30712,13 +30675,13 @@ class AnimationSprite extends abstract_rendered_entity_1.AbstractRenderedEntity 
         this.currentFrame = 0;
         this.elapsedTimeBetweenFrames = 0;
         this.direction = 1;
+        this.isActive = true;
         this.halfSize = {
             x: frameSize.x / 2,
             y: frameSize.y / 2,
         };
-        this.onRender((dt) => this.draw(dt));
     }
-    draw(dt) {
+    render(dt) {
         this.canvas.context.drawImage(this.image, this.currentFrame * this.frameSize.x, 0, this.frameSize.x, this.frameSize.y, this.position.x -
             (this.withCameraRelation
                 ? this.canvas.cameraPosition.x - this.canvas.canvasHalfSize.x
@@ -30758,6 +30721,44 @@ exports.AnimationSprite = AnimationSprite;
 
 /***/ }),
 
+/***/ "./src/core/canvas/rendered-entity/line-rendered-entity.ts":
+/*!*****************************************************************!*\
+  !*** ./src/core/canvas/rendered-entity/line-rendered-entity.ts ***!
+  \*****************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.LineRenderedEntity = void 0;
+class LineRenderedEntity {
+    constructor(canvas, position, color, layer, length, angle) {
+        this.canvas = canvas;
+        this.position = position;
+        this.color = color;
+        this.layer = layer;
+        this.length = length;
+        this.angle = angle;
+        this.isActive = true;
+    }
+    render() {
+        const target = {
+            x: this.position.x + this.length * Math.cos(this.angle.alpha),
+            y: this.position.y + this.length * Math.sin(this.angle.alpha),
+        };
+        this.canvas.context.strokeStyle = this.color;
+        this.canvas.context.beginPath();
+        this.canvas.context.moveTo(this.position.x - (this.canvas.cameraPosition.x - this.canvas.canvasHalfSize.x), this.position.y - (this.canvas.cameraPosition.y - this.canvas.canvasHalfSize.y));
+        this.canvas.context.lineTo(target.x - (this.canvas.cameraPosition.x - this.canvas.canvasHalfSize.x), target.y - (this.canvas.cameraPosition.y - this.canvas.canvasHalfSize.y));
+        this.canvas.context.stroke();
+    }
+}
+exports.LineRenderedEntity = LineRenderedEntity;
+
+
+/***/ }),
+
 /***/ "./src/core/canvas/rendered-entity/rectangle-rendered-entity.ts":
 /*!**********************************************************************!*\
   !*** ./src/core/canvas/rendered-entity/rectangle-rendered-entity.ts ***!
@@ -30769,23 +30770,22 @@ exports.AnimationSprite = AnimationSprite;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RectangleRenderedEntity = void 0;
-const abstract_rendered_entity_1 = __webpack_require__(/*! ./abstract-rendered-entity */ "./src/core/canvas/rendered-entity/abstract-rendered-entity.ts");
-class RectangleRenderedEntity extends abstract_rendered_entity_1.AbstractRenderedEntity {
+class RectangleRenderedEntity {
     constructor(canvas, color, size, position, layer, shadow, angle) {
-        super(canvas, size, layer);
+        this.canvas = canvas;
         this.color = color;
         this.size = size;
         this.position = position;
         this.layer = layer;
         this.shadow = shadow;
         this.angle = angle;
+        this.isActive = true;
         this.halfSize = {
             x: size.x / 2,
             y: size.y / 2,
         };
-        this.onRender(() => this.draw());
     }
-    draw() {
+    render() {
         this.canvas.context.fillStyle = this.color;
         if (this.shadow) {
             this.canvas.context.shadowColor = this.shadow;
@@ -30828,24 +30828,22 @@ exports.RectangleRenderedEntity = RectangleRenderedEntity;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Sprite = void 0;
-const abstract_rendered_entity_1 = __webpack_require__(/*! ./abstract-rendered-entity */ "./src/core/canvas/rendered-entity/abstract-rendered-entity.ts");
-class Sprite extends abstract_rendered_entity_1.AbstractRenderedEntity {
-    constructor(canvas, stateEntity, size, image, layer, angle, drawBox) {
-        super(canvas, size, layer);
+class Sprite {
+    constructor(canvas, position, size, image, layer, angle, drawBox) {
         this.canvas = canvas;
-        this.stateEntity = stateEntity;
+        this.position = position;
         this.size = size;
         this.image = image;
         this.layer = layer;
         this.angle = angle;
         this.drawBox = drawBox;
+        this.isActive = true;
         this.halfSize = {
             x: size.x / 2,
             y: size.y / 2,
         };
-        this.onRender(() => this.draw());
     }
-    draw() {
+    render() {
         if (this.drawBox) {
             this.canvas.context.strokeStyle = '#22cc22';
             this.canvas.context.strokeRect(this.canvas.cameraPosition.x -
@@ -30857,17 +30855,17 @@ class Sprite extends abstract_rendered_entity_1.AbstractRenderedEntity {
             return;
         }
         this.canvas.context.save();
-        this.canvas.context.translate(this.stateEntity.position.x -
-            (this.canvas.cameraPosition.x - this.canvas.canvasHalfSize.x), this.stateEntity.position.y -
+        this.canvas.context.translate(this.position.x -
+            (this.canvas.cameraPosition.x - this.canvas.canvasHalfSize.x), this.position.y -
             (this.canvas.cameraPosition.y - this.canvas.canvasHalfSize.y));
         this.canvas.context.rotate(this.angle.alpha);
         this.drawImage();
         this.canvas.context.restore();
     }
     drawImageWithShift() {
-        this.canvas.context.drawImage(this.image, this.stateEntity.position.x -
+        this.canvas.context.drawImage(this.image, this.position.x -
             (this.canvas.cameraPosition.x - this.canvas.canvasHalfSize.x) -
-            this.halfSize.x, this.stateEntity.position.y -
+            this.halfSize.x, this.position.y -
             (this.canvas.cameraPosition.y - this.canvas.canvasHalfSize.y) -
             this.halfSize.y, this.size.x, this.size.y);
     }
@@ -30925,36 +30923,6 @@ exports.ScreenShake = ScreenShake;
 
 /***/ }),
 
-/***/ "./src/core/entity/abstract-entity.ts":
-/*!********************************************!*\
-  !*** ./src/core/entity/abstract-entity.ts ***!
-  \********************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.AbstractEntity = void 0;
-const generate_uuid_1 = __webpack_require__(/*! ../utils/generate-uuid */ "./src/core/utils/generate-uuid.ts");
-class AbstractEntity {
-    constructor(position, size) {
-        this.position = position;
-        this.size = size;
-        this.id = generate_uuid_1.generateUuid();
-    }
-    onUpdate(func) {
-        this.stateEntity.onUpdate(func);
-    }
-    onRender(func) {
-        this.renderedEntity.onRender(func);
-    }
-}
-exports.AbstractEntity = AbstractEntity;
-
-
-/***/ }),
-
 /***/ "./src/core/entity/animated-entity.ts":
 /*!********************************************!*\
   !*** ./src/core/entity/animated-entity.ts ***!
@@ -30967,16 +30935,13 @@ exports.AbstractEntity = AbstractEntity;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AnimatedEntity = void 0;
 const animation_sprite_1 = __webpack_require__(/*! ../canvas/rendered-entity/animation-sprite */ "./src/core/canvas/rendered-entity/animation-sprite.ts");
-const abstract_state_entity_1 = __webpack_require__(/*! ../state/state-entity/abstract-state-entity */ "./src/core/state/state-entity/abstract-state-entity.ts");
-const abstract_entity_1 = __webpack_require__(/*! ./abstract-entity */ "./src/core/entity/abstract-entity.ts");
-class AnimatedEntity extends abstract_entity_1.AbstractEntity {
+const rectangle_state_entity_1 = __webpack_require__(/*! ../state/state-entity/rectangle-state.entity */ "./src/core/state/state-entity/rectangle-state.entity.ts");
+class AnimatedEntity {
     constructor(position, size, animationLength, frameDuration, image, layer, isBoomerang = false, withBoundingBox = false) {
-        super(position, size);
-        this.stateEntity = new abstract_state_entity_1.AbstractStateEntity(window.state, position, size);
+        this.stateEntity = new rectangle_state_entity_1.RectangleStateEntity(window.state.controlState, position, size);
         this.renderedEntity = new animation_sprite_1.AnimationSprite(window.canvas, this.stateEntity.position, size, animationLength, frameDuration, image, layer, isBoomerang, withBoundingBox);
         window.canvas.addEntity(this.renderedEntity);
         window.state.addEntity(this.stateEntity);
-        this.onUpdate(() => { });
     }
 }
 exports.AnimatedEntity = AnimatedEntity;
@@ -30995,14 +30960,15 @@ exports.AnimatedEntity = AnimatedEntity;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BackgroundFiller = void 0;
-const abstract_rendered_entity_1 = __webpack_require__(/*! ../canvas/rendered-entity/abstract-rendered-entity */ "./src/core/canvas/rendered-entity/abstract-rendered-entity.ts");
 const random_1 = __webpack_require__(/*! ../utils/random */ "./src/core/utils/random.ts");
-class BackgroundFiller extends abstract_rendered_entity_1.AbstractRenderedEntity {
-    constructor(canvas, fragmentSize, images) {
-        super(canvas, fragmentSize, 0);
+class BackgroundFiller {
+    constructor(canvas, fragmentSize, images, layer) {
+        this.canvas = canvas;
         this.fragmentSize = fragmentSize;
         this.images = images;
+        this.layer = layer;
         this.grid = [];
+        this.isActive = true;
         window.canvas.addEntity(this);
         for (let i = 0; i < this.canvas.canvas.width; i += this.fragmentSize.x) {
             const row = [];
@@ -31013,9 +30979,8 @@ class BackgroundFiller extends abstract_rendered_entity_1.AbstractRenderedEntity
             }
             this.grid.push(row);
         }
-        this.onRender(() => this.draw());
     }
-    draw() {
+    render() {
         for (let i = 0; i < this.grid.length; i++) {
             for (let j = 0; j < this.grid[i].length; j++) {
                 this.canvas.context.drawImage(this.grid[i][j].image, i * this.fragmentSize.x, j * this.fragmentSize.y, this.fragmentSize.x, this.fragmentSize.y);
@@ -31107,13 +31072,13 @@ class ParticleSource {
         for (let i = 0; i < MAX_PARTICLES; i++) {
             const rect = new rectangle_entity_1.RectangleEntity({ x: this.position.x, y: this.position.y }, { x: singleParticleSize.x, y: singleParticleSize.y }, layer, color, shadow);
             this.particles.push(rect);
-            rect.stateEntity.velocity = {
+            rect.stateEntity.physicsState.velocity = {
                 x: this.velocity.x + this.getRandomVelDiff(),
                 y: this.velocity.y + this.getRandomVelDiff(),
             };
             const sizeReducing = SIZE_REDUCING_SPEED;
             const concreteParticleLifetime = Math.random() * particleLifetime;
-            rect.onUpdate((() => {
+            rect.stateEntity.update = ((() => {
                 let iteration = 0;
                 return (dt, stateEntity) => {
                     if (this.reduceSize && stateEntity.size.x > 0 || stateEntity.size.x > 0) {
@@ -31126,21 +31091,21 @@ class ParticleSource {
                         stateEntity.size.y = singleParticleSize.y;
                         stateEntity.position.x = this.position.x;
                         stateEntity.position.y = this.position.y;
-                        stateEntity.velocity.x = this.velocity.x + this.getRandomVelDiff();
-                        stateEntity.velocity.y = this.velocity.y + this.getRandomVelDiff();
+                        stateEntity.physicsState.velocity.x = this.velocity.x + this.getRandomVelDiff();
+                        stateEntity.physicsState.velocity.y = this.velocity.y + this.getRandomVelDiff();
                         iteration = 0;
                     }
-                    const dPosition = calc_1.sum(stateEntity.position, calc_1.multiply(stateEntity.velocity, dt / 100));
+                    const dPosition = calc_1.sum(stateEntity.position, calc_1.multiply(stateEntity.physicsState.velocity, dt / 100));
                     stateEntity.position.x = dPosition.x;
                     stateEntity.position.y = dPosition.y;
                 };
             })());
-            rect.onRender((dt, renderedEntity) => {
-                if (renderedEntity.size.x <= 0 || renderedEntity.size.x <= 0) {
-                    return;
-                }
-                rect.renderedEntity.draw();
-            });
+            /* rect.renderedEntity.onRender((dt, renderedEntity) => {
+              if (renderedEntity.size.x <= 0 || renderedEntity.size.x <= 0) {
+                return;
+              }
+              (<RectangleRenderedEntity>rect.renderedEntity).draw();
+            }) */
         }
     }
     getRandomVelDiff() {
@@ -31164,17 +31129,14 @@ exports.ParticleSource = ParticleSource;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RectangleEntity = void 0;
-const abstract_entity_1 = __webpack_require__(/*! ./abstract-entity */ "./src/core/entity/abstract-entity.ts");
 const rectangle_rendered_entity_1 = __webpack_require__(/*! ../canvas/rendered-entity/rectangle-rendered-entity */ "./src/core/canvas/rendered-entity/rectangle-rendered-entity.ts");
-const abstract_state_entity_1 = __webpack_require__(/*! ../state/state-entity/abstract-state-entity */ "./src/core/state/state-entity/abstract-state-entity.ts");
-class RectangleEntity extends abstract_entity_1.AbstractEntity {
+const rectangle_state_entity_1 = __webpack_require__(/*! ../state/state-entity/rectangle-state.entity */ "./src/core/state/state-entity/rectangle-state.entity.ts");
+class RectangleEntity {
     constructor(position, size, layer, color, shadow) {
-        super(position, size);
-        this.stateEntity = new abstract_state_entity_1.AbstractStateEntity(window.state, position, size);
+        this.stateEntity = new rectangle_state_entity_1.RectangleStateEntity(window.state.controlState, position, size);
         this.renderedEntity = new rectangle_rendered_entity_1.RectangleRenderedEntity(window.canvas, color, size, this.stateEntity.position, layer, shadow);
         window.canvas.addEntity(this.renderedEntity);
         window.state.addEntity(this.stateEntity);
-        this.stateEntity.onUpdate(() => { });
     }
 }
 exports.RectangleEntity = RectangleEntity;
@@ -31194,16 +31156,13 @@ exports.RectangleEntity = RectangleEntity;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SpriteEntity = void 0;
 const sprite_1 = __webpack_require__(/*! ../canvas/rendered-entity/sprite */ "./src/core/canvas/rendered-entity/sprite.ts");
-const abstract_state_entity_1 = __webpack_require__(/*! ../state/state-entity/abstract-state-entity */ "./src/core/state/state-entity/abstract-state-entity.ts");
-const abstract_entity_1 = __webpack_require__(/*! ./abstract-entity */ "./src/core/entity/abstract-entity.ts");
-class SpriteEntity extends abstract_entity_1.AbstractEntity {
+const rectangle_state_entity_1 = __webpack_require__(/*! ../state/state-entity/rectangle-state.entity */ "./src/core/state/state-entity/rectangle-state.entity.ts");
+class SpriteEntity {
     constructor(position, size, image, layer) {
-        super(position, size);
-        this.stateEntity = new abstract_state_entity_1.AbstractStateEntity(window.state, position, size);
-        this.renderedEntity = new sprite_1.Sprite(window.canvas, this.stateEntity, size, image, layer);
+        this.stateEntity = new rectangle_state_entity_1.RectangleStateEntity(window.state, position, size);
+        this.renderedEntity = new sprite_1.Sprite(window.canvas, this.stateEntity.position, size, image, layer);
         window.canvas.addEntity(this.renderedEntity);
         window.state.addEntity(this.stateEntity);
-        this.stateEntity.onUpdate(() => { });
     }
 }
 exports.SpriteEntity = SpriteEntity;
@@ -31223,14 +31182,12 @@ exports.SpriteEntity = SpriteEntity;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.StatefulObject = void 0;
 const animation_sprite_1 = __webpack_require__(/*! ../canvas/rendered-entity/animation-sprite */ "./src/core/canvas/rendered-entity/animation-sprite.ts");
-const abstract_state_entity_1 = __webpack_require__(/*! ../state/state-entity/abstract-state-entity */ "./src/core/state/state-entity/abstract-state-entity.ts");
-const abstract_entity_1 = __webpack_require__(/*! ./abstract-entity */ "./src/core/entity/abstract-entity.ts");
-class StatefulObject extends abstract_entity_1.AbstractEntity {
+const rectangle_state_entity_1 = __webpack_require__(/*! ../state/state-entity/rectangle-state.entity */ "./src/core/state/state-entity/rectangle-state.entity.ts");
+class StatefulObject {
     constructor(position, size, state, canvas, states, defaultState, layer) {
-        super(position, size);
         this.state = state;
         this.canvas = canvas;
-        this.stateEntity = new abstract_state_entity_1.AbstractStateEntity(window.state, position, {
+        this.stateEntity = new rectangle_state_entity_1.RectangleStateEntity(window.state, position, {
             x: size.x - 1,
             y: size.y - 1,
         });
@@ -31238,18 +31195,22 @@ class StatefulObject extends abstract_entity_1.AbstractEntity {
             ...acc,
             [key]: new animation_sprite_1.AnimationSprite(canvas, this.stateEntity.position, size, blueprint.animationLength, blueprint.frameDuration, blueprint.image, layer, blueprint.isBoomerang, blueprint.withBoundingBox)
         }), {});
+        Object.values(this.stateStore).forEach(animatedSprite => {
+            animatedSprite.isActive = false;
+            this.canvas.addEntity(animatedSprite);
+        });
         this.activeStateName = defaultState;
         this.activeState = this.stateStore[defaultState];
+        this.activeState.isActive = true;
         this.state.addEntity(this.stateEntity);
-        this.canvas.addEntity(this.activeState);
         this.renderedEntity = this.activeState;
     }
     changeState(newState) {
         if (newState !== this.activeStateName && !!this.stateStore[newState]) {
-            this.canvas.destroy(this.activeState.layer, this.activeState.id);
+            this.activeState.isActive = false;
             this.activeStateName = newState;
             this.activeState = this.stateStore[newState];
-            this.canvas.addEntity(this.activeState);
+            this.activeState.isActive = true;
             this.renderedEntity = this.activeState;
         }
     }
@@ -31271,12 +31232,10 @@ exports.StatefulObject = StatefulObject;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Bullet = void 0;
 const rectangle_rendered_entity_1 = __webpack_require__(/*! ../canvas/rendered-entity/rectangle-rendered-entity */ "./src/core/canvas/rendered-entity/rectangle-rendered-entity.ts");
-const abstract_entity_1 = __webpack_require__(/*! ../entity/abstract-entity */ "./src/core/entity/abstract-entity.ts");
-const abstract_state_entity_1 = __webpack_require__(/*! ../state/state-entity/abstract-state-entity */ "./src/core/state/state-entity/abstract-state-entity.ts");
+const rectangle_state_entity_1 = __webpack_require__(/*! ../state/state-entity/rectangle-state.entity */ "./src/core/state/state-entity/rectangle-state.entity.ts");
 const BULLET_VELOCITY_DIFF = 0.7;
-class Bullet extends abstract_entity_1.AbstractEntity {
+class Bullet {
     constructor(target, position, size, velocityMagnitude, layer, color, shadow) {
-        super(position, size);
         this.target = target;
         this.position = position;
         this.size = size;
@@ -31289,11 +31248,11 @@ class Bullet extends abstract_entity_1.AbstractEntity {
             x: this.velocityMagnitude * Math.cos(this.currentAngle) + this.getRandomVelDiff(),
             y: this.velocityMagnitude * Math.sin(this.currentAngle) + this.getRandomVelDiff(),
         };
-        this.stateEntity = new abstract_state_entity_1.AbstractStateEntity(window.state, position, size);
+        this.stateEntity = new rectangle_state_entity_1.RectangleStateEntity(window.state, position, size);
         this.renderedEntity = new rectangle_rendered_entity_1.RectangleRenderedEntity(window.canvas, color, size, this.stateEntity.position, layer, shadow, this.angleContainer);
         window.canvas.addEntity(this.renderedEntity);
         window.state.addEntity(this.stateEntity);
-        this.stateEntity.onUpdate(() => this.update());
+        this.stateEntity.update = () => this.update();
     }
     update() {
         this.position.x += this.velocity.x;
@@ -31325,11 +31284,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Cursor = void 0;
 const rxjs_1 = __webpack_require__(/*! rxjs */ "./node_modules/rxjs/_esm5/index.js");
 const animation_sprite_1 = __webpack_require__(/*! ../canvas/rendered-entity/animation-sprite */ "./src/core/canvas/rendered-entity/animation-sprite.ts");
-const abstract_entity_1 = __webpack_require__(/*! ../entity/abstract-entity */ "./src/core/entity/abstract-entity.ts");
-const abstract_state_entity_1 = __webpack_require__(/*! ../state/state-entity/abstract-state-entity */ "./src/core/state/state-entity/abstract-state-entity.ts");
-class Cursor extends abstract_entity_1.AbstractEntity {
+const rectangle_state_entity_1 = __webpack_require__(/*! ../state/state-entity/rectangle-state.entity */ "./src/core/state/state-entity/rectangle-state.entity.ts");
+class Cursor {
     constructor(canvas, size, animationLength, frameDuration, image) {
-        super({ x: 0, y: 0 }, size);
         this.canvas = canvas;
         this.cursorPosition = { x: 0, y: 0 };
         this.position = { x: 0, y: 0 };
@@ -31338,13 +31295,13 @@ class Cursor extends abstract_entity_1.AbstractEntity {
             this.cursorPosition.y = event.clientY;
         });
         this.renderedEntity = new animation_sprite_1.AnimationSprite(window.canvas, this.cursorPosition, size, animationLength, frameDuration, image, 1000, false, false, false);
-        this.stateEntity = new abstract_state_entity_1.AbstractStateEntity(window.state, this.position, {
+        this.stateEntity = new rectangle_state_entity_1.RectangleStateEntity(window.state, this.position, {
             x: 1,
             y: 1,
         });
         canvas.addEntity(this.renderedEntity);
         window.state.addEntity(this.stateEntity);
-        this.stateEntity.onUpdate(() => this.update());
+        this.stateEntity.update = () => this.update();
     }
     update() {
         this.position.x =
@@ -31356,6 +31313,67 @@ class Cursor extends abstract_entity_1.AbstractEntity {
     }
 }
 exports.Cursor = Cursor;
+
+
+/***/ }),
+
+/***/ "./src/core/game-objects/enemy.ts":
+/*!****************************************!*\
+  !*** ./src/core/game-objects/enemy.ts ***!
+  \****************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Enemy = void 0;
+const line_rendered_entity_1 = __webpack_require__(/*! ../canvas/rendered-entity/line-rendered-entity */ "./src/core/canvas/rendered-entity/line-rendered-entity.ts");
+const sprite_1 = __webpack_require__(/*! ../canvas/rendered-entity/sprite */ "./src/core/canvas/rendered-entity/sprite.ts");
+const rectangle_state_entity_1 = __webpack_require__(/*! ../state/state-entity/rectangle-state.entity */ "./src/core/state/state-entity/rectangle-state.entity.ts");
+const FIELD_OF_VIEW = Math.PI / 6;
+const ANGLE_CHANGE_VELOCITY = Math.PI / 100;
+const ALLOWED_INACCURACY = Math.PI / 100;
+class Enemy {
+    constructor(target, position, size, renderSize, image, layer) {
+        this.target = target;
+        this.position = position;
+        this.size = size;
+        this.renderSize = renderSize;
+        this.angleContainer = { alpha: 0 };
+        this.currentAngle = 0;
+        this.currentAngleToTarget = 0;
+        this.currentFieldOfView = { bottomAngle: 0, upAngle: 0 };
+        this.currentAngleToTarget = this.getTargetAngle();
+        this.currentAngle = this.currentAngleToTarget;
+        this.stateEntity = new rectangle_state_entity_1.RectangleStateEntity(window.state, position, size);
+        this.renderedEntity = new sprite_1.Sprite(window.canvas, this.stateEntity.position, renderSize, image, layer);
+        const lineRenderedEntity = new line_rendered_entity_1.LineRenderedEntity(window.canvas, this.position, '#55ff99', 10, 300, this.angleContainer);
+        window.canvas.addEntity(this.renderedEntity);
+        window.canvas.addEntity(lineRenderedEntity);
+        window.state.addEntity(this.stateEntity);
+    }
+    findTarget() {
+        this.currentAngleToTarget = this.getTargetAngle();
+        this.currentAngle = this.adjustCurrentAngle();
+        this.currentFieldOfView.bottomAngle = this.currentAngle - FIELD_OF_VIEW;
+        this.currentFieldOfView.upAngle = this.currentAngle + FIELD_OF_VIEW;
+        this.angleContainer.alpha = this.currentAngle;
+    }
+    getTargetAngle() {
+        return Math.atan2(this.target.y - this.position.y, this.target.x - this.position.x);
+    }
+    adjustCurrentAngle() {
+        const diff = this.currentAngle > this.currentAngleToTarget
+            ? -ANGLE_CHANGE_VELOCITY
+            : ANGLE_CHANGE_VELOCITY;
+        const newAngle = this.currentAngle + diff;
+        return Math.abs(this.currentAngleToTarget - newAngle) > ALLOWED_INACCURACY
+            ? newAngle
+            : this.currentAngleToTarget;
+    }
+}
+exports.Enemy = Enemy;
 
 
 /***/ }),
@@ -31372,13 +31390,11 @@ exports.Cursor = Cursor;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Missile = void 0;
 const sprite_1 = __webpack_require__(/*! ../canvas/rendered-entity/sprite */ "./src/core/canvas/rendered-entity/sprite.ts");
-const abstract_entity_1 = __webpack_require__(/*! ../entity/abstract-entity */ "./src/core/entity/abstract-entity.ts");
 const particle_source_1 = __webpack_require__(/*! ../entity/particle-source */ "./src/core/entity/particle-source.ts");
-const abstract_state_entity_1 = __webpack_require__(/*! ../state/state-entity/abstract-state-entity */ "./src/core/state/state-entity/abstract-state-entity.ts");
+const rectangle_state_entity_1 = __webpack_require__(/*! ../state/state-entity/rectangle-state.entity */ "./src/core/state/state-entity/rectangle-state.entity.ts");
 const calc_1 = __webpack_require__(/*! ../utils/calc */ "./src/core/utils/calc.ts");
-class Missile extends abstract_entity_1.AbstractEntity {
+class Missile {
     constructor(target, position, size, renderSize, velocityMagnitude, image, layer) {
-        super(position, size);
         this.target = target;
         this.position = position;
         this.size = size;
@@ -31386,21 +31402,22 @@ class Missile extends abstract_entity_1.AbstractEntity {
         this.velocityMagnitude = velocityMagnitude;
         this.currentAngle = 0;
         this.angleContainer = { alpha: 0 };
-        this.ANGLE_VELOCITY = velocityMagnitude / 50;
+        this.angleChangeVelocity = velocityMagnitude / 50;
         this.velocity = {
             x: this.velocityMagnitude * Math.cos(this.currentAngle),
             y: this.velocityMagnitude * Math.sin(this.currentAngle),
         };
         this.setVelocity();
         this.currentAngle = this.getTargetAngle();
-        this.stateEntity = new abstract_state_entity_1.AbstractStateEntity(window.state, position, size);
-        this.renderedEntity = new sprite_1.Sprite(window.canvas, this.stateEntity, renderSize, image, layer, this.angleContainer);
+        this.stateEntity = new rectangle_state_entity_1.RectangleStateEntity(window.state, position, size);
+        this.renderedEntity = new sprite_1.Sprite(window.canvas, this.stateEntity.position, renderSize, image, layer, this.angleContainer);
         this.fireTail = new particle_source_1.ParticleSource(this.stateEntity.position, { x: 7, y: 7 }, { x: 0, y: 0 }, '#ffffff', true, 20, true, 10, layer, '#ffee88');
         window.canvas.addEntity(this.renderedEntity);
         window.state.addEntity(this.stateEntity);
-        this.stateEntity.onUpdate((dt, stateEntity) => this.update(dt, stateEntity));
+        this.stateEntity.update = (dt, stateEntity) => this.update(dt, stateEntity);
     }
     update(dt, stateEntity) {
+        this.currentAngle = this.getTargetAngle();
         this.setVelocity();
         const dPosition = calc_1.sum(stateEntity.position, calc_1.multiply(this.velocity, dt / 100));
         this.position.x += dPosition.x;
@@ -31413,15 +31430,18 @@ class Missile extends abstract_entity_1.AbstractEntity {
         this.fireTail.velocity.y = -this.velocity.y;
     }
     setVelocity() {
-        this.currentAngle = this.getTargetAngle();
         const newVelocityVec = {
             x: this.velocityMagnitude * Math.cos(this.currentAngle),
             y: this.velocityMagnitude * Math.sin(this.currentAngle),
         };
         this.velocity.x +=
-            this.velocity.x < newVelocityVec.x ? this.ANGLE_VELOCITY : -this.ANGLE_VELOCITY;
+            this.velocity.x < newVelocityVec.x
+                ? this.angleChangeVelocity
+                : -this.angleChangeVelocity;
         this.velocity.y +=
-            this.velocity.y < newVelocityVec.y ? this.ANGLE_VELOCITY : -this.ANGLE_VELOCITY;
+            this.velocity.y < newVelocityVec.y
+                ? this.angleChangeVelocity
+                : -this.angleChangeVelocity;
     }
     getTargetAngle() {
         return Math.atan2(this.target.y - this.position.y, this.target.x - this.position.x);
@@ -31444,22 +31464,19 @@ exports.Missile = Missile;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Weapon = void 0;
 const sprite_1 = __webpack_require__(/*! ../canvas/rendered-entity/sprite */ "./src/core/canvas/rendered-entity/sprite.ts");
-const abstract_entity_1 = __webpack_require__(/*! ../entity/abstract-entity */ "./src/core/entity/abstract-entity.ts");
-const abstract_state_entity_1 = __webpack_require__(/*! ../state/state-entity/abstract-state-entity */ "./src/core/state/state-entity/abstract-state-entity.ts");
-class Weapon extends abstract_entity_1.AbstractEntity {
+const rectangle_state_entity_1 = __webpack_require__(/*! ../state/state-entity/rectangle-state.entity */ "./src/core/state/state-entity/rectangle-state.entity.ts");
+class Weapon {
     constructor(target, position, size, image, layer, canvas) {
-        super(position, size);
         this.target = target;
         this.position = position;
         this.size = size;
-        this.currentAngle = 0;
         this.angleContainer = { alpha: 0 };
         this.currentAngle = this.getTargetAngle();
-        this.stateEntity = new abstract_state_entity_1.AbstractStateEntity(window.state, position, size);
-        this.renderedEntity = new sprite_1.Sprite(window.canvas, this.stateEntity, size, image, layer, this.angleContainer, false);
+        this.stateEntity = new rectangle_state_entity_1.RectangleStateEntity(window.state, position, size);
+        this.renderedEntity = new sprite_1.Sprite(window.canvas, this.stateEntity.position, size, image, layer, this.angleContainer, false);
         canvas.addEntity(this.renderedEntity);
         window.state.addEntity(this.stateEntity);
-        this.stateEntity.onUpdate(() => this.update());
+        this.stateEntity.update = () => this.update();
     }
     update() {
         this.currentAngle = this.getTargetAngle();
@@ -31681,21 +31698,23 @@ class TileMapGenerator {
         for (let i = 0; i < this.map.length; i++) {
             for (let j = 0; j < this.map[i].length; j++) {
                 if (this.map[i][j] && this.blockSamples[this.map[i][j]]) {
-                    let entity;
+                    let tile;
                     if (this.blockSamples[this.map[i][j]].isAnimation) {
-                        entity = new animated_entity_1.AnimatedEntity({
+                        const animatedEntity = new animated_entity_1.AnimatedEntity({
                             x: j * this.tileSize.x,
                             y: i * this.tileSize.y,
                         }, this.tileSize, this.blockSamples[this.map[i][j]].animationLength, this.blockSamples[this.map[i][j]].frameDuration, this.blockSamples[this.map[i][j]].image, this.blockSamples[this.map[i][j]].layer);
+                        tile = animatedEntity.stateEntity;
                     }
                     else {
-                        entity = new sprite_entity_1.SpriteEntity({
+                        const spriteEntity = new sprite_entity_1.SpriteEntity({
                             x: j * this.tileSize.x,
                             y: i * this.tileSize.y,
                         }, this.tileSize, this.blockSamples[this.map[i][j]].image, this.blockSamples[this.map[i][j]].layer);
+                        tile = spriteEntity.stateEntity;
                     }
                     if (this.blockSamples[this.map[i][j]].isBlock) {
-                        this.tiles.push(entity);
+                        this.tiles.push(tile);
                     }
                 }
             }
@@ -31834,18 +31853,14 @@ class StateController {
             .subscribe((dir) => (this.controlState[dir] = false));
     }
     addEntity(entity) {
-        entity.stateController = this;
         this.entities.push(entity);
-    }
-    destroy(id) {
-        this.entities.splice(lodash_1.findIndex(this.entities, (entity) => entity.id === id), 1);
     }
     update(dt) {
         lodash_1.each(this.entities, (entity) => {
             if (!entity.update) {
                 return;
             }
-            entity.update(dt);
+            entity.update(dt, entity);
         });
     }
 }
@@ -31854,43 +31869,57 @@ exports.StateController = StateController;
 
 /***/ }),
 
-/***/ "./src/core/state/state-entity/abstract-state-entity.ts":
-/*!**************************************************************!*\
-  !*** ./src/core/state/state-entity/abstract-state-entity.ts ***!
-  \**************************************************************/
+/***/ "./src/core/state/state-entity/physics-state.ts":
+/*!******************************************************!*\
+  !*** ./src/core/state/state-entity/physics-state.ts ***!
+  \******************************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AbstractStateEntity = void 0;
-const generate_uuid_1 = __webpack_require__(/*! ../../utils/generate-uuid */ "./src/core/utils/generate-uuid.ts");
-class AbstractStateEntity {
-    constructor(stateController, position = { x: 0, y: 0 }, size = { x: 0, y: 0 }) {
-        this.stateController = stateController;
-        this.position = position;
-        this.size = size;
-        this.id = generate_uuid_1.generateUuid();
+exports.PhysicsState = void 0;
+class PhysicsState {
+    constructor() {
         this.velocity = { x: 0, y: 0 };
         this.acceleration = { x: 0, y: 0 };
         this.onGround = false;
         this.spaceBottom = true;
         this.leftWall = false;
         this.rightWall = false;
-        this.controlState = stateController.controlState;
-        this.prevPosition = this.position;
-    }
-    destroy() {
-        this.stateController.destroy(this.id);
-    }
-    onUpdate(func) {
-        this.update = (dt) => {
-            func(dt, this);
-        };
     }
 }
-exports.AbstractStateEntity = AbstractStateEntity;
+exports.PhysicsState = PhysicsState;
+
+
+/***/ }),
+
+/***/ "./src/core/state/state-entity/rectangle-state.entity.ts":
+/*!***************************************************************!*\
+  !*** ./src/core/state/state-entity/rectangle-state.entity.ts ***!
+  \***************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.RectangleStateEntity = void 0;
+const physics_state_1 = __webpack_require__(/*! ./physics-state */ "./src/core/state/state-entity/physics-state.ts");
+class RectangleStateEntity {
+    constructor(controlState, position, size) {
+        this.controlState = controlState;
+        this.position = position;
+        this.size = size;
+        this.physicsState = new physics_state_1.PhysicsState();
+        this.physicsState.prevPosition = this.position;
+        this.physicsState.position = this.position;
+        this.physicsState.size = this.size;
+    }
+    update(dt, stateEntity) { }
+}
+exports.RectangleStateEntity = RectangleStateEntity;
 
 
 /***/ }),
@@ -31938,26 +31967,6 @@ function isSmall(v) {
     return Math.abs(v.x) < 0.1 && Math.abs(v.y) < 0.1;
 }
 exports.isSmall = isSmall;
-
-
-/***/ }),
-
-/***/ "./src/core/utils/generate-uuid.ts":
-/*!*****************************************!*\
-  !*** ./src/core/utils/generate-uuid.ts ***!
-  \*****************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.generateUuid = void 0;
-function generateUuid() {
-    // tslint:disable-next-line
-    return [Date.now().toString(36), Math.floor(Math.random() * 0xfffff).toString(36)].join('-');
-}
-exports.generateUuid = generateUuid;
 
 
 /***/ }),
@@ -32032,6 +32041,19 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
+/***/ "./src/demos/assets/enemy.png":
+/*!************************************!*\
+  !*** ./src/demos/assets/enemy.png ***!
+  \************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony default export */ __webpack_exports__["default"] = (__webpack_require__.p + "src/demos/assets/enemy.png");
+
+/***/ }),
+
 /***/ "./src/demos/assets/fire.png":
 /*!***********************************!*\
   !*** ./src/demos/assets/fire.png ***!
@@ -32066,6 +32088,7 @@ __webpack_require__(/*! ./wall_3.png */ "./src/demos/assets/wall_3.png");
 __webpack_require__(/*! ./missile_1.png */ "./src/demos/assets/missile_1.png");
 __webpack_require__(/*! ./aim_cursor.png */ "./src/demos/assets/aim_cursor.png");
 __webpack_require__(/*! ./weapon_1.png */ "./src/demos/assets/weapon_1.png");
+__webpack_require__(/*! ./enemy.png */ "./src/demos/assets/enemy.png");
 
 
 /***/ }),
@@ -32213,6 +32236,7 @@ const bullet_1 = __webpack_require__(/*! ../../src/core/game-objects/bullet */ "
 const calc_1 = __webpack_require__(/*! ../../src/core/utils/calc */ "./src/core/utils/calc.ts");
 const weapon_2 = __webpack_require__(/*! ../../src/core/game-objects/weapon */ "./src/core/game-objects/weapon.ts");
 const ballistic_collision_1 = __webpack_require__(/*! ../../src/core/physics/ballistic-collision */ "./src/core/physics/ballistic-collision.ts");
+const enemy_1 = __webpack_require__(/*! ../../src/core/game-objects/enemy */ "./src/core/game-objects/enemy.ts");
 const fpsPlaceholder = document.querySelector('#fps_placeholder');
 const MOVE_ACCELERATION = { x: 15, y: 40 };
 const PERSON_LAYER = 2;
@@ -32233,6 +32257,7 @@ function initGame() {
         missile: './src/demos/assets/missile_1.png',
         aim_cursor: './src/demos/assets/aim_cursor.png',
         weapon_1: './src/demos/assets/weapon_1.png',
+        enemy: './src/demos/assets/enemy.png',
     }, () => {
         loopController.subscribe((dt) => {
             fpsPlaceholder.textContent = `${Math.round(dt * 100) / 100} dT`;
@@ -32245,7 +32270,7 @@ function initGame() {
                     mediaStorage.getSource('wall_1'),
                     mediaStorage.getSource('wall_2'),
                     mediaStorage.getSource('wall_3'),
-                ]);
+                ], 0);
                 const cursor = new cursor_1.Cursor(canvas, { x: 27, y: 27 }, 4, 200, mediaStorage.getSource('aim_cursor'));
                 const person = new stateful_object_1.StatefulObject({ x: 500, y: 300 }, { x: 60, y: 60 }, state, canvas, {
                     'idle': {
@@ -32266,7 +32291,6 @@ function initGame() {
                     },
                 }, 'idle', PERSON_LAYER);
                 canvas.cameraPosition = person.stateEntity.position;
-                person.stateEntity.prevPosition.y--;
                 const tileMap = new tile_map_generator_1.TileMapGenerator([
                     [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
                     [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
@@ -32305,44 +32329,60 @@ function initGame() {
                     },
                 }, { x: 60, y: 60 });
                 tileMap.generate();
-                person.stateEntity.velocity.y = 1;
-                const missile = new missile_1.Missile(person.position, { x: 700, y: 500, }, { x: 10, y: 10, }, { x: 45, y: 15 }, 35, mediaStorage.getSource('missile'), 5);
-                new weapon_2.Weapon(cursor.position, person.position, { x: 45, y: 15 }, mediaStorage.getSource('weapon_1'), 20, canvas);
+                person.stateEntity.physicsState.prevPosition.y--;
+                person.stateEntity.physicsState.velocity.y = 1;
+                const missile = new missile_1.Missile(person.stateEntity.position, { x: 700, y: 500, }, { x: 10, y: 10, }, { x: 45, y: 15 }, 35, mediaStorage.getSource('missile'), 5);
+                new weapon_2.Weapon(cursor.position, person.stateEntity.position, { x: 45, y: 15 }, mediaStorage.getSource('weapon_1'), 20, canvas);
                 new particle_source_1.ParticleSource({ x: 1000, y: 320 }, { x: 10, y: 10 }, { x: 1, y: -7 }, '#ffffff', true, 100, true, 5, 10, '#ee77ff');
                 const ballisticCollision = new ballistic_collision_1.BallisticCollision(FREE_ACCELERATION, MAXIMUM_VELOCITY, FRICTION);
-                person.onUpdate((dt, stateEntity) => {
-                    if (state.controlState[direction_1.Direction.LEFT] && !stateEntity.leftWall) {
-                        stateEntity.acceleration.x = -MOVE_ACCELERATION.x;
+                console.log(person.stateEntity.physicsState);
+                // debugger;
+                person.stateEntity.update = (dt, stateEntity) => {
+                    if (state.controlState[direction_1.Direction.LEFT] && !stateEntity.physicsState.leftWall) {
+                        stateEntity.physicsState.acceleration.x = -MOVE_ACCELERATION.x;
                         person.changeState('move_left');
                     }
-                    if (state.controlState[direction_1.Direction.RIGHT] && !stateEntity.rightWall) {
-                        stateEntity.acceleration.x = MOVE_ACCELERATION.x;
+                    if (state.controlState[direction_1.Direction.RIGHT] && !stateEntity.physicsState.rightWall) {
+                        stateEntity.physicsState.acceleration.x = MOVE_ACCELERATION.x;
                         person.changeState('move_right');
                     }
                     if (!state.controlState[direction_1.Direction.LEFT] && !state.controlState[direction_1.Direction.RIGHT]) {
-                        stateEntity.acceleration.x = 0;
+                        stateEntity.physicsState.acceleration.x = 0;
                         person.changeState('idle');
                     }
-                    if (state.controlState[direction_1.Direction.UP] && stateEntity.onGround) {
-                        stateEntity.acceleration.y = -MOVE_ACCELERATION.y;
+                    if (state.controlState[direction_1.Direction.UP] && stateEntity.physicsState.onGround) {
+                        stateEntity.physicsState.acceleration.y = -MOVE_ACCELERATION.y;
                     }
                     if (!state.controlState[direction_1.Direction.UP]) {
-                        stateEntity.acceleration.y = 0;
+                        stateEntity.physicsState.acceleration.y = 0;
                     }
                     if (state.controlState[state_controller_1.Controls.MOUSE_LEFT]) {
                         canvas.addShake();
                         new bullet_1.Bullet({ ...cursor.position }, { ...person.stateEntity.position }, { x: 10, y: 4 }, 10, 10, '#ffffff', '#3377ff');
                     }
-                    ballisticCollision.track(stateEntity, tileMap.tiles, dt);
-                    stateEntity.prevPosition.x = stateEntity.position.x;
-                    stateEntity.prevPosition.y = stateEntity.position.y;
-                    const dVelocity = calc_1.sum(stateEntity.velocity, calc_1.multiply(stateEntity.acceleration, dt / 100));
-                    stateEntity.velocity.x = dVelocity.x;
-                    stateEntity.velocity.y = dVelocity.y;
-                    const dPosition = calc_1.sum(stateEntity.position, calc_1.multiply(stateEntity.velocity, dt / 100));
+                    ballisticCollision.track(stateEntity.physicsState, tileMap.tiles, dt);
+                    stateEntity.physicsState.prevPosition.x = stateEntity.position.x;
+                    stateEntity.physicsState.prevPosition.y = stateEntity.position.y;
+                    const dVelocity = calc_1.sum(stateEntity.physicsState.velocity, calc_1.multiply(stateEntity.physicsState.acceleration, dt / 100));
+                    stateEntity.physicsState.velocity.x = dVelocity.x;
+                    stateEntity.physicsState.velocity.y = dVelocity.y;
+                    const dPosition = calc_1.sum(stateEntity.position, calc_1.multiply(stateEntity.physicsState.velocity, dt / 100));
                     stateEntity.position.x = dPosition.x;
                     stateEntity.position.y = dPosition.y;
-                });
+                };
+                const enemy = new enemy_1.Enemy(person.stateEntity.position, { x: 900, y: 550 }, { x: 60, y: 60 }, { x: 60, y: 60 }, mediaStorage.getSource('enemy'), 2);
+                enemy.stateEntity.update = (dt, stateEntity) => {
+                    ballisticCollision.track(stateEntity.physicsState, tileMap.tiles, dt);
+                    enemy.findTarget();
+                    stateEntity.physicsState.prevPosition.x = stateEntity.position.x;
+                    stateEntity.physicsState.prevPosition.y = stateEntity.position.y;
+                    const dVelocity = calc_1.sum(stateEntity.physicsState.velocity, calc_1.multiply(stateEntity.physicsState.acceleration, dt / 100));
+                    stateEntity.physicsState.velocity.x = dVelocity.x;
+                    stateEntity.physicsState.velocity.y = dVelocity.y;
+                    const dPosition = calc_1.sum(stateEntity.position, calc_1.multiply(stateEntity.physicsState.velocity, dt / 100));
+                    stateEntity.position.x = dPosition.x;
+                    stateEntity.position.y = dPosition.y;
+                };
             }
         }
     });

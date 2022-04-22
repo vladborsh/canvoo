@@ -1,12 +1,13 @@
 import { Canvas } from "../canvas/canvas";
-import { AbstractEntity } from "../entity/abstract-entity";
 import { Vector } from "../interfaces/vector";
-export declare class Weapon extends AbstractEntity {
+export declare class Weapon {
     target: Vector;
     position: Vector;
     size: Vector;
-    private currentAngle;
     private angleContainer;
+    private currentAngle;
+    private stateEntity;
+    private renderedEntity;
     constructor(target: Vector, position: Vector, size: Vector, image: HTMLImageElement, layer: number, canvas: Canvas);
     update(): void;
     private getTargetAngle;

@@ -1,9 +1,9 @@
 import { Canvas } from '../canvas/canvas';
+import { AbstractRenderedEntity } from '../canvas/rendered-entity/abstract-rendered-entity';
 import { AnimationSprite } from '../canvas/rendered-entity/animation-sprite';
 import { Vector } from '../interfaces/vector';
 import { StateController } from '../state/state-controller';
-import { AbstractStateEntity } from '../state/state-entity/abstract-state-entity';
-import { AbstractEntity } from './abstract-entity';
+import { RectangleStateEntity } from '../state/state-entity/rectangle-state.entity';
 interface AnimatedEntityBlueprint {
     animationLength: number;
     frameDuration: number;
@@ -11,13 +11,14 @@ interface AnimatedEntityBlueprint {
     isBoomerang?: boolean;
     withBoundingBox?: boolean;
 }
-export declare class StatefulObject extends AbstractEntity {
+export declare class StatefulObject {
     private state;
     private canvas;
     stateStore: Record<string, AnimationSprite>;
     activeStateName: string;
     activeState: AnimationSprite;
-    update: (dt: number, stateEntity: AbstractStateEntity) => void;
+    stateEntity: RectangleStateEntity;
+    renderedEntity: AbstractRenderedEntity;
     constructor(position: Vector, size: Vector, state: StateController, canvas: Canvas, states: Record<string, AnimatedEntityBlueprint>, defaultState: string, layer: number);
     changeState(newState: string): void;
 }
