@@ -31536,8 +31536,8 @@ exports.DIRECTIONS = {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BallisticCollision = void 0;
 class BallisticCollision {
-    constructor(FREE_ACCELERATION, MAXIMUM_VELOCITY, FRICTION) {
-        this.FREE_ACCELERATION = FREE_ACCELERATION;
+    constructor(GRAVITY, MAXIMUM_VELOCITY, FRICTION) {
+        this.GRAVITY = GRAVITY;
         this.MAXIMUM_VELOCITY = MAXIMUM_VELOCITY;
         this.FRICTION = FRICTION;
     }
@@ -31643,17 +31643,22 @@ class BallisticCollision {
             }
         }
         if (!stateEntity.onGround || Math.abs(stateEntity.velocity.y)) {
-            stateEntity.velocity.y = stateEntity.velocity.y + this.FREE_ACCELERATION * (dt / 500);
+            stateEntity.velocity.y = stateEntity.velocity.y + this.GRAVITY * dt;
+        }
+        if (stateEntity.velocity.y > this.MAXIMUM_VELOCITY.y) {
+            if (stateEntity.velocity.y < 0) {
+                stateEntity.velocity.y = this.MAXIMUM_VELOCITY.y;
+            }
         }
         if (stateEntity.velocity.y < -this.MAXIMUM_VELOCITY.y && Math.abs(stateEntity.acceleration.y) > 0) {
             stateEntity.acceleration.y = 0;
         }
         if (Math.abs(stateEntity.velocity.x)) {
             if (stateEntity.velocity.x < 0) {
-                stateEntity.velocity.x = stateEntity.velocity.x + this.FRICTION * (dt / 100);
+                stateEntity.velocity.x = stateEntity.velocity.x + this.FRICTION * dt;
             }
             if (stateEntity.velocity.x > 0) {
-                stateEntity.velocity.x = stateEntity.velocity.x - this.FRICTION * (dt / 100);
+                stateEntity.velocity.x = stateEntity.velocity.x - this.FRICTION * dt;
             }
         }
         if (Math.abs(stateEntity.velocity.x) < 1) {
@@ -32238,11 +32243,11 @@ const weapon_2 = __webpack_require__(/*! ../../src/core/game-objects/weapon */ "
 const ballistic_collision_1 = __webpack_require__(/*! ../../src/core/physics/ballistic-collision */ "./src/core/physics/ballistic-collision.ts");
 const enemy_1 = __webpack_require__(/*! ../../src/core/game-objects/enemy */ "./src/core/game-objects/enemy.ts");
 const fpsPlaceholder = document.querySelector('#fps_placeholder');
-const MOVE_ACCELERATION = { x: 15, y: 40 };
+const MOVE_ACCELERATION = { x: 15, y: 70 };
 const PERSON_LAYER = 2;
-const FRICTION = 5;
-const FREE_ACCELERATION = 80;
-const MAXIMUM_VELOCITY = { x: 35, y: 55 };
+const FRICTION = 0.05;
+const GRAVITY = 0.1;
+const MAXIMUM_VELOCITY = { x: 35, y: 35 };
 function initGame() {
     const { canvas, state, loopController } = setup_1.setup();
     new common_state_1.CommonState(canvas, state, loopController, {
@@ -32334,7 +32339,7 @@ function initGame() {
                 const missile = new missile_1.Missile(person.stateEntity.position, { x: 700, y: 500, }, { x: 10, y: 10, }, { x: 45, y: 15 }, 35, mediaStorage.getSource('missile'), 5);
                 new weapon_2.Weapon(cursor.position, person.stateEntity.position, { x: 45, y: 15 }, mediaStorage.getSource('weapon_1'), 20, canvas);
                 new particle_source_1.ParticleSource({ x: 1000, y: 320 }, { x: 10, y: 10 }, { x: 1, y: -7 }, '#ffffff', true, 100, true, 5, 10, '#ee77ff');
-                const ballisticCollision = new ballistic_collision_1.BallisticCollision(FREE_ACCELERATION, MAXIMUM_VELOCITY, FRICTION);
+                const ballisticCollision = new ballistic_collision_1.BallisticCollision(GRAVITY, MAXIMUM_VELOCITY, FRICTION);
                 console.log(person.stateEntity.physicsState);
                 // debugger;
                 person.stateEntity.update = (dt, stateEntity) => {
@@ -32351,10 +32356,12 @@ function initGame() {
                         person.changeState('idle');
                     }
                     if (state.controlState[direction_1.Direction.UP] && stateEntity.physicsState.onGround) {
-                        stateEntity.physicsState.acceleration.y = -MOVE_ACCELERATION.y;
+                        // stateEntity.physicsState.acceleration.y = -MOVE_ACCELERATION.y;
+                        stateEntity.physicsState.velocity.y = -MOVE_ACCELERATION.y;
                     }
-                    if (!state.controlState[direction_1.Direction.UP]) {
-                        stateEntity.physicsState.acceleration.y = 0;
+                    if (!state.controlState[direction_1.Direction.UP] && !stateEntity.physicsState.onGround && stateEntity.physicsState.velocity.y < 0) {
+                        // stateEntity.physicsState.acceleration.y = 0;
+                        stateEntity.physicsState.velocity.y += 5;
                     }
                     if (state.controlState[state_controller_1.Controls.MOUSE_LEFT]) {
                         canvas.addShake();
@@ -32365,12 +32372,12 @@ function initGame() {
                     stateEntity.physicsState.prevPosition.y = stateEntity.position.y;
                     const dVelocity = calc_1.sum(stateEntity.physicsState.velocity, calc_1.multiply(stateEntity.physicsState.acceleration, dt / 100));
                     stateEntity.physicsState.velocity.x = dVelocity.x;
-                    stateEntity.physicsState.velocity.y = dVelocity.y;
+                    // stateEntity.physicsState.velocity.y = dVelocity.y;
                     const dPosition = calc_1.sum(stateEntity.position, calc_1.multiply(stateEntity.physicsState.velocity, dt / 100));
                     stateEntity.position.x = dPosition.x;
                     stateEntity.position.y = dPosition.y;
                 };
-                const enemy = new enemy_1.Enemy(person.stateEntity.position, { x: 900, y: 550 }, { x: 60, y: 60 }, { x: 60, y: 60 }, mediaStorage.getSource('enemy'), 2);
+                const enemy = new enemy_1.Enemy(person.stateEntity.position, { x: 900, y: 450 }, { x: 60, y: 60 }, { x: 60, y: 60 }, mediaStorage.getSource('enemy'), 2);
                 enemy.stateEntity.update = (dt, stateEntity) => {
                     ballisticCollision.track(stateEntity.physicsState, tileMap.tiles, dt);
                     enemy.findTarget();
