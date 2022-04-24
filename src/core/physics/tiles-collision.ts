@@ -1,16 +1,16 @@
-import { Block } from "../interfaces/block";
+import { Collider } from "../interfaces/collider";
 import { Vector } from "../interfaces/vector";
 import { AbstractStateEntity } from "../state/state-entity/abstract-state-entity";
 import { PhysicsState } from "../state/state-entity/physics-state";
 
-export class BallisticCollision {
+export class TilesCollision {
   constructor(
     private readonly GRAVITY: number,
     private readonly MAXIMUM_VELOCITY: Vector,
     private readonly FRICTION: number,
   ) {}
 
-  public track(stateEntity: PhysicsState, blocks: Block[], dt: number) {
+  public track(stateEntity: PhysicsState, blocks: Collider[], dt: number) {
     let untouchedGroundWalls = 0;
     let untouchedLeftWalls = 0;
     let untouchedRightWalls = 0;
@@ -30,7 +30,7 @@ export class BallisticCollision {
           Math.max(stateEntity.position.x, platform.position.x);
         if (Math.abs(dx) > Math.abs(dy)) {
           stateEntity.velocity.y = 0;
-          stateEntity.position.y = platform.position.y - stateEntity.size.y - 1;
+          stateEntity.position.y = platform.position.y - stateEntity.size.y;
           stateEntity.onGround = true;
           stateEntity.spaceBottom = false;
         }

@@ -1,13 +1,15 @@
 import { AbstractRenderedEntity } from '../canvas/rendered-entity/abstract-rendered-entity';
 import { LineRenderedEntity } from '../canvas/rendered-entity/line-rendered-entity';
 import { Sprite } from '../canvas/rendered-entity/sprite';
+import { Collider } from '../interfaces/collider';
 import { Vector } from '../interfaces/vector';
-import { AbstractStateEntity } from '../state/state-entity/abstract-state-entity';
 import { RectangleStateEntity } from '../state/state-entity/rectangle-state.entity';
 
 const FIELD_OF_VIEW = Math.PI / 6;
-const ANGLE_CHANGE_VELOCITY = Math.PI / 100;
+const ANGLE_CHANGE_VELOCITY = Math.PI / 200;
 const ALLOWED_INACCURACY = Math.PI / 100;
+
+const MOVE_ACCELERATION = 5;
 
 export class Enemy {
   private angleContainer = { alpha: 0 };
@@ -47,6 +49,9 @@ export class Enemy {
     (<any>window).canvas.addEntity(this.renderedEntity);
     (<any>window).canvas.addEntity(lineRenderedEntity);
     (<any>window).state.addEntity(this.stateEntity);
+
+    // DRAFT: SET MOVING
+    this.stateEntity.physicsState.acceleration.x = MOVE_ACCELERATION;
   }
 
   public findTarget(): void {
@@ -57,20 +62,92 @@ export class Enemy {
     this.angleContainer.alpha = this.currentAngle;
   }
 
+  public horizontalPatrolling(tiles: Collider[]): void {
+    if(this.stateEntity.physicsState.onGround) {
+      if (this.stateEntity.physicsState.rightWall) {
+        this.stateEntity.physicsState.acceleration.x = -MOVE_ACCELERATION;
+        this.stateEntity.physicsState.velocity.x = this.stateEntity.physicsState.acceleration.x;
+        this.stateEntity.physicsState.rightWall = false;
+        return;
+      }
+
+      if (this.stateEntity.physicsState.leftWall) {
+        this.stateEntity.physicsState.acceleration.x = MOVE_ACCELERATION;
+        this.stateEntity.physicsState.velocity.x = this.stateEntity.physicsState.acceleration.x;
+        this.stateEntity.physicsState.leftWall = false;
+        return;
+      }
+
+      let isBottomRightTileExists = false;
+      let isBottomLeftTileExists = false;
+
+      for (let tile of tiles) {
+        if ((this.stateEntity.position.x > tile.position.x)
+          && (this.stateEntity.position.x < tile.position.x + tile.size.x)
+          && (this.stateEntity.position.y + this.stateEntity.size.y + 2 >= tile.position.y)
+          && (this.stateEntity.position.y + this.stateEntity.size.y < tile.position.y + tile.size.y)
+        ) {
+          isBottomLeftTileExists = true;
+        }
+
+        if ((this.stateEntity.position.x + this.stateEntity.size.x < tile.position.x + tile.size.x)
+          && (this.stateEntity.position.x + this.stateEntity.size.x > tile.position.x)
+          && (this.stateEntity.position.y + this.stateEntity.size.y + 2 >= tile.position.y)
+          && (this.stateEntity.position.y + this.stateEntity.size.y < tile.position.y + tile.size.y)
+        ) {
+          isBottomRightTileExists = true;
+        }
+      }
+
+      if (!isBottomRightTileExists) {
+        this.stateEntity.physicsState.acceleration.x = -MOVE_ACCELERATION;
+        this.stateEntity.physicsState.velocity.x = this.stateEntity.physicsState.acceleration.x;
+      }
+
+      if (!isBottomLeftTileExists) {
+        this.stateEntity.physicsState.acceleration.x = MOVE_ACCELERATION;
+        this.stateEntity.physicsState.velocity.x = this.stateEntity.physicsState.acceleration.x;
+      }
+    }
+
+  }
+
   private getTargetAngle(): number {
     return Math.atan2(this.target.y - this.position.y, this.target.x - this.position.x);
   }
 
   private adjustCurrentAngle(): number {
-    const diff =
+    let angleDelta =
       this.currentAngle > this.currentAngleToTarget
         ? -ANGLE_CHANGE_VELOCITY
         : ANGLE_CHANGE_VELOCITY;
 
-    const newAngle = this.currentAngle + diff;
+    if (this.isFrom2to3Quadrant() || this.isFrom3to2Quadrant()) {
+      angleDelta = -angleDelta;
+    }
+
+    let newAngle = this.currentAngle + angleDelta;
+
+    if (newAngle < -Math.PI) {
+      newAngle = Math.PI-ANGLE_CHANGE_VELOCITY;
+    }
+
+    if (newAngle > Math.PI) {
+      newAngle = -Math.PI+ANGLE_CHANGE_VELOCITY;
+    }
 
     return Math.abs(this.currentAngleToTarget - newAngle) > ALLOWED_INACCURACY
       ? newAngle
       : this.currentAngleToTarget;
+  }
+
+  private isFrom2to3Quadrant(): boolean {
+    return (this.currentAngle < -Math.PI/2 && this.currentAngle > -Math.PI
+      && this.currentAngleToTarget > Math.PI/2 && this.currentAngleToTarget < Math.PI)
+  }
+
+  private isFrom3to2Quadrant(): boolean {
+    return (this.currentAngleToTarget < -Math.PI/2 && this.currentAngleToTarget > -Math.PI
+      && this.currentAngle > Math.PI/2 && this.currentAngle < Math.PI)
   }
 }

@@ -13,7 +13,7 @@ import { ParticleSource } from '../../src/core/entity/particle-source';
 import { Bullet } from '../../src/core/game-objects/bullet';
 import { multiply, sum } from '../../src/core/utils/calc';
 import { Weapon } from '../../src/core/game-objects/weapon';
-import { BallisticCollision } from '../../src/core/physics/ballistic-collision';
+import { TilesCollision } from '../core/physics/tiles-collision';
 import { Enemy } from '../../src/core/game-objects/enemy';
 
 const fpsPlaceholder = document.querySelector('#fps_placeholder');
@@ -113,9 +113,9 @@ export function initGame() {
               [' ', '#', '#', '#', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
               [' ', '#', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', '#', ' ', ' ', '#', '#',],
               [' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ',],
-              [' ', '#', '#', '#', '#', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ',],
-              [' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ',],
-              [' ', ' ', ' ', ' ', ' ', '#', '#', '#', '#', '#', ' ', ' ', ' ', ' ', ' ', '#', '#', ' ', ' ',],
+              [' ', '#', '#', '#', '#', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
+              [' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', '#', ' ',],
+              [' ', ' ', ' ', ' ', ' ', '#', '#', '#', '#', '#', ' ', ' ', ' ', '#', '#', '#', '#', '#', ' ',],
               [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ',],
               [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
               [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
@@ -181,10 +181,8 @@ export function initGame() {
             '#ee77ff',
           );
 
-          const ballisticCollision = new BallisticCollision(GRAVITY, MAXIMUM_VELOCITY, FRICTION);
+          const tilesCollision = new TilesCollision(GRAVITY, MAXIMUM_VELOCITY, FRICTION);
 
-          console.log(person.stateEntity.physicsState);
-          // debugger;
 
           person.stateEntity.update = (dt, stateEntity) => {
             if (state.controlState[Direction.LEFT] && !stateEntity.physicsState.leftWall) {
@@ -220,7 +218,7 @@ export function initGame() {
               );
             }
 
-            ballisticCollision.track(stateEntity.physicsState, tileMap.tiles, dt);
+            tilesCollision.track(stateEntity.physicsState, tileMap.tiles, dt);
 
             stateEntity.physicsState.prevPosition.x = stateEntity.position.x;
             stateEntity.physicsState.prevPosition.y = stateEntity.position.y;
@@ -243,9 +241,10 @@ export function initGame() {
           );
 
           enemy.stateEntity.update = (dt, stateEntity) => {
-            ballisticCollision.track(stateEntity.physicsState, tileMap.tiles, dt);
+            tilesCollision.track(stateEntity.physicsState, tileMap.tiles, dt);
 
             enemy.findTarget();
+            enemy.horizontalPatrolling(tileMap.tiles);
             stateEntity.physicsState.prevPosition.x = stateEntity.position.x;
             stateEntity.physicsState.prevPosition.y = stateEntity.position.y;
 

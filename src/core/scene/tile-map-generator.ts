@@ -1,6 +1,6 @@
 import { AnimatedEntity } from "../entity/animated-entity";
 import { SpriteEntity } from "../entity/sprite-entity";
-import { Block } from "../interfaces/block";
+import { Collider } from "../interfaces/collider";
 import { Vector } from "../interfaces/vector";
 
 export interface BlockBlueprint {
@@ -13,7 +13,7 @@ export interface BlockBlueprint {
 }
 
 export class TileMapGenerator {
-  public tiles: Block[] = [];
+  public tiles: Collider[] = [];
 
   constructor(
     public map: string[][],
@@ -25,7 +25,7 @@ export class TileMapGenerator {
     for (let i = 0; i < this.map.length; i++) {
       for (let j = 0; j < this.map[i].length; j++) {
         if (this.map[i][j] && this.blockSamples[this.map[i][j]]) {
-          let tile: Block;
+          let tile: Collider;
           if (this.blockSamples[this.map[i][j]].isAnimation) {
             const animatedEntity = new AnimatedEntity(
               {

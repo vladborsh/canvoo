@@ -1,6 +1,7 @@
 import { Vector } from "./vector";
 
-export interface Block {
+export interface Collider {
   position: Vector,
   size: Vector,
+  isHighlighted?: boolean,
 }
