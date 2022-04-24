@@ -1,4 +1,4 @@
-import { Block } from "../interfaces/block";
+import { Collider } from "../interfaces/collider";
 import { Vector } from "../interfaces/vector";
 export interface BlockBlueprint {
     layer: number;
@@ -12,7 +12,7 @@ export declare class TileMapGenerator {
     map: string[][];
     blockSamples: Record<string, BlockBlueprint>;
     tileSize: Vector;
-    tiles: Block[];
+    tiles: Collider[];
     constructor(map: string[][], blockSamples: Record<string, BlockBlueprint>, tileSize: Vector);
     generate(): void;
 }

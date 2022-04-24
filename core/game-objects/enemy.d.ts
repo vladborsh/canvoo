@@ -1,4 +1,5 @@
 import { AbstractRenderedEntity } from '../canvas/rendered-entity/abstract-rendered-entity';
+import { Collider } from '../interfaces/collider';
 import { Vector } from '../interfaces/vector';
 import { RectangleStateEntity } from '../state/state-entity/rectangle-state.entity';
 export declare class Enemy {
@@ -15,6 +16,9 @@ export declare class Enemy {
     renderedEntity: AbstractRenderedEntity;
     constructor(target: Vector, position: Vector, size: Vector, renderSize: Vector, image: HTMLImageElement, layer: number);
     findTarget(): void;
+    horizontalPatrolling(tiles: Collider[]): void;
     private getTargetAngle;
     private adjustCurrentAngle;
+    private isFrom2to3Quadrant;
+    private isFrom3to2Quadrant;
 }
