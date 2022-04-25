@@ -1,6 +1,5 @@
 import { Collider } from "../interfaces/collider";
 import { Vector } from "../interfaces/vector";
-import { AbstractStateEntity } from "../state/state-entity/abstract-state-entity";
 import { PhysicsState } from "../state/state-entity/physics-state";
 
 export class TilesCollision {
@@ -139,42 +138,6 @@ export class TilesCollision {
           stateEntity.acceleration.y = 0;
           stateEntity.position.y = platform.position.y + stateEntity.size.y + 1;
         }
-      }
-    }
-
-    if (!stateEntity.onGround || Math.abs(stateEntity.velocity.y)) {
-      stateEntity.velocity.y = stateEntity.velocity.y + this.GRAVITY * dt;
-    }
-
-    if (stateEntity.velocity.y > this.MAXIMUM_VELOCITY.y) {
-      if (stateEntity.velocity.y < 0) {
-        stateEntity.velocity.y = this.MAXIMUM_VELOCITY.y;
-      }
-    }
-
-    if (stateEntity.velocity.y < -this.MAXIMUM_VELOCITY.y && Math.abs(stateEntity.acceleration.y) > 0) {
-      stateEntity.acceleration.y = 0;
-    }
-
-    if (Math.abs(stateEntity.velocity.x)) {
-      if (stateEntity.velocity.x < 0) {
-        stateEntity.velocity.x = stateEntity.velocity.x + this.FRICTION * dt;
-      }
-      if (stateEntity.velocity.x > 0) {
-        stateEntity.velocity.x = stateEntity.velocity.x - this.FRICTION * dt;
-      }
-    }
-
-    if (Math.abs(stateEntity.velocity.x) < 1) {
-      stateEntity.velocity.x = 0;
-    }
-
-    if (Math.abs(stateEntity.velocity.x) > this.MAXIMUM_VELOCITY.x) {
-      if (stateEntity.velocity.x < 0) {
-        stateEntity.velocity.x = -this.MAXIMUM_VELOCITY.x;
-      }
-      if (stateEntity.velocity.x > 0) {
-        stateEntity.velocity.x = this.MAXIMUM_VELOCITY.x;
       }
     }
   }

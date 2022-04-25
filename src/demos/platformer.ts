@@ -11,7 +11,6 @@ import { Controls } from '../../src/core/state/state-controller';
 import { Cursor } from '../../src/core/game-objects/cursor';
 import { ParticleSource } from '../../src/core/entity/particle-source';
 import { Bullet } from '../../src/core/game-objects/bullet';
-import { multiply, sum } from '../../src/core/utils/calc';
 import { Weapon } from '../../src/core/game-objects/weapon';
 import { TilesCollision } from '../core/physics/tiles-collision';
 import { Enemy } from '../../src/core/game-objects/enemy';
@@ -114,7 +113,7 @@ export function initGame() {
               [' ', '#', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', '#', ' ', ' ', '#', '#',],
               [' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ',],
               [' ', '#', '#', '#', '#', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
-              [' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', '#', ' ',],
+              [' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
               [' ', ' ', ' ', ' ', ' ', '#', '#', '#', '#', '#', ' ', ' ', ' ', '#', '#', '#', '#', '#', ' ',],
               [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ',],
               [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
@@ -209,7 +208,7 @@ export function initGame() {
               canvas.addShake();
               new Bullet(
                 { ...cursor.position },
-                { ...person.stateEntity.position },
+                { ...person.stateEntity.physicsState.position },
                 { x: 10, y: 4 },
                 10,
                 10,
@@ -219,23 +218,15 @@ export function initGame() {
             }
 
             tilesCollision.track(stateEntity.physicsState, tileMap.tiles, dt);
-
-            stateEntity.physicsState.prevPosition.x = stateEntity.position.x;
-            stateEntity.physicsState.prevPosition.y = stateEntity.position.y;
-
-            const dVelocity = sum(stateEntity.physicsState.velocity, multiply(stateEntity.physicsState.acceleration, dt / 100));
-            stateEntity.physicsState.velocity.x = dVelocity.x;
-            // stateEntity.physicsState.velocity.y = dVelocity.y;
-            const dPosition = sum(stateEntity.position, multiply(stateEntity.physicsState.velocity, dt / 100));
-            stateEntity.position.x = dPosition.x;
-            stateEntity.position.y = dPosition.y;
+            stateEntity.physicsState.acceleratedMotion(dt);
           };
 
           const enemy = new Enemy(
-            person.stateEntity.position,
+            person.stateEntity.physicsState.position,
             { x: 900, y: 450 },
             { x: 60, y: 60 },
             { x: 60, y: 60 },
+            700,
             mediaStorage.getSource('enemy'),
             2,
           );
@@ -243,17 +234,9 @@ export function initGame() {
           enemy.stateEntity.update = (dt, stateEntity) => {
             tilesCollision.track(stateEntity.physicsState, tileMap.tiles, dt);
 
-            enemy.findTarget();
-            enemy.horizontalPatrolling(tileMap.tiles);
-            stateEntity.physicsState.prevPosition.x = stateEntity.position.x;
-            stateEntity.physicsState.prevPosition.y = stateEntity.position.y;
-
-            const dVelocity = sum(stateEntity.physicsState.velocity, multiply(stateEntity.physicsState.acceleration, dt / 100));
-            stateEntity.physicsState.velocity.x = dVelocity.x;
-            stateEntity.physicsState.velocity.y = dVelocity.y;
-            const dPosition = sum(stateEntity.position, multiply(stateEntity.physicsState.velocity, dt / 100));
-            stateEntity.position.x = dPosition.x;
-            stateEntity.position.y = dPosition.y;
+            enemy.patrolling.horizontalPatrol(tileMap.tiles);
+            enemy.aiming.aim();
+            enemy.stateEntity.physicsState.acceleratedMotion(dt);
           }
         }
       }
