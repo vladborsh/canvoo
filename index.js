@@ -30744,8 +30744,8 @@ class LineRenderedEntity {
     }
     render() {
         const target = {
-            x: this.position.x + this.length * Math.cos(this.angle.alpha),
-            y: this.position.y + this.length * Math.sin(this.angle.alpha),
+            x: this.position.x + this.length * Math.cos(this.angle.currentAngle),
+            y: this.position.y + this.length * Math.sin(this.angle.currentAngle),
         };
         this.canvas.context.strokeStyle = this.color;
         this.canvas.context.beginPath();
@@ -31220,6 +31220,75 @@ exports.StatefulObject = StatefulObject;
 
 /***/ }),
 
+/***/ "./src/core/game-objects/aiming.ts":
+/*!*****************************************!*\
+  !*** ./src/core/game-objects/aiming.ts ***!
+  \*****************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Aiming = void 0;
+const ANGLE_CHANGE_VELOCITY = Math.PI / 200;
+const ALLOWED_INACCURACY = Math.PI / 100;
+class Aiming {
+    constructor(target, position, activationRange) {
+        this.target = target;
+        this.position = position;
+        this.activationRange = activationRange;
+        this.currentAngle = 0;
+        this.currentAngleToTarget = 0;
+    }
+    aim() {
+        if (!this.activationRange || (this.getTargetDistance() < this.activationRange)) {
+            this.currentAngleToTarget = this.getTargetAngle();
+            this.currentAngle = this.adjustCurrentAngle();
+            this.isAiming = true;
+        }
+        else {
+            this.isAiming = false;
+        }
+    }
+    adjustCurrentAngle() {
+        let angleDelta = this.currentAngle > this.currentAngleToTarget
+            ? -ANGLE_CHANGE_VELOCITY
+            : ANGLE_CHANGE_VELOCITY;
+        if (this.isFrom2to3Quadrant() || this.isFrom3to2Quadrant()) {
+            angleDelta = -angleDelta;
+        }
+        let newAngle = this.currentAngle + angleDelta;
+        if (newAngle < -Math.PI) {
+            newAngle = Math.PI - ANGLE_CHANGE_VELOCITY;
+        }
+        if (newAngle > Math.PI) {
+            newAngle = -Math.PI + ANGLE_CHANGE_VELOCITY;
+        }
+        return Math.abs(this.currentAngleToTarget - newAngle) > ALLOWED_INACCURACY
+            ? newAngle
+            : this.currentAngleToTarget;
+    }
+    isFrom2to3Quadrant() {
+        return (this.currentAngle < -Math.PI / 2 && this.currentAngle > -Math.PI
+            && this.currentAngleToTarget > Math.PI / 2 && this.currentAngleToTarget < Math.PI);
+    }
+    isFrom3to2Quadrant() {
+        return (this.currentAngleToTarget < -Math.PI / 2 && this.currentAngleToTarget > -Math.PI
+            && this.currentAngle > Math.PI / 2 && this.currentAngle < Math.PI);
+    }
+    getTargetDistance() {
+        return Math.sqrt(Math.pow(this.target.y - this.position.y, 2) + Math.pow(this.target.x - this.position.x, 2));
+    }
+    getTargetAngle() {
+        return Math.atan2(this.target.y - this.position.y, this.target.x - this.position.x);
+    }
+}
+exports.Aiming = Aiming;
+
+
+/***/ }),
+
 /***/ "./src/core/game-objects/bullet.ts":
 /*!*****************************************!*\
   !*** ./src/core/game-objects/bullet.ts ***!
@@ -31331,106 +31400,21 @@ exports.Enemy = void 0;
 const line_rendered_entity_1 = __webpack_require__(/*! ../canvas/rendered-entity/line-rendered-entity */ "./src/core/canvas/rendered-entity/line-rendered-entity.ts");
 const sprite_1 = __webpack_require__(/*! ../canvas/rendered-entity/sprite */ "./src/core/canvas/rendered-entity/sprite.ts");
 const rectangle_state_entity_1 = __webpack_require__(/*! ../state/state-entity/rectangle-state.entity */ "./src/core/state/state-entity/rectangle-state.entity.ts");
-const FIELD_OF_VIEW = Math.PI / 6;
-const ANGLE_CHANGE_VELOCITY = Math.PI / 200;
-const ALLOWED_INACCURACY = Math.PI / 100;
-const MOVE_ACCELERATION = 5;
+const aiming_1 = __webpack_require__(/*! ./aiming */ "./src/core/game-objects/aiming.ts");
+const patrolling_1 = __webpack_require__(/*! ./patrolling */ "./src/core/game-objects/patrolling.ts");
 class Enemy {
-    constructor(target, position, size, renderSize, image, layer) {
+    constructor(target, position, size, renderSize, activationRange, image, layer) {
         this.target = target;
         this.position = position;
         this.size = size;
         this.renderSize = renderSize;
-        this.angleContainer = { alpha: 0 };
-        this.currentAngle = 0;
-        this.currentAngleToTarget = 0;
-        this.currentFieldOfView = { bottomAngle: 0, upAngle: 0 };
-        this.currentAngleToTarget = this.getTargetAngle();
-        this.currentAngle = this.currentAngleToTarget;
         this.stateEntity = new rectangle_state_entity_1.RectangleStateEntity(window.state, position, size);
         this.renderedEntity = new sprite_1.Sprite(window.canvas, this.stateEntity.position, renderSize, image, layer);
-        const lineRenderedEntity = new line_rendered_entity_1.LineRenderedEntity(window.canvas, this.position, '#55ff99', 10, 300, this.angleContainer);
         window.canvas.addEntity(this.renderedEntity);
-        window.canvas.addEntity(lineRenderedEntity);
         window.state.addEntity(this.stateEntity);
-        // DRAFT: SET MOVING
-        this.stateEntity.physicsState.acceleration.x = MOVE_ACCELERATION;
-    }
-    findTarget() {
-        this.currentAngleToTarget = this.getTargetAngle();
-        this.currentAngle = this.adjustCurrentAngle();
-        this.currentFieldOfView.bottomAngle = this.currentAngle - FIELD_OF_VIEW;
-        this.currentFieldOfView.upAngle = this.currentAngle + FIELD_OF_VIEW;
-        this.angleContainer.alpha = this.currentAngle;
-    }
-    horizontalPatrolling(tiles) {
-        if (this.stateEntity.physicsState.onGround) {
-            if (this.stateEntity.physicsState.rightWall) {
-                this.stateEntity.physicsState.acceleration.x = -MOVE_ACCELERATION;
-                this.stateEntity.physicsState.velocity.x = this.stateEntity.physicsState.acceleration.x;
-                this.stateEntity.physicsState.rightWall = false;
-                return;
-            }
-            if (this.stateEntity.physicsState.leftWall) {
-                this.stateEntity.physicsState.acceleration.x = MOVE_ACCELERATION;
-                this.stateEntity.physicsState.velocity.x = this.stateEntity.physicsState.acceleration.x;
-                this.stateEntity.physicsState.leftWall = false;
-                return;
-            }
-            let isBottomRightTileExists = false;
-            let isBottomLeftTileExists = false;
-            for (let tile of tiles) {
-                if ((this.stateEntity.position.x > tile.position.x)
-                    && (this.stateEntity.position.x < tile.position.x + tile.size.x)
-                    && (this.stateEntity.position.y + this.stateEntity.size.y + 2 >= tile.position.y)
-                    && (this.stateEntity.position.y + this.stateEntity.size.y < tile.position.y + tile.size.y)) {
-                    isBottomLeftTileExists = true;
-                }
-                if ((this.stateEntity.position.x + this.stateEntity.size.x < tile.position.x + tile.size.x)
-                    && (this.stateEntity.position.x + this.stateEntity.size.x > tile.position.x)
-                    && (this.stateEntity.position.y + this.stateEntity.size.y + 2 >= tile.position.y)
-                    && (this.stateEntity.position.y + this.stateEntity.size.y < tile.position.y + tile.size.y)) {
-                    isBottomRightTileExists = true;
-                }
-            }
-            if (!isBottomRightTileExists) {
-                this.stateEntity.physicsState.acceleration.x = -MOVE_ACCELERATION;
-                this.stateEntity.physicsState.velocity.x = this.stateEntity.physicsState.acceleration.x;
-            }
-            if (!isBottomLeftTileExists) {
-                this.stateEntity.physicsState.acceleration.x = MOVE_ACCELERATION;
-                this.stateEntity.physicsState.velocity.x = this.stateEntity.physicsState.acceleration.x;
-            }
-        }
-    }
-    getTargetAngle() {
-        return Math.atan2(this.target.y - this.position.y, this.target.x - this.position.x);
-    }
-    adjustCurrentAngle() {
-        let angleDelta = this.currentAngle > this.currentAngleToTarget
-            ? -ANGLE_CHANGE_VELOCITY
-            : ANGLE_CHANGE_VELOCITY;
-        if (this.isFrom2to3Quadrant() || this.isFrom3to2Quadrant()) {
-            angleDelta = -angleDelta;
-        }
-        let newAngle = this.currentAngle + angleDelta;
-        if (newAngle < -Math.PI) {
-            newAngle = Math.PI - ANGLE_CHANGE_VELOCITY;
-        }
-        if (newAngle > Math.PI) {
-            newAngle = -Math.PI + ANGLE_CHANGE_VELOCITY;
-        }
-        return Math.abs(this.currentAngleToTarget - newAngle) > ALLOWED_INACCURACY
-            ? newAngle
-            : this.currentAngleToTarget;
-    }
-    isFrom2to3Quadrant() {
-        return (this.currentAngle < -Math.PI / 2 && this.currentAngle > -Math.PI
-            && this.currentAngleToTarget > Math.PI / 2 && this.currentAngleToTarget < Math.PI);
-    }
-    isFrom3to2Quadrant() {
-        return (this.currentAngleToTarget < -Math.PI / 2 && this.currentAngleToTarget > -Math.PI
-            && this.currentAngle > Math.PI / 2 && this.currentAngle < Math.PI);
+        this.patrolling = new patrolling_1.Patrolling(this.stateEntity.physicsState);
+        this.aiming = new aiming_1.Aiming(this.target, this.position, activationRange);
+        window.canvas.addEntity(new line_rendered_entity_1.LineRenderedEntity(window.canvas, this.position, '#55ff99', 10, 300, this.aiming));
     }
 }
 exports.Enemy = Enemy;
@@ -31508,6 +31492,85 @@ class Missile {
     }
 }
 exports.Missile = Missile;
+
+
+/***/ }),
+
+/***/ "./src/core/game-objects/patrolling.ts":
+/*!*********************************************!*\
+  !*** ./src/core/game-objects/patrolling.ts ***!
+  \*********************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Patrolling = void 0;
+class Patrolling {
+    constructor(physicsState, MOVE_ACCELERATION = 5) {
+        this.physicsState = physicsState;
+        this.MOVE_ACCELERATION = MOVE_ACCELERATION;
+        this.isActive = true;
+    }
+    horizontalPatrol(tiles) {
+        if (!this.physicsState.onGround || !this.isActive) {
+            return;
+        }
+        const { isWallLeft, isWallRight } = this.checkSideWalls();
+        const { isBottomLeftTile, isBottomRightTile } = !isWallLeft && !isWallRight ? this.checkTilesBottom(tiles) : this.getDefault();
+        if (isWallRight || !isBottomRightTile) {
+            this.physicsState.acceleration.x = -this.MOVE_ACCELERATION;
+            this.physicsState.velocity.x = this.physicsState.acceleration.x;
+        }
+        if (isWallLeft || !isBottomLeftTile) {
+            this.physicsState.acceleration.x = this.MOVE_ACCELERATION;
+            this.physicsState.velocity.x = this.physicsState.acceleration.x;
+        }
+    }
+    activate() {
+        this.isActive = true;
+    }
+    deactivate() {
+        this.isActive = false;
+    }
+    checkSideWalls() {
+        let isWallRight = false;
+        let isWallLeft = false;
+        if (this.physicsState.rightWall) {
+            this.physicsState.rightWall = false;
+            isWallRight = true;
+        }
+        if (this.physicsState.leftWall) {
+            this.physicsState.leftWall = false;
+            isWallLeft = true;
+        }
+        return { isWallLeft, isWallRight };
+    }
+    checkTilesBottom(tiles) {
+        let isBottomRightTile = false;
+        let isBottomLeftTile = false;
+        for (let tile of tiles) {
+            if ((this.physicsState.position.x > tile.position.x)
+                && (this.physicsState.position.x < tile.position.x + tile.size.x)
+                && (this.physicsState.position.y + this.physicsState.size.y + 2 >= tile.position.y)
+                && (this.physicsState.position.y + this.physicsState.size.y < tile.position.y + tile.size.y)) {
+                isBottomLeftTile = true;
+            }
+            if ((this.physicsState.position.x + this.physicsState.size.x < tile.position.x + tile.size.x)
+                && (this.physicsState.position.x + this.physicsState.size.x > tile.position.x)
+                && (this.physicsState.position.y + this.physicsState.size.y + 2 >= tile.position.y)
+                && (this.physicsState.position.y + this.physicsState.size.y < tile.position.y + tile.size.y)) {
+                isBottomRightTile = true;
+            }
+        }
+        return { isBottomRightTile, isBottomLeftTile };
+    }
+    getDefault() {
+        return { isBottomRightTile: null, isBottomLeftTile: null };
+    }
+}
+exports.Patrolling = Patrolling;
 
 
 /***/ }),
@@ -31700,36 +31763,6 @@ class TilesCollision {
                     stateEntity.acceleration.y = 0;
                     stateEntity.position.y = platform.position.y + stateEntity.size.y + 1;
                 }
-            }
-        }
-        if (!stateEntity.onGround || Math.abs(stateEntity.velocity.y)) {
-            stateEntity.velocity.y = stateEntity.velocity.y + this.GRAVITY * dt;
-        }
-        if (stateEntity.velocity.y > this.MAXIMUM_VELOCITY.y) {
-            if (stateEntity.velocity.y < 0) {
-                stateEntity.velocity.y = this.MAXIMUM_VELOCITY.y;
-            }
-        }
-        if (stateEntity.velocity.y < -this.MAXIMUM_VELOCITY.y && Math.abs(stateEntity.acceleration.y) > 0) {
-            stateEntity.acceleration.y = 0;
-        }
-        if (Math.abs(stateEntity.velocity.x)) {
-            if (stateEntity.velocity.x < 0) {
-                stateEntity.velocity.x = stateEntity.velocity.x + this.FRICTION * dt;
-            }
-            if (stateEntity.velocity.x > 0) {
-                stateEntity.velocity.x = stateEntity.velocity.x - this.FRICTION * dt;
-            }
-        }
-        if (Math.abs(stateEntity.velocity.x) < 1) {
-            stateEntity.velocity.x = 0;
-        }
-        if (Math.abs(stateEntity.velocity.x) > this.MAXIMUM_VELOCITY.x) {
-            if (stateEntity.velocity.x < 0) {
-                stateEntity.velocity.x = -this.MAXIMUM_VELOCITY.x;
-            }
-            if (stateEntity.velocity.x > 0) {
-                stateEntity.velocity.x = this.MAXIMUM_VELOCITY.x;
             }
         }
     }
@@ -31945,6 +31978,10 @@ exports.StateController = StateController;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PhysicsState = void 0;
+const calc_1 = __webpack_require__(/*! ../../utils/calc */ "./src/core/utils/calc.ts");
+const FRICTION = 0.03;
+const GRAVITY = 0.1;
+const MAXIMUM_VELOCITY = { x: 40, y: 100 };
 class PhysicsState {
     constructor() {
         this.velocity = { x: 0, y: 0 };
@@ -31953,6 +31990,61 @@ class PhysicsState {
         this.spaceBottom = true;
         this.leftWall = false;
         this.rightWall = false;
+    }
+    acceleratedMotion(dt) {
+        this.applyGravity(dt);
+        this.applyFriction(dt);
+        this.adjustMaximumVelocityX();
+        this.adjustMaximumVelocityY();
+        this.adjustMinVelocityX();
+        this.prevPosition.x = this.position.x;
+        this.prevPosition.y = this.position.y;
+        const dVelocity = calc_1.sum(this.velocity, calc_1.multiply(this.acceleration, dt / 100));
+        this.velocity.x = dVelocity.x;
+        this.velocity.y = dVelocity.y;
+        const dPosition = calc_1.sum(this.position, calc_1.multiply(this.velocity, dt / 100));
+        this.position.x = dPosition.x;
+        this.position.y = dPosition.y;
+    }
+    applyGravity(dt) {
+        if (!this.onGround || Math.abs(this.velocity.y)) {
+            this.velocity.y = this.velocity.y + GRAVITY * dt;
+        }
+    }
+    applyFriction(dt) {
+        if (Math.abs(this.velocity.x)) {
+            if (this.velocity.x < 0) {
+                this.velocity.x = this.velocity.x + FRICTION * dt;
+            }
+            if (this.velocity.x > 0) {
+                this.velocity.x = this.velocity.x - FRICTION * dt;
+            }
+        }
+    }
+    adjustMaximumVelocityY() {
+        if (Math.abs(this.velocity.y) > MAXIMUM_VELOCITY.y) {
+            if (this.velocity.y < 0) {
+                this.velocity.y = -MAXIMUM_VELOCITY.y;
+            }
+            if (this.velocity.y > 0) {
+                this.velocity.y = MAXIMUM_VELOCITY.y;
+            }
+        }
+    }
+    adjustMaximumVelocityX() {
+        if (Math.abs(this.velocity.x) > MAXIMUM_VELOCITY.x) {
+            if (this.velocity.x < 0) {
+                this.velocity.x = -MAXIMUM_VELOCITY.x;
+            }
+            if (this.velocity.x > 0) {
+                this.velocity.x = MAXIMUM_VELOCITY.x;
+            }
+        }
+    }
+    adjustMinVelocityX() {
+        if (Math.abs(this.velocity.x) < 1) {
+            this.velocity.x = 0;
+        }
     }
 }
 exports.PhysicsState = PhysicsState;
@@ -32298,7 +32390,6 @@ const state_controller_1 = __webpack_require__(/*! ../../src/core/state/state-co
 const cursor_1 = __webpack_require__(/*! ../../src/core/game-objects/cursor */ "./src/core/game-objects/cursor.ts");
 const particle_source_1 = __webpack_require__(/*! ../../src/core/entity/particle-source */ "./src/core/entity/particle-source.ts");
 const bullet_1 = __webpack_require__(/*! ../../src/core/game-objects/bullet */ "./src/core/game-objects/bullet.ts");
-const calc_1 = __webpack_require__(/*! ../../src/core/utils/calc */ "./src/core/utils/calc.ts");
 const weapon_2 = __webpack_require__(/*! ../../src/core/game-objects/weapon */ "./src/core/game-objects/weapon.ts");
 const tiles_collision_1 = __webpack_require__(/*! ../core/physics/tiles-collision */ "./src/core/physics/tiles-collision.ts");
 const enemy_1 = __webpack_require__(/*! ../../src/core/game-objects/enemy */ "./src/core/game-objects/enemy.ts");
@@ -32366,7 +32457,7 @@ function initGame() {
                     [' ', '#', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', '#', ' ', ' ', '#', '#',],
                     [' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ',],
                     [' ', '#', '#', '#', '#', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
-                    [' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', '#', ' ',],
+                    [' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
                     [' ', ' ', ' ', ' ', ' ', '#', '#', '#', '#', '#', ' ', ' ', ' ', '#', '#', '#', '#', '#', ' ',],
                     [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ',],
                     [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',],
@@ -32423,31 +32514,17 @@ function initGame() {
                     }
                     if (state.controlState[state_controller_1.Controls.MOUSE_LEFT]) {
                         canvas.addShake();
-                        new bullet_1.Bullet({ ...cursor.position }, { ...person.stateEntity.position }, { x: 10, y: 4 }, 10, 10, '#ffffff', '#3377ff');
+                        new bullet_1.Bullet({ ...cursor.position }, { ...person.stateEntity.physicsState.position }, { x: 10, y: 4 }, 10, 10, '#ffffff', '#3377ff');
                     }
                     tilesCollision.track(stateEntity.physicsState, tileMap.tiles, dt);
-                    stateEntity.physicsState.prevPosition.x = stateEntity.position.x;
-                    stateEntity.physicsState.prevPosition.y = stateEntity.position.y;
-                    const dVelocity = calc_1.sum(stateEntity.physicsState.velocity, calc_1.multiply(stateEntity.physicsState.acceleration, dt / 100));
-                    stateEntity.physicsState.velocity.x = dVelocity.x;
-                    // stateEntity.physicsState.velocity.y = dVelocity.y;
-                    const dPosition = calc_1.sum(stateEntity.position, calc_1.multiply(stateEntity.physicsState.velocity, dt / 100));
-                    stateEntity.position.x = dPosition.x;
-                    stateEntity.position.y = dPosition.y;
+                    stateEntity.physicsState.acceleratedMotion(dt);
                 };
-                const enemy = new enemy_1.Enemy(person.stateEntity.position, { x: 900, y: 450 }, { x: 60, y: 60 }, { x: 60, y: 60 }, mediaStorage.getSource('enemy'), 2);
+                const enemy = new enemy_1.Enemy(person.stateEntity.physicsState.position, { x: 900, y: 450 }, { x: 60, y: 60 }, { x: 60, y: 60 }, 700, mediaStorage.getSource('enemy'), 2);
                 enemy.stateEntity.update = (dt, stateEntity) => {
                     tilesCollision.track(stateEntity.physicsState, tileMap.tiles, dt);
-                    enemy.findTarget();
-                    enemy.horizontalPatrolling(tileMap.tiles);
-                    stateEntity.physicsState.prevPosition.x = stateEntity.position.x;
-                    stateEntity.physicsState.prevPosition.y = stateEntity.position.y;
-                    const dVelocity = calc_1.sum(stateEntity.physicsState.velocity, calc_1.multiply(stateEntity.physicsState.acceleration, dt / 100));
-                    stateEntity.physicsState.velocity.x = dVelocity.x;
-                    stateEntity.physicsState.velocity.y = dVelocity.y;
-                    const dPosition = calc_1.sum(stateEntity.position, calc_1.multiply(stateEntity.physicsState.velocity, dt / 100));
-                    stateEntity.position.x = dPosition.x;
-                    stateEntity.position.y = dPosition.y;
+                    enemy.patrolling.horizontalPatrol(tileMap.tiles);
+                    enemy.aiming.aim();
+                    enemy.stateEntity.physicsState.acceleratedMotion(dt);
                 };
             }
         }

@@ -1,4 +1,4 @@
-import { Vector } from "src/core/interfaces/vector";
+import { Vector } from "../../interfaces/vector";
 export declare class PhysicsState {
     prevPosition: Vector;
     position: Vector;
@@ -9,4 +9,10 @@ export declare class PhysicsState {
     spaceBottom: boolean;
     leftWall: boolean;
     rightWall: boolean;
+    acceleratedMotion(dt: number): void;
+    private applyGravity;
+    private applyFriction;
+    private adjustMaximumVelocityY;
+    private adjustMaximumVelocityX;
+    private adjustMinVelocityX;
 }

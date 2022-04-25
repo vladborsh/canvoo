@@ -10,7 +10,7 @@ export declare class LineRenderedEntity implements AbstractRenderedEntity {
     private angle;
     isActive: boolean;
     constructor(canvas: Canvas, position: Vector, color: string, layer: number, length: number, angle: {
-        alpha: number;
+        currentAngle: number;
     });
     render(): void;
 }
