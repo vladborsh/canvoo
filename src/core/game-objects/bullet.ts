@@ -1,17 +1,25 @@
 import { AbstractRenderedEntity } from '../canvas/rendered-entity/abstract-rendered-entity';
 import { RectangleRenderedEntity } from '../canvas/rendered-entity/rectangle-rendered-entity';
+import { Collider } from '../interfaces/collider';
 import { Vector } from '../interfaces/vector';
+import { findNearest, TileSegment } from '../physics/find-nearest-point';
+import { intersectLineOnRect } from '../physics/intersect-line-on-rect';
+import { intersectRects } from '../physics/intersect-rects';
 import { AbstractStateEntity } from '../state/state-entity/abstract-state-entity';
 import { RectangleStateEntity } from '../state/state-entity/rectangle-state.entity';
 
-const BULLET_VELOCITY_DIFF = 0.7;
+const ANGLE_RANDOMNESS = 0.07;
+
 
 export class Bullet {
   public velocity: Vector;
-  public stateEntity: AbstractStateEntity;
+  public stateEntity: RectangleStateEntity;
   public renderedEntity: AbstractRenderedEntity;
   private currentAngle: number = 0;
   private angleContainer = { alpha: 0 };
+  private tiles: Collider[];
+  private onTileHitCallback: (position: Vector) => void;
+  private finalTile: TileSegment;
 
   constructor(
     public target: Vector,
@@ -20,13 +28,13 @@ export class Bullet {
     public velocityMagnitude: number,
     layer: number,
     color: string,
-    shadow?: string
+    shadow?: string,
   ) {
-    this.currentAngle = this.getTargetAngle();
+    this.currentAngle = this.getTargetAngle() + this.getRandomVelDiff();
     this.angleContainer.alpha = this.currentAngle;
     this.velocity = {
-      x: this.velocityMagnitude * Math.cos(this.currentAngle) + this.getRandomVelDiff(),
-      y: this.velocityMagnitude * Math.sin(this.currentAngle) + this.getRandomVelDiff(),
+      x: this.velocityMagnitude * Math.cos(this.currentAngle),
+      y: this.velocityMagnitude * Math.sin(this.currentAngle),
     };
     this.stateEntity = new RectangleStateEntity((<any>window).state, position, size);
     this.renderedEntity = new RectangleRenderedEntity(
@@ -44,9 +52,19 @@ export class Bullet {
     this.stateEntity.update = () => this.update();
   }
 
+  public onTileHit(tiles: Collider[], cb: (position: Vector) => void): void {
+    this.onTileHitCallback = cb;
+    this.tiles = tiles;
+    this.findTrajectory();
+  }
+
   public update(): void {
     this.position.x += this.velocity.x;
     this.position.y += this.velocity.y;
+
+    if (this.finalTile && intersectRects(this.finalTile.tile, this.stateEntity.getCollider())) {
+      this.onTileHitCallback(this.finalTile.point);
+    }
   }
 
   private getTargetAngle(): number {
@@ -55,6 +73,36 @@ export class Bullet {
 
   private getRandomVelDiff(): number {
     const sign = Math.random() > 0.5 ? 1 : -1;
-    return sign * Math.random() * BULLET_VELOCITY_DIFF;
+    return sign * Math.random() * ANGLE_RANDOMNESS;
+  }
+
+  private findTrajectory(): void {
+    if (!this.tiles.length) {
+      return;
+    }
+
+    const rayLength = 2000;
+    const rayEnd: Vector = {
+      x: rayLength * Math.cos(this.currentAngle),
+      y: rayLength * Math.sin(this.currentAngle),
+    };
+
+    const intersectedTiles = this.tiles.map(tile => ({
+      tile,
+      segment: intersectLineOnRect(tile, this.position, rayEnd)
+    })).filter(({ segment }) => !!segment);
+
+    if(intersectedTiles.length) {
+      const targets: TileSegment[] = intersectedTiles.reduce(
+        (acc: TileSegment[], { tile, segment }) => [
+          ...acc,
+          { tile, point: segment[0]},
+          { tile, point: segment[1]},
+        ],
+        [],
+      );
+      const nearest = findNearest(this.position, targets);
+      this.finalTile = nearest;
+    }
   }
 }

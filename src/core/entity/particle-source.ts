@@ -4,7 +4,6 @@ import { RectangleStateEntity } from "../state/state-entity/rectangle-state.enti
 import { multiply, sum } from "../utils/calc";
 import { RectangleEntity } from "./rectangle-entity";
 
-const MAX_PARTICLES = 30;
 const SIZE_REDUCING_SPEED = 0.1;
 
 export class ParticleSource {
@@ -20,9 +19,10 @@ export class ParticleSource {
     public isInfinite: boolean,
     public velocityDiffRange: number,
     public layer: number,
+    public particleCount: number,
     public shadow?: string,
   ) {
-    for (let i = 0; i < MAX_PARTICLES; i++) {
+    for (let i = 0; i < this.particleCount; i++) {
       const rect = new RectangleEntity(
         { x: this.position.x, y: this.position.y},
         { x: singleParticleSize.x, y: singleParticleSize.y },
@@ -66,13 +66,6 @@ export class ParticleSource {
           stateEntity.position.y = dPosition.y;
         }
       })())
-
-      /* rect.renderedEntity.onRender((dt, renderedEntity) => {
-        if (renderedEntity.size.x <= 0 || renderedEntity.size.x <= 0) {
-          return;
-        }
-        (<RectangleRenderedEntity>rect.renderedEntity).draw();
-      }) */
     }
   }
 

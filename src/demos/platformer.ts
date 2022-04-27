@@ -148,7 +148,7 @@ export function initGame() {
           person.stateEntity.physicsState.prevPosition.y--;
           person.stateEntity.physicsState.velocity.y = 1;
 
-          const missile = new Missile(
+          /* new Missile(
             person.stateEntity.position,
             { x: 700, y: 500, },
             { x: 10, y: 10, },
@@ -156,7 +156,7 @@ export function initGame() {
             35,
             mediaStorage.getSource('missile'),
             5,
-          );
+          ); */
 
           new Weapon(
             cursor.position,
@@ -177,6 +177,7 @@ export function initGame() {
             true,
             5,
             10,
+            30,
             '#ee77ff',
           );
 
@@ -206,15 +207,35 @@ export function initGame() {
             }
             if (state.controlState[Controls.MOUSE_LEFT]) {
               canvas.addShake();
-              new Bullet(
+              const bullet = new Bullet(
                 { ...cursor.position },
                 { ...person.stateEntity.physicsState.position },
                 { x: 10, y: 4 },
                 10,
                 10,
-               '#ffffff',
-               '#3377ff',
+                '#ffffff',
+                '#3377ff',
               );
+              bullet.onTileHit(tileMap.tiles, (pos: Vector) => {
+                new ParticleSource(
+                  { x: pos.x, y: pos.y },
+                  { x: 5, y: 5 },
+                  { x: 1, y: -7 },
+                  '#ffffff',
+                  true,
+                  100,
+                  false,
+                  5,
+                  10,
+                  5,
+                  '#ffcc44',
+                );
+
+                bullet.position.x = -10000;
+                bullet.position.y = -10000;
+                bullet.velocity.x = 0;
+                bullet.velocity.y = 0;
+              });
             }
 
             tilesCollision.track(stateEntity.physicsState, tileMap.tiles, dt);

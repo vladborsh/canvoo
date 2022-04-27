@@ -51,6 +51,7 @@ export class Missile {
       true,
       10,
       layer,
+      20,
       '#ffee88'
     );
 

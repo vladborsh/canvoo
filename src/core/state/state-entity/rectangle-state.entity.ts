@@ -1,3 +1,4 @@
+import { Collider } from "src/core/interfaces/collider";
 import { Vector } from "src/core/interfaces/vector";
 import { AbstractStateEntity } from "./abstract-state-entity";
 import { PhysicsState } from "./physics-state";
@@ -16,4 +17,11 @@ export class RectangleStateEntity implements AbstractStateEntity {
   }
 
   update(dt: number, stateEntity: RectangleStateEntity): void {}
+
+  public getCollider(): Collider {
+    return {
+      position: this.physicsState.position,
+      size: this.physicsState.size,
+    }
+  }
 }

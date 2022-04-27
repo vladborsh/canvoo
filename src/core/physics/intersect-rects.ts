@@ -1,6 +1,7 @@
 import { Vector } from '../interfaces/vector';
 import { Direction } from '../interfaces/direction';
 import { multiply, sum } from '../utils/calc';
+import { Collider } from '../interfaces/collider';
 
 export const FREE_ACCELERATION: Vector = { x: 0, y: 80 };
 
@@ -14,16 +15,14 @@ interface Collision {
 /*
  https://developer.mozilla.org/en-US/docs/Games/Techniques/3D_collision_detection
  */
-export function intersect(
-  position1: Vector,
-  size1: Vector,
-  position2: Vector,
-  size2: Vector
+export function intersectRects(
+  collider1: Collider,
+  collider2: Collider,
 ): boolean {
   return (
-    position1.x < position2.x + size2.x &&
-    position1.x + size1.x > position2.x &&
-    position1.y < position2.y + size2.y &&
-    position1.y + size1.y > position2.y
+    collider1.position.x < collider2.position.x + collider2.size.x &&
+    collider1.position.x + collider1.size.x > collider2.position.x &&
+    collider1.position.y < collider2.position.y + collider2.size.y &&
+    collider1.position.y + collider1.size.y > collider2.position.y
   );
 }

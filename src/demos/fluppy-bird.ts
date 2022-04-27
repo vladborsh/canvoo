@@ -5,7 +5,7 @@ import { setup } from '../../src/core/setup/setup';
 import { Direction } from '../core/interfaces/direction';
 import { AbstractStateEntity } from '../../src/core/state/state-entity/abstract-state-entity';
 import { multiply, sum } from '../../src/core/utils/calc';
-import { intersect } from '../core/physics/intersect';
+import { intersectRects } from '../core/physics/intersect-rects';
 
 export function initGame() {
   const { canvas, state } = setup();
@@ -47,11 +47,15 @@ export function initGame() {
       );
 
       if (
-        intersect(
-          cube.stateEntity.position,
-          cube.stateEntity.size,
-          panel.stateEntity.position,
-          panel.stateEntity.size
+        intersectRects(
+          {
+            position: cube.stateEntity.position,
+            size: cube.stateEntity.size,
+          },
+          {
+            position: panel.stateEntity.position,
+            size: panel.stateEntity.size,
+          },
         )
       ) {
         ACTIVE = false;
