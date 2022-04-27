@@ -31054,10 +31054,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ParticleSource = void 0;
 const calc_1 = __webpack_require__(/*! ../utils/calc */ "./src/core/utils/calc.ts");
 const rectangle_entity_1 = __webpack_require__(/*! ./rectangle-entity */ "./src/core/entity/rectangle-entity.ts");
-const MAX_PARTICLES = 30;
 const SIZE_REDUCING_SPEED = 0.1;
 class ParticleSource {
-    constructor(position, singleParticleSize, velocity, color, reduceSize, particleLifetime, isInfinite, velocityDiffRange, layer, shadow) {
+    constructor(position, singleParticleSize, velocity, color, reduceSize, particleLifetime, isInfinite, velocityDiffRange, layer, particleCount, shadow) {
         this.position = position;
         this.singleParticleSize = singleParticleSize;
         this.velocity = velocity;
@@ -31067,9 +31066,10 @@ class ParticleSource {
         this.isInfinite = isInfinite;
         this.velocityDiffRange = velocityDiffRange;
         this.layer = layer;
+        this.particleCount = particleCount;
         this.shadow = shadow;
         this.particles = [];
-        for (let i = 0; i < MAX_PARTICLES; i++) {
+        for (let i = 0; i < this.particleCount; i++) {
             const rect = new rectangle_entity_1.RectangleEntity({ x: this.position.x, y: this.position.y }, { x: singleParticleSize.x, y: singleParticleSize.y }, layer, color, shadow);
             this.particles.push(rect);
             rect.stateEntity.physicsState.velocity = {
@@ -31100,12 +31100,6 @@ class ParticleSource {
                     stateEntity.position.y = dPosition.y;
                 };
             })());
-            /* rect.renderedEntity.onRender((dt, renderedEntity) => {
-              if (renderedEntity.size.x <= 0 || renderedEntity.size.x <= 0) {
-                return;
-              }
-              (<RectangleRenderedEntity>rect.renderedEntity).draw();
-            }) */
         }
     }
     getRandomVelDiff() {
@@ -31301,8 +31295,11 @@ exports.Aiming = Aiming;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Bullet = void 0;
 const rectangle_rendered_entity_1 = __webpack_require__(/*! ../canvas/rendered-entity/rectangle-rendered-entity */ "./src/core/canvas/rendered-entity/rectangle-rendered-entity.ts");
+const find_nearest_point_1 = __webpack_require__(/*! ../physics/find-nearest-point */ "./src/core/physics/find-nearest-point.ts");
+const intersect_line_on_rect_1 = __webpack_require__(/*! ../physics/intersect-line-on-rect */ "./src/core/physics/intersect-line-on-rect.ts");
+const intersect_rects_1 = __webpack_require__(/*! ../physics/intersect-rects */ "./src/core/physics/intersect-rects.ts");
 const rectangle_state_entity_1 = __webpack_require__(/*! ../state/state-entity/rectangle-state.entity */ "./src/core/state/state-entity/rectangle-state.entity.ts");
-const BULLET_VELOCITY_DIFF = 0.7;
+const ANGLE_RANDOMNESS = 0.07;
 class Bullet {
     constructor(target, position, size, velocityMagnitude, layer, color, shadow) {
         this.target = target;
@@ -31311,11 +31308,11 @@ class Bullet {
         this.velocityMagnitude = velocityMagnitude;
         this.currentAngle = 0;
         this.angleContainer = { alpha: 0 };
-        this.currentAngle = this.getTargetAngle();
+        this.currentAngle = this.getTargetAngle() + this.getRandomVelDiff();
         this.angleContainer.alpha = this.currentAngle;
         this.velocity = {
-            x: this.velocityMagnitude * Math.cos(this.currentAngle) + this.getRandomVelDiff(),
-            y: this.velocityMagnitude * Math.sin(this.currentAngle) + this.getRandomVelDiff(),
+            x: this.velocityMagnitude * Math.cos(this.currentAngle),
+            y: this.velocityMagnitude * Math.sin(this.currentAngle),
         };
         this.stateEntity = new rectangle_state_entity_1.RectangleStateEntity(window.state, position, size);
         this.renderedEntity = new rectangle_rendered_entity_1.RectangleRenderedEntity(window.canvas, color, size, this.stateEntity.position, layer, shadow, this.angleContainer);
@@ -31323,16 +31320,47 @@ class Bullet {
         window.state.addEntity(this.stateEntity);
         this.stateEntity.update = () => this.update();
     }
+    onTileHit(tiles, cb) {
+        this.onTileHitCallback = cb;
+        this.tiles = tiles;
+        this.findTrajectory();
+    }
     update() {
         this.position.x += this.velocity.x;
         this.position.y += this.velocity.y;
+        if (this.finalTile && intersect_rects_1.intersectRects(this.finalTile.tile, this.stateEntity.getCollider())) {
+            this.onTileHitCallback(this.finalTile.point);
+        }
     }
     getTargetAngle() {
         return Math.atan2(this.target.y - this.position.y, this.target.x - this.position.x);
     }
     getRandomVelDiff() {
         const sign = Math.random() > 0.5 ? 1 : -1;
-        return sign * Math.random() * BULLET_VELOCITY_DIFF;
+        return sign * Math.random() * ANGLE_RANDOMNESS;
+    }
+    findTrajectory() {
+        if (!this.tiles.length) {
+            return;
+        }
+        const rayLength = 2000;
+        const rayEnd = {
+            x: rayLength * Math.cos(this.currentAngle),
+            y: rayLength * Math.sin(this.currentAngle),
+        };
+        const intersectedTiles = this.tiles.map(tile => ({
+            tile,
+            segment: intersect_line_on_rect_1.intersectLineOnRect(tile, this.position, rayEnd)
+        })).filter(({ segment }) => !!segment);
+        if (intersectedTiles.length) {
+            const targets = intersectedTiles.reduce((acc, { tile, segment }) => [
+                ...acc,
+                { tile, point: segment[0] },
+                { tile, point: segment[1] },
+            ], []);
+            const nearest = find_nearest_point_1.findNearest(this.position, targets);
+            this.finalTile = nearest;
+        }
     }
 }
 exports.Bullet = Bullet;
@@ -31418,80 +31446,6 @@ class Enemy {
     }
 }
 exports.Enemy = Enemy;
-
-
-/***/ }),
-
-/***/ "./src/core/game-objects/missile.ts":
-/*!******************************************!*\
-  !*** ./src/core/game-objects/missile.ts ***!
-  \******************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.Missile = void 0;
-const sprite_1 = __webpack_require__(/*! ../canvas/rendered-entity/sprite */ "./src/core/canvas/rendered-entity/sprite.ts");
-const particle_source_1 = __webpack_require__(/*! ../entity/particle-source */ "./src/core/entity/particle-source.ts");
-const rectangle_state_entity_1 = __webpack_require__(/*! ../state/state-entity/rectangle-state.entity */ "./src/core/state/state-entity/rectangle-state.entity.ts");
-const calc_1 = __webpack_require__(/*! ../utils/calc */ "./src/core/utils/calc.ts");
-class Missile {
-    constructor(target, position, size, renderSize, velocityMagnitude, image, layer) {
-        this.target = target;
-        this.position = position;
-        this.size = size;
-        this.renderSize = renderSize;
-        this.velocityMagnitude = velocityMagnitude;
-        this.currentAngle = 0;
-        this.angleContainer = { alpha: 0 };
-        this.angleChangeVelocity = velocityMagnitude / 50;
-        this.velocity = {
-            x: this.velocityMagnitude * Math.cos(this.currentAngle),
-            y: this.velocityMagnitude * Math.sin(this.currentAngle),
-        };
-        this.setVelocity();
-        this.currentAngle = this.getTargetAngle();
-        this.stateEntity = new rectangle_state_entity_1.RectangleStateEntity(window.state, position, size);
-        this.renderedEntity = new sprite_1.Sprite(window.canvas, this.stateEntity.position, renderSize, image, layer, this.angleContainer);
-        this.fireTail = new particle_source_1.ParticleSource(this.stateEntity.position, { x: 7, y: 7 }, { x: 0, y: 0 }, '#ffffff', true, 20, true, 10, layer, '#ffee88');
-        window.canvas.addEntity(this.renderedEntity);
-        window.state.addEntity(this.stateEntity);
-        this.stateEntity.update = (dt, stateEntity) => this.update(dt, stateEntity);
-    }
-    update(dt, stateEntity) {
-        this.currentAngle = this.getTargetAngle();
-        this.setVelocity();
-        const dPosition = calc_1.sum(stateEntity.position, calc_1.multiply(this.velocity, dt / 100));
-        this.position.x += dPosition.x;
-        this.position.y += dPosition.y;
-        stateEntity.position.x = dPosition.x;
-        stateEntity.position.y = dPosition.y;
-        /* for render */
-        this.angleContainer.alpha = this.currentAngle;
-        this.fireTail.velocity.x = -this.velocity.x;
-        this.fireTail.velocity.y = -this.velocity.y;
-    }
-    setVelocity() {
-        const newVelocityVec = {
-            x: this.velocityMagnitude * Math.cos(this.currentAngle),
-            y: this.velocityMagnitude * Math.sin(this.currentAngle),
-        };
-        this.velocity.x +=
-            this.velocity.x < newVelocityVec.x
-                ? this.angleChangeVelocity
-                : -this.angleChangeVelocity;
-        this.velocity.y +=
-            this.velocity.y < newVelocityVec.y
-                ? this.angleChangeVelocity
-                : -this.angleChangeVelocity;
-    }
-    getTargetAngle() {
-        return Math.atan2(this.target.y - this.position.y, this.target.x - this.position.x);
-    }
-}
-exports.Missile = Missile;
 
 
 /***/ }),
@@ -31643,6 +31597,140 @@ exports.DIRECTIONS = {
     87: Direction.UP,
     83: Direction.DOWN,
 };
+
+
+/***/ }),
+
+/***/ "./src/core/physics/find-nearest-point.ts":
+/*!************************************************!*\
+  !*** ./src/core/physics/find-nearest-point.ts ***!
+  \************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.findNearest = void 0;
+function findNearest(point, targets) {
+    if (!targets.length) {
+        return null;
+    }
+    let distance = getDistance(targets[0].point, point);
+    let nearestTarget = targets[0];
+    for (let target of targets) {
+        const newDistance = getDistance(target.point, point);
+        if (newDistance < distance) {
+            distance = newDistance;
+            nearestTarget = target;
+        }
+    }
+    return nearestTarget;
+}
+exports.findNearest = findNearest;
+function getDistance(a, b) {
+    return Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2));
+}
+
+
+/***/ }),
+
+/***/ "./src/core/physics/intersect-line-on-rect.ts":
+/*!****************************************************!*\
+  !*** ./src/core/physics/intersect-line-on-rect.ts ***!
+  \****************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.intersectLineOnRect = void 0;
+/*
+  Liang-Barsky line clipping algorithm
+  http://www.skytopia.com/project/articles/compsci/clipping.html
+ */
+function intersectLineOnRect(collider, lineStart, lineEnd) {
+    const xmin = collider.position.x - collider.size.x / 2;
+    const xmax = collider.position.x + collider.size.x / 2;
+    const ymin = collider.position.y - collider.size.y / 2;
+    const ymax = collider.position.y + collider.size.y / 2;
+    let t0 = 0;
+    let t1 = 1;
+    const dx = lineEnd.x - lineStart.x;
+    const dy = lineEnd.y - lineStart.y;
+    let p, q, r;
+    for (var edge = 0; edge < 4; edge++) { // Traverse through left, right, bottom, top edges.
+        if (edge === 0) {
+            p = -dx;
+            q = -(xmin - lineStart.x);
+        }
+        if (edge === 1) {
+            p = dx;
+            q = (xmax - lineStart.x);
+        }
+        if (edge === 2) {
+            p = -dy;
+            q = -(ymin - lineStart.y);
+        }
+        if (edge === 3) {
+            p = dy;
+            q = (ymax - lineStart.y);
+        }
+        r = q / p;
+        if (p === 0 && q < 0)
+            return null; // Don't draw line at all. (parallel line outside)
+        if (p < 0) {
+            if (r > t1)
+                return null; // Don't draw line at all.
+            else if (r > t0)
+                t0 = r; // Line is clipped!
+        }
+        else if (p > 0) {
+            if (r < t0)
+                return null; // Don't draw line at all.
+            else if (r < t1)
+                t1 = r; // Line is clipped!
+        }
+    }
+    return [
+        {
+            x: lineStart.x + t0 * dx,
+            y: lineStart.y + t0 * dy,
+        },
+        {
+            x: lineStart.x + t1 * dx,
+            y: lineStart.y + t1 * dy,
+        }
+    ];
+}
+exports.intersectLineOnRect = intersectLineOnRect;
+
+
+/***/ }),
+
+/***/ "./src/core/physics/intersect-rects.ts":
+/*!*********************************************!*\
+  !*** ./src/core/physics/intersect-rects.ts ***!
+  \*********************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.intersectRects = exports.FREE_ACCELERATION = void 0;
+exports.FREE_ACCELERATION = { x: 0, y: 80 };
+/*
+ https://developer.mozilla.org/en-US/docs/Games/Techniques/3D_collision_detection
+ */
+function intersectRects(collider1, collider2) {
+    return (collider1.position.x < collider2.position.x + collider2.size.x &&
+        collider1.position.x + collider1.size.x > collider2.position.x &&
+        collider1.position.y < collider2.position.y + collider2.size.y &&
+        collider1.position.y + collider1.size.y > collider2.position.y);
+}
+exports.intersectRects = intersectRects;
 
 
 /***/ }),
@@ -32075,6 +32163,12 @@ class RectangleStateEntity {
         this.physicsState.size = this.size;
     }
     update(dt, stateEntity) { }
+    getCollider() {
+        return {
+            position: this.physicsState.position,
+            size: this.physicsState.size,
+        };
+    }
 }
 exports.RectangleStateEntity = RectangleStateEntity;
 
@@ -32384,7 +32478,6 @@ const direction_1 = __webpack_require__(/*! ../core/interfaces/direction */ "./s
 const tile_map_generator_1 = __webpack_require__(/*! ../../src/core/scene/tile-map-generator */ "./src/core/scene/tile-map-generator.ts");
 const background_filler_1 = __webpack_require__(/*! ../../src/core/entity/background-filler */ "./src/core/entity/background-filler.ts");
 const common_state_1 = __webpack_require__(/*! ../../src/core/entity/common-state */ "./src/core/entity/common-state.ts");
-const missile_1 = __webpack_require__(/*! ../../src/core/game-objects/missile */ "./src/core/game-objects/missile.ts");
 __webpack_require__(/*! ./assets */ "./src/demos/assets/index.ts");
 const state_controller_1 = __webpack_require__(/*! ../../src/core/state/state-controller */ "./src/core/state/state-controller.ts");
 const cursor_1 = __webpack_require__(/*! ../../src/core/game-objects/cursor */ "./src/core/game-objects/cursor.ts");
@@ -32487,9 +32580,17 @@ function initGame() {
                 tileMap.generate();
                 person.stateEntity.physicsState.prevPosition.y--;
                 person.stateEntity.physicsState.velocity.y = 1;
-                const missile = new missile_1.Missile(person.stateEntity.position, { x: 700, y: 500, }, { x: 10, y: 10, }, { x: 45, y: 15 }, 35, mediaStorage.getSource('missile'), 5);
+                /* new Missile(
+                  person.stateEntity.position,
+                  { x: 700, y: 500, },
+                  { x: 10, y: 10, },
+                  { x: 45, y: 15},
+                  35,
+                  mediaStorage.getSource('missile'),
+                  5,
+                ); */
                 new weapon_2.Weapon(cursor.position, person.stateEntity.position, { x: 45, y: 15 }, mediaStorage.getSource('weapon_1'), 20, canvas);
-                new particle_source_1.ParticleSource({ x: 1000, y: 320 }, { x: 10, y: 10 }, { x: 1, y: -7 }, '#ffffff', true, 100, true, 5, 10, '#ee77ff');
+                new particle_source_1.ParticleSource({ x: 1000, y: 320 }, { x: 10, y: 10 }, { x: 1, y: -7 }, '#ffffff', true, 100, true, 5, 10, 30, '#ee77ff');
                 const tilesCollision = new tiles_collision_1.TilesCollision(GRAVITY, MAXIMUM_VELOCITY, FRICTION);
                 person.stateEntity.update = (dt, stateEntity) => {
                     if (state.controlState[direction_1.Direction.LEFT] && !stateEntity.physicsState.leftWall) {
@@ -32514,7 +32615,14 @@ function initGame() {
                     }
                     if (state.controlState[state_controller_1.Controls.MOUSE_LEFT]) {
                         canvas.addShake();
-                        new bullet_1.Bullet({ ...cursor.position }, { ...person.stateEntity.physicsState.position }, { x: 10, y: 4 }, 10, 10, '#ffffff', '#3377ff');
+                        const bullet = new bullet_1.Bullet({ ...cursor.position }, { ...person.stateEntity.physicsState.position }, { x: 10, y: 4 }, 10, 10, '#ffffff', '#3377ff');
+                        bullet.onTileHit(tileMap.tiles, (pos) => {
+                            new particle_source_1.ParticleSource({ x: pos.x, y: pos.y }, { x: 5, y: 5 }, { x: 1, y: -7 }, '#ffffff', true, 100, false, 5, 10, 5, '#ffcc44');
+                            bullet.position.x = -10000;
+                            bullet.position.y = -10000;
+                            bullet.velocity.x = 0;
+                            bullet.velocity.y = 0;
+                        });
                     }
                     tilesCollision.track(stateEntity.physicsState, tileMap.tiles, dt);
                     stateEntity.physicsState.acceleratedMotion(dt);
