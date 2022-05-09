@@ -3,7 +3,7 @@ export declare class Aiming {
     target: Vector;
     position: Vector;
     activationRange?: number;
-    currentAngle: number;
+    alpha: number;
     private currentAngleToTarget;
     isAiming: boolean;
     constructor(target: Vector, position: Vector, activationRange?: number);

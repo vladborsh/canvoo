@@ -30744,8 +30744,8 @@ class LineRenderedEntity {
     }
     render() {
         const target = {
-            x: this.position.x + this.length * Math.cos(this.angle.currentAngle),
-            y: this.position.y + this.length * Math.sin(this.angle.currentAngle),
+            x: this.position.x + this.length * Math.cos(this.angle.alpha),
+            y: this.position.y + this.length * Math.sin(this.angle.alpha),
         };
         this.canvas.context.strokeStyle = this.color;
         this.canvas.context.beginPath();
@@ -31232,13 +31232,13 @@ class Aiming {
         this.target = target;
         this.position = position;
         this.activationRange = activationRange;
-        this.currentAngle = 0;
+        this.alpha = 0;
         this.currentAngleToTarget = 0;
     }
     aim() {
         if (!this.activationRange || (this.getTargetDistance() < this.activationRange)) {
             this.currentAngleToTarget = this.getTargetAngle();
-            this.currentAngle = this.adjustCurrentAngle();
+            this.alpha = this.adjustCurrentAngle();
             this.isAiming = true;
         }
         else {
@@ -31246,13 +31246,13 @@ class Aiming {
         }
     }
     adjustCurrentAngle() {
-        let angleDelta = this.currentAngle > this.currentAngleToTarget
+        let angleDelta = this.alpha > this.currentAngleToTarget
             ? -ANGLE_CHANGE_VELOCITY
             : ANGLE_CHANGE_VELOCITY;
         if (this.isFrom2to3Quadrant() || this.isFrom3to2Quadrant()) {
             angleDelta = -angleDelta;
         }
-        let newAngle = this.currentAngle + angleDelta;
+        let newAngle = this.alpha + angleDelta;
         if (newAngle < -Math.PI) {
             newAngle = Math.PI - ANGLE_CHANGE_VELOCITY;
         }
@@ -31264,12 +31264,12 @@ class Aiming {
             : this.currentAngleToTarget;
     }
     isFrom2to3Quadrant() {
-        return (this.currentAngle < -Math.PI / 2 && this.currentAngle > -Math.PI
+        return (this.alpha < -Math.PI / 2 && this.alpha > -Math.PI
             && this.currentAngleToTarget > Math.PI / 2 && this.currentAngleToTarget < Math.PI);
     }
     isFrom3to2Quadrant() {
         return (this.currentAngleToTarget < -Math.PI / 2 && this.currentAngleToTarget > -Math.PI
-            && this.currentAngle > Math.PI / 2 && this.currentAngle < Math.PI);
+            && this.alpha > Math.PI / 2 && this.alpha < Math.PI);
     }
     getTargetDistance() {
         return Math.sqrt(Math.pow(this.target.y - this.position.y, 2) + Math.pow(this.target.x - this.position.x, 2));
@@ -31329,7 +31329,7 @@ class Bullet {
         this.position.x += this.velocity.x;
         this.position.y += this.velocity.y;
         if (this.finalTile && intersect_rects_1.intersectRects(this.finalTile.tile, this.stateEntity.getCollider())) {
-            this.onTileHitCallback(this.finalTile.point);
+            this.onTileHitCallback(this.finalTile.point, this.currentAngle);
         }
     }
     getTargetAngle() {
@@ -31345,22 +31345,23 @@ class Bullet {
         }
         const rayLength = 2000;
         const rayEnd = {
-            x: rayLength * Math.cos(this.currentAngle),
-            y: rayLength * Math.sin(this.currentAngle),
+            x: this.position.x + rayLength * Math.cos(this.currentAngle),
+            y: this.position.y + rayLength * Math.sin(this.currentAngle),
         };
         const intersectedTiles = this.tiles.map(tile => ({
             tile,
             segment: intersect_line_on_rect_1.intersectLineOnRect(tile, this.position, rayEnd)
         })).filter(({ segment }) => !!segment);
         if (intersectedTiles.length) {
-            const targets = intersectedTiles.reduce((acc, { tile, segment }) => [
-                ...acc,
-                { tile, point: segment[0] },
-                { tile, point: segment[1] },
-            ], []);
-            const nearest = find_nearest_point_1.findNearest(this.position, targets);
-            this.finalTile = nearest;
+            this.finalTile = this.getNearestIntersectedTile(intersectedTiles);
         }
+    }
+    getNearestIntersectedTile(intersectedTiles) {
+        return find_nearest_point_1.findNearest(this.position, intersectedTiles.reduce((acc, { tile, segment }) => [
+            ...acc,
+            { tile, point: segment[0] },
+            { tile, point: segment[1] },
+        ], []));
     }
 }
 exports.Bullet = Bullet;
@@ -31719,16 +31720,23 @@ exports.intersectLineOnRect = intersectLineOnRect;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.intersectRects = exports.FREE_ACCELERATION = void 0;
-exports.FREE_ACCELERATION = { x: 0, y: 80 };
+exports.intersectRects = void 0;
 /*
  https://developer.mozilla.org/en-US/docs/Games/Techniques/3D_collision_detection
  */
 function intersectRects(collider1, collider2) {
-    return (collider1.position.x < collider2.position.x + collider2.size.x &&
-        collider1.position.x + collider1.size.x > collider2.position.x &&
-        collider1.position.y < collider2.position.y + collider2.size.y &&
-        collider1.position.y + collider1.size.y > collider2.position.y);
+    const coll1minX = collider1.position.x - collider1.size.x / 2;
+    const coll1maxX = collider1.position.x + collider1.size.x / 2;
+    const coll1minY = collider1.position.y - collider1.size.y / 2;
+    const coll1maxY = collider1.position.y + collider1.size.y / 2;
+    const coll2minX = collider2.position.x - collider2.size.x / 2;
+    const coll2maxX = collider2.position.x + collider2.size.x / 2;
+    const coll2minY = collider2.position.y - collider2.size.y / 2;
+    const coll2maxY = collider2.position.y + collider2.size.y / 2;
+    return (coll1minX < coll2maxX &&
+        coll1maxX > coll2minX &&
+        coll1minY < coll2maxY &&
+        coll1maxY > coll2minY);
 }
 exports.intersectRects = intersectRects;
 
@@ -32486,10 +32494,11 @@ const bullet_1 = __webpack_require__(/*! ../../src/core/game-objects/bullet */ "
 const weapon_2 = __webpack_require__(/*! ../../src/core/game-objects/weapon */ "./src/core/game-objects/weapon.ts");
 const tiles_collision_1 = __webpack_require__(/*! ../core/physics/tiles-collision */ "./src/core/physics/tiles-collision.ts");
 const enemy_1 = __webpack_require__(/*! ../../src/core/game-objects/enemy */ "./src/core/game-objects/enemy.ts");
+const throttle_1 = __webpack_require__(/*! ../../src/core/utils/throttle */ "./src/core/utils/throttle.ts");
 const fpsPlaceholder = document.querySelector('#fps_placeholder');
 const MOVE_ACCELERATION = { x: 15, y: 70 };
 const PERSON_LAYER = 2;
-const FRICTION = 0.05;
+const FRICTION = 0.1;
 const GRAVITY = 0.1;
 const MAXIMUM_VELOCITY = { x: 35, y: 35 };
 function initGame() {
@@ -32580,18 +32589,20 @@ function initGame() {
                 tileMap.generate();
                 person.stateEntity.physicsState.prevPosition.y--;
                 person.stateEntity.physicsState.velocity.y = 1;
-                /* new Missile(
-                  person.stateEntity.position,
-                  { x: 700, y: 500, },
-                  { x: 10, y: 10, },
-                  { x: 45, y: 15},
-                  35,
-                  mediaStorage.getSource('missile'),
-                  5,
-                ); */
                 new weapon_2.Weapon(cursor.position, person.stateEntity.position, { x: 45, y: 15 }, mediaStorage.getSource('weapon_1'), 20, canvas);
                 new particle_source_1.ParticleSource({ x: 1000, y: 320 }, { x: 10, y: 10 }, { x: 1, y: -7 }, '#ffffff', true, 100, true, 5, 10, 30, '#ee77ff');
                 const tilesCollision = new tiles_collision_1.TilesCollision(GRAVITY, MAXIMUM_VELOCITY, FRICTION);
+                const addBullet = throttle_1.throttle(() => {
+                    canvas.addShake();
+                    const bullet = new bullet_1.Bullet({ ...cursor.position }, { ...person.stateEntity.physicsState.position }, { x: 10, y: 5 }, 10, 10, '#ffffff', '#3377ff');
+                    bullet.onTileHit(tileMap.tiles, (pos, angle) => {
+                        new particle_source_1.ParticleSource({ x: pos.x, y: pos.y }, { x: 5, y: 5 }, { x: -5 * Math.cos(angle), y: -5 * Math.sin(angle) }, '#ffffff', true, 100, false, 5, 10, 5, '#ffcc44');
+                        bullet.position.x = -10000;
+                        bullet.position.y = -10000;
+                        bullet.velocity.x = 0;
+                        bullet.velocity.y = 0;
+                    });
+                }, 100);
                 person.stateEntity.update = (dt, stateEntity) => {
                     if (state.controlState[direction_1.Direction.LEFT] && !stateEntity.physicsState.leftWall) {
                         stateEntity.physicsState.acceleration.x = -MOVE_ACCELERATION.x;
@@ -32614,15 +32625,7 @@ function initGame() {
                         stateEntity.physicsState.velocity.y += 5;
                     }
                     if (state.controlState[state_controller_1.Controls.MOUSE_LEFT]) {
-                        canvas.addShake();
-                        const bullet = new bullet_1.Bullet({ ...cursor.position }, { ...person.stateEntity.physicsState.position }, { x: 10, y: 4 }, 10, 10, '#ffffff', '#3377ff');
-                        bullet.onTileHit(tileMap.tiles, (pos) => {
-                            new particle_source_1.ParticleSource({ x: pos.x, y: pos.y }, { x: 5, y: 5 }, { x: 1, y: -7 }, '#ffffff', true, 100, false, 5, 10, 5, '#ffcc44');
-                            bullet.position.x = -10000;
-                            bullet.position.y = -10000;
-                            bullet.velocity.x = 0;
-                            bullet.velocity.y = 0;
-                        });
+                        addBullet();
                     }
                     tilesCollision.track(stateEntity.physicsState, tileMap.tiles, dt);
                     stateEntity.physicsState.acceleratedMotion(dt);

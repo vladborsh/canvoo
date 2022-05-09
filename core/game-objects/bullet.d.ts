@@ -16,9 +16,10 @@ export declare class Bullet {
     private onTileHitCallback;
     private finalTile;
     constructor(target: Vector, position: Vector, size: Vector, velocityMagnitude: number, layer: number, color: string, shadow?: string);
-    onTileHit(tiles: Collider[], cb: (position: Vector) => void): void;
+    onTileHit(tiles: Collider[], cb: (position: Vector, angle: number) => void): void;
     update(): void;
     private getTargetAngle;
     private getRandomVelDiff;
     private findTrajectory;
+    private getNearestIntersectedTile;
 }
