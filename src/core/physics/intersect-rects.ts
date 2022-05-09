@@ -17,9 +17,9 @@ export function intersectRects(
   const coll2maxY = collider2.position.y + collider2.size.y / 2;
 
   return (
-    coll1minX <= coll2maxX &&
-    coll1maxX >= coll2minX &&
-    coll1minY <= coll2maxY &&
+    coll1minX < coll2maxX &&
+    coll1maxX > coll2minX &&
+    coll1minY < coll2maxY &&
     coll1maxY > coll2minY
   );
 }

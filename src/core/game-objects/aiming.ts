@@ -4,7 +4,7 @@ const ANGLE_CHANGE_VELOCITY = Math.PI / 200;
 const ALLOWED_INACCURACY = Math.PI / 100;
 
 export class Aiming {
-  public currentAngle: number = 0;
+  public alpha: number = 0;
   private currentAngleToTarget: number = 0;
   public isAiming: boolean;
 
@@ -17,7 +17,7 @@ export class Aiming {
   public aim(): void {
     if (!this.activationRange || (this.getTargetDistance() < this.activationRange)) {
       this.currentAngleToTarget = this.getTargetAngle();
-      this.currentAngle = this.adjustCurrentAngle();
+      this.alpha = this.adjustCurrentAngle();
       this.isAiming = true;
     } else {
       this.isAiming = false;
@@ -26,7 +26,7 @@ export class Aiming {
 
   private adjustCurrentAngle(): number {
     let angleDelta =
-      this.currentAngle > this.currentAngleToTarget
+      this.alpha > this.currentAngleToTarget
         ? -ANGLE_CHANGE_VELOCITY
         : ANGLE_CHANGE_VELOCITY;
 
@@ -34,7 +34,7 @@ export class Aiming {
       angleDelta = -angleDelta;
     }
 
-    let newAngle = this.currentAngle + angleDelta;
+    let newAngle = this.alpha + angleDelta;
 
     if (newAngle < -Math.PI) {
       newAngle = Math.PI - ANGLE_CHANGE_VELOCITY;
@@ -50,13 +50,13 @@ export class Aiming {
   }
 
   private isFrom2to3Quadrant(): boolean {
-    return (this.currentAngle < -Math.PI/2 && this.currentAngle > -Math.PI
+    return (this.alpha < -Math.PI/2 && this.alpha > -Math.PI
       && this.currentAngleToTarget > Math.PI/2 && this.currentAngleToTarget < Math.PI)
   }
 
   private isFrom3to2Quadrant(): boolean {
     return (this.currentAngleToTarget < -Math.PI/2 && this.currentAngleToTarget > -Math.PI
-      && this.currentAngle > Math.PI/2 && this.currentAngle < Math.PI)
+      && this.alpha > Math.PI/2 && this.alpha < Math.PI)
   }
 
   private getTargetDistance(): number {

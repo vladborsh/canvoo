@@ -11,13 +11,13 @@ export class LineRenderedEntity implements AbstractRenderedEntity {
     public color: string,
     public layer: number,
     public length: number,
-    private angle: { currentAngle: number },
+    private angle: { alpha: number },
   ) {}
 
   public render() {
     const target = {
-      x: this.position.x + this.length * Math.cos(this.angle.currentAngle),
-      y: this.position.y + this.length * Math.sin(this.angle.currentAngle),
+      x: this.position.x + this.length * Math.cos(this.angle.alpha),
+      y: this.position.y + this.length * Math.sin(this.angle.alpha),
     }
 
     this.canvas.context.strokeStyle = this.color;

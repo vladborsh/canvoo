@@ -5,7 +5,6 @@ import { Vector } from '../interfaces/vector';
 import { findNearest, TileSegment } from '../physics/find-nearest-point';
 import { intersectLineOnRect } from '../physics/intersect-line-on-rect';
 import { intersectRects } from '../physics/intersect-rects';
-import { AbstractStateEntity } from '../state/state-entity/abstract-state-entity';
 import { RectangleStateEntity } from '../state/state-entity/rectangle-state.entity';
 
 const ANGLE_RANDOMNESS = 0.07;
@@ -18,7 +17,7 @@ export class Bullet {
   private currentAngle: number = 0;
   private angleContainer = { alpha: 0 };
   private tiles: Collider[];
-  private onTileHitCallback: (position: Vector) => void;
+  private onTileHitCallback: (position: Vector, angle: number) => void;
   private finalTile: TileSegment;
 
   constructor(
@@ -52,7 +51,7 @@ export class Bullet {
     this.stateEntity.update = () => this.update();
   }
 
-  public onTileHit(tiles: Collider[], cb: (position: Vector) => void): void {
+  public onTileHit(tiles: Collider[], cb: (position: Vector, angle: number) => void): void {
     this.onTileHitCallback = cb;
     this.tiles = tiles;
     this.findTrajectory();
@@ -63,7 +62,7 @@ export class Bullet {
     this.position.y += this.velocity.y;
 
     if (this.finalTile && intersectRects(this.finalTile.tile, this.stateEntity.getCollider())) {
-      this.onTileHitCallback(this.finalTile.point);
+      this.onTileHitCallback(this.finalTile.point, this.currentAngle);
     }
   }
 
@@ -83,8 +82,8 @@ export class Bullet {
 
     const rayLength = 2000;
     const rayEnd: Vector = {
-      x: rayLength * Math.cos(this.currentAngle),
-      y: rayLength * Math.sin(this.currentAngle),
+      x: this.position.x + rayLength * Math.cos(this.currentAngle),
+      y: this.position.y + rayLength * Math.sin(this.currentAngle),
     };
 
     const intersectedTiles = this.tiles.map(tile => ({
@@ -93,16 +92,21 @@ export class Bullet {
     })).filter(({ segment }) => !!segment);
 
     if(intersectedTiles.length) {
-      const targets: TileSegment[] = intersectedTiles.reduce(
+      this.finalTile = this.getNearestIntersectedTile(intersectedTiles);
+    }
+  }
+
+  private getNearestIntersectedTile(intersectedTiles: {tile: Collider, segment: Vector[]}[]): TileSegment {
+    return findNearest(
+      this.position,
+      intersectedTiles.reduce(
         (acc: TileSegment[], { tile, segment }) => [
           ...acc,
           { tile, point: segment[0]},
           { tile, point: segment[1]},
         ],
         [],
-      );
-      const nearest = findNearest(this.position, targets);
-      this.finalTile = nearest;
-    }
+      ),
+    );
   }
 }
