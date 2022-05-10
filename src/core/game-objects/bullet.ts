@@ -9,10 +9,11 @@ import { RectangleStateEntity } from '../state/state-entity/rectangle-state.enti
 
 const ANGLE_RANDOMNESS = 0.07;
 
-interface MovableTrack {
+interface MovableTrack<T> {
   position: Vector;
   size: Vector;
-  callback: (position: Vector, angle: number) => void;
+  hitPayload: T;
+  callback: (position: Vector, angle: number, payload: T) => void;
 }
 
 export class Bullet {
@@ -23,7 +24,7 @@ export class Bullet {
   private angleContainer = { alpha: 0 };
   private tiles: Collider[];
   private onTileHitCallback: (position: Vector, angle: number) => void;
-  private onMovableHitTracks: MovableTrack[] = [];
+  private onMovableHitTracks: MovableTrack<any>[] = [];
   private finalTile: TileSegment;
 
   constructor(
@@ -33,7 +34,7 @@ export class Bullet {
     public velocityMagnitude: number,
     layer: number,
     color: string,
-    shadow?: string,
+    shadow?: string
   ) {
     this.currentAngle = this.getTargetAngle() + this.getRandomVelDiff();
     this.angleContainer.alpha = this.currentAngle;
@@ -49,7 +50,7 @@ export class Bullet {
       this.stateEntity.position,
       layer,
       shadow,
-      this.angleContainer,
+      this.angleContainer
     );
 
     (<any>window).canvas.addEntity(this.renderedEntity);
@@ -57,15 +58,24 @@ export class Bullet {
     this.stateEntity.update = () => this.update();
   }
 
-  public onMovableHit(position: Vector, size: Vector, cb: (position: Vector, angle: number) => void): void {
+  public onMovableHit<T>(
+    position: Vector,
+    size: Vector,
+    hitPayload: T,
+    callback: (position: Vector, angle: number, hitPayload: T) => void
+  ): void {
     this.onMovableHitTracks.push({
       position,
       size,
-      callback: cb,
-    })
+      hitPayload,
+      callback,
+    });
   }
 
-  public onTileHit(tiles: Collider[], cb: (position: Vector, angle: number) => void): void {
+  public onTileHit(
+    tiles: Collider[],
+    cb: (position: Vector, angle: number) => void
+  ): void {
     this.onTileHitCallback = cb;
     this.tiles = tiles;
     this.findTrajectory();
@@ -75,13 +85,16 @@ export class Bullet {
     this.position.x += this.velocity.x;
     this.position.y += this.velocity.y;
 
-    if (this.finalTile && intersectRects(this.finalTile.tile, this.stateEntity.getCollider())) {
+    if (
+      this.finalTile &&
+      intersectRects(this.finalTile.tile, this.stateEntity.getCollider())
+    ) {
       this.onTileHitCallback(this.finalTile.point, this.currentAngle);
     }
 
-    this.onMovableHitTracks.forEach(({position, size, callback}) => {
-      if (intersectRects({position, size}, this.stateEntity.getCollider())) {
-        callback(this.position, this.currentAngle);
+    this.onMovableHitTracks.forEach(({ position, size, hitPayload, callback }) => {
+      if (intersectRects({ position, size }, this.stateEntity.getCollider())) {
+        callback(this.position, this.currentAngle, hitPayload);
       }
     });
   }
@@ -106,27 +119,31 @@ export class Bullet {
       y: this.position.y + rayLength * Math.sin(this.currentAngle),
     };
 
-    const intersectedTiles = this.tiles.map(tile => ({
-      tile,
-      segment: intersectLineOnRect(tile, this.position, rayEnd)
-    })).filter(({ segment }) => !!segment);
+    const intersectedTiles = this.tiles
+      .map((tile) => ({
+        tile,
+        segment: intersectLineOnRect(tile, this.position, rayEnd),
+      }))
+      .filter(({ segment }) => !!segment);
 
-    if(intersectedTiles.length) {
+    if (intersectedTiles.length) {
       this.finalTile = this.getNearestIntersectedTile(intersectedTiles);
     }
   }
 
-  private getNearestIntersectedTile(intersectedTiles: {tile: Collider, segment: Vector[]}[]): TileSegment {
+  private getNearestIntersectedTile(
+    intersectedTiles: { tile: Collider; segment: Vector[] }[]
+  ): TileSegment {
     return findNearest(
       this.position,
       intersectedTiles.reduce(
         (acc: TileSegment[], { tile, segment }) => [
           ...acc,
-          { tile, point: segment[0]},
-          { tile, point: segment[1]},
+          { tile, point: segment[0] },
+          { tile, point: segment[1] },
         ],
-        [],
-      ),
+        []
+      )
     );
   }
 }

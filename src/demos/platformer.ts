@@ -205,19 +205,22 @@ export function initGame() {
               bullet.velocity.x = 0;
               bullet.velocity.y = 0;
             });
-            bullet.onMovableHit(enemy.stateEntity.position, enemy.stateEntity.size, (pos: Vector, angle: number) => {
+            bullet.onMovableHit(
+              enemy.stateEntity.position,
+              enemy.stateEntity.size,
+              {},
+              (pos: Vector, angle: number) => {
               new ParticleSource(
                 { x: pos.x, y: pos.y },
                 { x: 5, y: 5 },
                 { x: 5 * Math.cos(angle), y: 5 * Math.sin(angle) },
-                '#ff0000',
+                '#aa0000',
                 true,
                 100,
                 false,
                 5,
                 10,
                 5,
-                '#ffcc44',
               );
 
               bullet.position.x = -10000;
@@ -250,6 +253,29 @@ export function initGame() {
                 10,
                 5,
                 '#ffcc44',
+              );
+
+              bullet.position.x = -10000;
+              bullet.position.y = -10000;
+              bullet.velocity.x = 0;
+              bullet.velocity.y = 0;
+            });
+            bullet.onMovableHit(
+              person.stateEntity.position,
+              person.stateEntity.size,
+              {},
+              (pos: Vector, angle: number) => {
+              new ParticleSource(
+                { x: pos.x, y: pos.y },
+                { x: 5, y: 5 },
+                { x: 5 * Math.cos(angle), y: 5 * Math.sin(angle) },
+                '#aa0000',
+                true,
+                100,
+                false,
+                5,
+                10,
+                5,
               );
 
               bullet.position.x = -10000;
