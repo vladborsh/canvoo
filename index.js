@@ -31295,11 +31295,12 @@ class Bullet {
         window.state.addEntity(this.stateEntity);
         this.stateEntity.update = () => this.update();
     }
-    onMovableHit(position, size, cb) {
+    onMovableHit(position, size, hitPayload, callback) {
         this.onMovableHitTracks.push({
             position,
             size,
-            callback: cb,
+            hitPayload,
+            callback,
         });
     }
     onTileHit(tiles, cb) {
@@ -31310,12 +31311,13 @@ class Bullet {
     update() {
         this.position.x += this.velocity.x;
         this.position.y += this.velocity.y;
-        if (this.finalTile && intersect_rects_1.intersectRects(this.finalTile.tile, this.stateEntity.getCollider())) {
+        if (this.finalTile &&
+            intersect_rects_1.intersectRects(this.finalTile.tile, this.stateEntity.getCollider())) {
             this.onTileHitCallback(this.finalTile.point, this.currentAngle);
         }
-        this.onMovableHitTracks.forEach(({ position, size, callback }) => {
+        this.onMovableHitTracks.forEach(({ position, size, hitPayload, callback }) => {
             if (intersect_rects_1.intersectRects({ position, size }, this.stateEntity.getCollider())) {
-                callback(this.position, this.currentAngle);
+                callback(this.position, this.currentAngle, hitPayload);
             }
         });
     }
@@ -31335,10 +31337,12 @@ class Bullet {
             x: this.position.x + rayLength * Math.cos(this.currentAngle),
             y: this.position.y + rayLength * Math.sin(this.currentAngle),
         };
-        const intersectedTiles = this.tiles.map(tile => ({
+        const intersectedTiles = this.tiles
+            .map((tile) => ({
             tile,
-            segment: intersect_line_on_rect_1.intersectLineOnRect(tile, this.position, rayEnd)
-        })).filter(({ segment }) => !!segment);
+            segment: intersect_line_on_rect_1.intersectLineOnRect(tile, this.position, rayEnd),
+        }))
+            .filter(({ segment }) => !!segment);
         if (intersectedTiles.length) {
             this.finalTile = this.getNearestIntersectedTile(intersectedTiles);
         }
@@ -32610,8 +32614,8 @@ function initGame() {
                         bullet.velocity.x = 0;
                         bullet.velocity.y = 0;
                     });
-                    bullet.onMovableHit(enemy.stateEntity.position, enemy.stateEntity.size, (pos, angle) => {
-                        new particle_source_1.ParticleSource({ x: pos.x, y: pos.y }, { x: 5, y: 5 }, { x: 5 * Math.cos(angle), y: 5 * Math.sin(angle) }, '#ff0000', true, 100, false, 5, 10, 5, '#ffcc44');
+                    bullet.onMovableHit(enemy.stateEntity.position, enemy.stateEntity.size, {}, (pos, angle) => {
+                        new particle_source_1.ParticleSource({ x: pos.x, y: pos.y }, { x: 5, y: 5 }, { x: 5 * Math.cos(angle), y: 5 * Math.sin(angle) }, '#aa0000', true, 100, false, 5, 10, 5);
                         bullet.position.x = -10000;
                         bullet.position.y = -10000;
                         bullet.velocity.x = 0;
@@ -32622,6 +32626,13 @@ function initGame() {
                     const bullet = new bullet_1.Bullet({ ...target }, { ...position }, { x: 10, y: 5 }, 10, 10, '#ffffff', '#3377ff');
                     bullet.onTileHit(tileMap.tiles, (pos, angle) => {
                         new particle_source_1.ParticleSource({ x: pos.x, y: pos.y }, { x: 5, y: 5 }, { x: -5 * Math.cos(angle), y: -5 * Math.sin(angle) }, '#ffffff', true, 100, false, 5, 10, 5, '#ffcc44');
+                        bullet.position.x = -10000;
+                        bullet.position.y = -10000;
+                        bullet.velocity.x = 0;
+                        bullet.velocity.y = 0;
+                    });
+                    bullet.onMovableHit(person.stateEntity.position, person.stateEntity.size, {}, (pos, angle) => {
+                        new particle_source_1.ParticleSource({ x: pos.x, y: pos.y }, { x: 5, y: 5 }, { x: 5 * Math.cos(angle), y: 5 * Math.sin(angle) }, '#aa0000', true, 100, false, 5, 10, 5);
                         bullet.position.x = -10000;
                         bullet.position.y = -10000;
                         bullet.velocity.x = 0;
