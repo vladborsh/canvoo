@@ -6,12 +6,24 @@ export class Patrolling {
 
   constructor(
     public physicsState: PhysicsState,
-    public MOVE_ACCELERATION = 5,
-  ) {}
+    public MOVE_ACCELERATION = 3,
+  ) {
+    this.physicsState.acceleration.x = this.MOVE_ACCELERATION;
+    this.physicsState.velocity.x += this.physicsState.acceleration.x;
+  }
 
   public horizontalPatrol(tiles: Collider[]): void {
     if (!this.physicsState.onGround || !this.isActive) {
+      if (!this.isActive) {
+        this.physicsState.velocity.x = 0;
+        this.physicsState.acceleration.x = 0;
+      }
       return;
+    }
+
+    if (!this.physicsState.velocity.x && !this.physicsState.acceleration.x) {
+      this.physicsState.acceleration.x = this.MOVE_ACCELERATION;
+      this.physicsState.velocity.x += this.physicsState.acceleration.x;
     }
 
     const { isWallLeft, isWallRight } = this.checkSideWalls();
@@ -20,17 +32,18 @@ export class Patrolling {
 
     if (isWallRight || !isBottomRightTile) {
       this.physicsState.acceleration.x = -this.MOVE_ACCELERATION;
-      this.physicsState.velocity.x = this.physicsState.acceleration.x;
+      this.physicsState.velocity.x += this.physicsState.acceleration.x;
     }
 
     if (isWallLeft || !isBottomLeftTile) {
       this.physicsState.acceleration.x = this.MOVE_ACCELERATION;
-      this.physicsState.velocity.x = this.physicsState.acceleration.x;
+      this.physicsState.velocity.x += this.physicsState.acceleration.x;
     }
   }
 
   public activate(): void {
     this.isActive = true;
+    console.log('activate');
   }
 
   public deactivate(): void {

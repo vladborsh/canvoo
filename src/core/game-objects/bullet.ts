@@ -9,6 +9,11 @@ import { RectangleStateEntity } from '../state/state-entity/rectangle-state.enti
 
 const ANGLE_RANDOMNESS = 0.07;
 
+interface MovableTrack {
+  position: Vector;
+  size: Vector;
+  callback: (position: Vector, angle: number) => void;
+}
 
 export class Bullet {
   public velocity: Vector;
@@ -18,6 +23,7 @@ export class Bullet {
   private angleContainer = { alpha: 0 };
   private tiles: Collider[];
   private onTileHitCallback: (position: Vector, angle: number) => void;
+  private onMovableHitTracks: MovableTrack[] = [];
   private finalTile: TileSegment;
 
   constructor(
@@ -51,6 +57,14 @@ export class Bullet {
     this.stateEntity.update = () => this.update();
   }
 
+  public onMovableHit(position: Vector, size: Vector, cb: (position: Vector, angle: number) => void): void {
+    this.onMovableHitTracks.push({
+      position,
+      size,
+      callback: cb,
+    })
+  }
+
   public onTileHit(tiles: Collider[], cb: (position: Vector, angle: number) => void): void {
     this.onTileHitCallback = cb;
     this.tiles = tiles;
@@ -64,6 +78,12 @@ export class Bullet {
     if (this.finalTile && intersectRects(this.finalTile.tile, this.stateEntity.getCollider())) {
       this.onTileHitCallback(this.finalTile.point, this.currentAngle);
     }
+
+    this.onMovableHitTracks.forEach(({position, size, callback}) => {
+      if (intersectRects({position, size}, this.stateEntity.getCollider())) {
+        callback(this.position, this.currentAngle);
+      }
+    });
   }
 
   private getTargetAngle(): number {

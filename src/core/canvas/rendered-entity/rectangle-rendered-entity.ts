@@ -26,7 +26,7 @@ export class RectangleRenderedEntity implements AbstractRenderedEntity {
 
     if (this.shadow) {
       this.canvas.context.shadowColor = this.shadow;
-      this.canvas.context.shadowBlur = 16;
+      this.canvas.context.shadowBlur = 25;
     }
 
     if (!this.angle) {

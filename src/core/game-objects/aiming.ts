@@ -8,18 +8,35 @@ export class Aiming {
   private currentAngleToTarget: number = 0;
   public isAiming: boolean;
 
+  private onActiveRangeCb: (position: Vector, target: Vector, angleToTarget: number) => void;
+  private onOutActiveRangeCb: (position: Vector) => void;
+
   constructor(
     public target: Vector,
     public position: Vector,
     public activationRange?: number,
   ) {}
 
+  public onActiveRange(callback: (position: Vector, target: Vector, angleToTarget: number) => void): void {
+    this.onActiveRangeCb = callback;
+  }
+
+  public onOutActiveRange(callback: (position: Vector) => void): void {
+    this.onOutActiveRangeCb = callback;
+  }
+
   public aim(): void {
     if (!this.activationRange || (this.getTargetDistance() < this.activationRange)) {
       this.currentAngleToTarget = this.getTargetAngle();
       this.alpha = this.adjustCurrentAngle();
       this.isAiming = true;
+      if (this.onActiveRangeCb) {
+        this.onActiveRangeCb(this.position, this.target, this.currentAngleToTarget);
+      }
     } else {
+      if (this.isAiming && this.onOutActiveRangeCb) {
+        this.onOutActiveRangeCb(this.position);
+      }
       this.isAiming = false;
     }
   }

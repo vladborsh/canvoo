@@ -174,11 +174,63 @@ export function initGame() {
 
           const tilesCollision = new TilesCollision(GRAVITY, MAXIMUM_VELOCITY, FRICTION);
 
-          const addBullet = throttle(() => {
+          const addHeroBullet = throttle(() => {
             canvas.addShake();
             const bullet = new Bullet(
               { ...cursor.position },
               { ...person.stateEntity.physicsState.position },
+              { x: 10, y: 5 },
+              10,
+              10,
+              '#ffffff',
+              '#ffff54',
+            );
+            bullet.onTileHit(tileMap.tiles, (pos: Vector, angle: number) => {
+              new ParticleSource(
+                { x: pos.x, y: pos.y },
+                { x: 5, y: 5 },
+                { x: -5 * Math.cos(angle), y: -5 * Math.sin(angle) },
+                '#ffffff',
+                true,
+                100,
+                false,
+                5,
+                10,
+                5,
+                '#ffcc44',
+              );
+
+              bullet.position.x = -10000;
+              bullet.position.y = -10000;
+              bullet.velocity.x = 0;
+              bullet.velocity.y = 0;
+            });
+            bullet.onMovableHit(enemy.stateEntity.position, enemy.stateEntity.size, (pos: Vector, angle: number) => {
+              new ParticleSource(
+                { x: pos.x, y: pos.y },
+                { x: 5, y: 5 },
+                { x: 5 * Math.cos(angle), y: 5 * Math.sin(angle) },
+                '#ff0000',
+                true,
+                100,
+                false,
+                5,
+                10,
+                5,
+                '#ffcc44',
+              );
+
+              bullet.position.x = -10000;
+              bullet.position.y = -10000;
+              bullet.velocity.x = 0;
+              bullet.velocity.y = 0;
+            });
+          }, 100);
+
+          const addEnemyBullet: (...args: any[]) => void = throttle((position: Vector, target: Vector) => {
+            const bullet = new Bullet(
+              { ...target },
+              { ...position },
               { x: 10, y: 5 },
               10,
               10,
@@ -229,7 +281,7 @@ export function initGame() {
               stateEntity.physicsState.velocity.y += 5;
             }
             if (state.controlState[Controls.MOUSE_LEFT]) {
-              addBullet();
+              addHeroBullet();
             }
 
             tilesCollision.track(stateEntity.physicsState, tileMap.tiles, dt);
@@ -241,10 +293,15 @@ export function initGame() {
             { x: 900, y: 450 },
             { x: 60, y: 60 },
             { x: 60, y: 60 },
-            700,
+            300,
             mediaStorage.getSource('enemy'),
             2,
           );
+
+          enemy.onActiveRange((position, target, angleToTarget) => {
+            addEnemyBullet(position, target);
+          });
+          enemy.onOutActiveRange(() => {});
 
           enemy.stateEntity.update = (dt, stateEntity) => {
             tilesCollision.track(stateEntity.physicsState, tileMap.tiles, dt);

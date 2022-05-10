@@ -35,14 +35,19 @@ export class Enemy {
 
     this.patrolling = new Patrolling(this.stateEntity.physicsState);
     this.aiming = new Aiming(this.target, this.position, activationRange);
+  }
 
-    (<any>window).canvas.addEntity(new LineRenderedEntity(
-      (<any>window).canvas,
-      this.position,
-      '#55ff99',
-      10,
-      300,
-      this.aiming
-    ));
+  public onActiveRange(callback: (position: Vector, target: Vector, angleToTarget: number) => void): void {
+    this.aiming.onActiveRange((position, target, angleToTarget) => {
+      callback(position, target, angleToTarget);
+      this.patrolling.deactivate();
+    });
+  }
+
+  public onOutActiveRange(callback: (position: Vector) => void): void {
+    this.aiming.onOutActiveRange((position) => {
+      callback(position);
+      this.patrolling.activate();
+    });
   }
 }
