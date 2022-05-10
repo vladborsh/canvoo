@@ -14,8 +14,10 @@ export declare class Bullet {
     private angleContainer;
     private tiles;
     private onTileHitCallback;
+    private onMovableHitTracks;
     private finalTile;
     constructor(target: Vector, position: Vector, size: Vector, velocityMagnitude: number, layer: number, color: string, shadow?: string);
+    onMovableHit(position: Vector, size: Vector, cb: (position: Vector, angle: number) => void): void;
     onTileHit(tiles: Collider[], cb: (position: Vector, angle: number) => void): void;
     update(): void;
     private getTargetAngle;

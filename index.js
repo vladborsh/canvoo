@@ -30721,44 +30721,6 @@ exports.AnimationSprite = AnimationSprite;
 
 /***/ }),
 
-/***/ "./src/core/canvas/rendered-entity/line-rendered-entity.ts":
-/*!*****************************************************************!*\
-  !*** ./src/core/canvas/rendered-entity/line-rendered-entity.ts ***!
-  \*****************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.LineRenderedEntity = void 0;
-class LineRenderedEntity {
-    constructor(canvas, position, color, layer, length, angle) {
-        this.canvas = canvas;
-        this.position = position;
-        this.color = color;
-        this.layer = layer;
-        this.length = length;
-        this.angle = angle;
-        this.isActive = true;
-    }
-    render() {
-        const target = {
-            x: this.position.x + this.length * Math.cos(this.angle.alpha),
-            y: this.position.y + this.length * Math.sin(this.angle.alpha),
-        };
-        this.canvas.context.strokeStyle = this.color;
-        this.canvas.context.beginPath();
-        this.canvas.context.moveTo(this.position.x - (this.canvas.cameraPosition.x - this.canvas.canvasHalfSize.x), this.position.y - (this.canvas.cameraPosition.y - this.canvas.canvasHalfSize.y));
-        this.canvas.context.lineTo(target.x - (this.canvas.cameraPosition.x - this.canvas.canvasHalfSize.x), target.y - (this.canvas.cameraPosition.y - this.canvas.canvasHalfSize.y));
-        this.canvas.context.stroke();
-    }
-}
-exports.LineRenderedEntity = LineRenderedEntity;
-
-
-/***/ }),
-
 /***/ "./src/core/canvas/rendered-entity/rectangle-rendered-entity.ts":
 /*!**********************************************************************!*\
   !*** ./src/core/canvas/rendered-entity/rectangle-rendered-entity.ts ***!
@@ -30789,7 +30751,7 @@ class RectangleRenderedEntity {
         this.canvas.context.fillStyle = this.color;
         if (this.shadow) {
             this.canvas.context.shadowColor = this.shadow;
-            this.canvas.context.shadowBlur = 16;
+            this.canvas.context.shadowBlur = 25;
         }
         if (!this.angle) {
             this.drawRectWithShift();
@@ -31235,13 +31197,25 @@ class Aiming {
         this.alpha = 0;
         this.currentAngleToTarget = 0;
     }
+    onActiveRange(callback) {
+        this.onActiveRangeCb = callback;
+    }
+    onOutActiveRange(callback) {
+        this.onOutActiveRangeCb = callback;
+    }
     aim() {
         if (!this.activationRange || (this.getTargetDistance() < this.activationRange)) {
             this.currentAngleToTarget = this.getTargetAngle();
             this.alpha = this.adjustCurrentAngle();
             this.isAiming = true;
+            if (this.onActiveRangeCb) {
+                this.onActiveRangeCb(this.position, this.target, this.currentAngleToTarget);
+            }
         }
         else {
+            if (this.isAiming && this.onOutActiveRangeCb) {
+                this.onOutActiveRangeCb(this.position);
+            }
             this.isAiming = false;
         }
     }
@@ -31308,6 +31282,7 @@ class Bullet {
         this.velocityMagnitude = velocityMagnitude;
         this.currentAngle = 0;
         this.angleContainer = { alpha: 0 };
+        this.onMovableHitTracks = [];
         this.currentAngle = this.getTargetAngle() + this.getRandomVelDiff();
         this.angleContainer.alpha = this.currentAngle;
         this.velocity = {
@@ -31320,6 +31295,13 @@ class Bullet {
         window.state.addEntity(this.stateEntity);
         this.stateEntity.update = () => this.update();
     }
+    onMovableHit(position, size, cb) {
+        this.onMovableHitTracks.push({
+            position,
+            size,
+            callback: cb,
+        });
+    }
     onTileHit(tiles, cb) {
         this.onTileHitCallback = cb;
         this.tiles = tiles;
@@ -31331,6 +31313,11 @@ class Bullet {
         if (this.finalTile && intersect_rects_1.intersectRects(this.finalTile.tile, this.stateEntity.getCollider())) {
             this.onTileHitCallback(this.finalTile.point, this.currentAngle);
         }
+        this.onMovableHitTracks.forEach(({ position, size, callback }) => {
+            if (intersect_rects_1.intersectRects({ position, size }, this.stateEntity.getCollider())) {
+                callback(this.position, this.currentAngle);
+            }
+        });
     }
     getTargetAngle() {
         return Math.atan2(this.target.y - this.position.y, this.target.x - this.position.x);
@@ -31426,7 +31413,6 @@ exports.Cursor = Cursor;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Enemy = void 0;
-const line_rendered_entity_1 = __webpack_require__(/*! ../canvas/rendered-entity/line-rendered-entity */ "./src/core/canvas/rendered-entity/line-rendered-entity.ts");
 const sprite_1 = __webpack_require__(/*! ../canvas/rendered-entity/sprite */ "./src/core/canvas/rendered-entity/sprite.ts");
 const rectangle_state_entity_1 = __webpack_require__(/*! ../state/state-entity/rectangle-state.entity */ "./src/core/state/state-entity/rectangle-state.entity.ts");
 const aiming_1 = __webpack_require__(/*! ./aiming */ "./src/core/game-objects/aiming.ts");
@@ -31443,7 +31429,18 @@ class Enemy {
         window.state.addEntity(this.stateEntity);
         this.patrolling = new patrolling_1.Patrolling(this.stateEntity.physicsState);
         this.aiming = new aiming_1.Aiming(this.target, this.position, activationRange);
-        window.canvas.addEntity(new line_rendered_entity_1.LineRenderedEntity(window.canvas, this.position, '#55ff99', 10, 300, this.aiming));
+    }
+    onActiveRange(callback) {
+        this.aiming.onActiveRange((position, target, angleToTarget) => {
+            callback(position, target, angleToTarget);
+            this.patrolling.deactivate();
+        });
+    }
+    onOutActiveRange(callback) {
+        this.aiming.onOutActiveRange((position) => {
+            callback(position);
+            this.patrolling.activate();
+        });
     }
 }
 exports.Enemy = Enemy;
@@ -31463,28 +31460,39 @@ exports.Enemy = Enemy;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Patrolling = void 0;
 class Patrolling {
-    constructor(physicsState, MOVE_ACCELERATION = 5) {
+    constructor(physicsState, MOVE_ACCELERATION = 3) {
         this.physicsState = physicsState;
         this.MOVE_ACCELERATION = MOVE_ACCELERATION;
         this.isActive = true;
+        this.physicsState.acceleration.x = this.MOVE_ACCELERATION;
+        this.physicsState.velocity.x += this.physicsState.acceleration.x;
     }
     horizontalPatrol(tiles) {
         if (!this.physicsState.onGround || !this.isActive) {
+            if (!this.isActive) {
+                this.physicsState.velocity.x = 0;
+                this.physicsState.acceleration.x = 0;
+            }
             return;
+        }
+        if (!this.physicsState.velocity.x && !this.physicsState.acceleration.x) {
+            this.physicsState.acceleration.x = this.MOVE_ACCELERATION;
+            this.physicsState.velocity.x += this.physicsState.acceleration.x;
         }
         const { isWallLeft, isWallRight } = this.checkSideWalls();
         const { isBottomLeftTile, isBottomRightTile } = !isWallLeft && !isWallRight ? this.checkTilesBottom(tiles) : this.getDefault();
         if (isWallRight || !isBottomRightTile) {
             this.physicsState.acceleration.x = -this.MOVE_ACCELERATION;
-            this.physicsState.velocity.x = this.physicsState.acceleration.x;
+            this.physicsState.velocity.x += this.physicsState.acceleration.x;
         }
         if (isWallLeft || !isBottomLeftTile) {
             this.physicsState.acceleration.x = this.MOVE_ACCELERATION;
-            this.physicsState.velocity.x = this.physicsState.acceleration.x;
+            this.physicsState.velocity.x += this.physicsState.acceleration.x;
         }
     }
     activate() {
         this.isActive = true;
+        console.log('activate');
     }
     deactivate() {
         this.isActive = false;
@@ -32592,9 +32600,26 @@ function initGame() {
                 new weapon_2.Weapon(cursor.position, person.stateEntity.position, { x: 45, y: 15 }, mediaStorage.getSource('weapon_1'), 20, canvas);
                 new particle_source_1.ParticleSource({ x: 1000, y: 320 }, { x: 10, y: 10 }, { x: 1, y: -7 }, '#ffffff', true, 100, true, 5, 10, 30, '#ee77ff');
                 const tilesCollision = new tiles_collision_1.TilesCollision(GRAVITY, MAXIMUM_VELOCITY, FRICTION);
-                const addBullet = throttle_1.throttle(() => {
+                const addHeroBullet = throttle_1.throttle(() => {
                     canvas.addShake();
-                    const bullet = new bullet_1.Bullet({ ...cursor.position }, { ...person.stateEntity.physicsState.position }, { x: 10, y: 5 }, 10, 10, '#ffffff', '#3377ff');
+                    const bullet = new bullet_1.Bullet({ ...cursor.position }, { ...person.stateEntity.physicsState.position }, { x: 10, y: 5 }, 10, 10, '#ffffff', '#ffff54');
+                    bullet.onTileHit(tileMap.tiles, (pos, angle) => {
+                        new particle_source_1.ParticleSource({ x: pos.x, y: pos.y }, { x: 5, y: 5 }, { x: -5 * Math.cos(angle), y: -5 * Math.sin(angle) }, '#ffffff', true, 100, false, 5, 10, 5, '#ffcc44');
+                        bullet.position.x = -10000;
+                        bullet.position.y = -10000;
+                        bullet.velocity.x = 0;
+                        bullet.velocity.y = 0;
+                    });
+                    bullet.onMovableHit(enemy.stateEntity.position, enemy.stateEntity.size, (pos, angle) => {
+                        new particle_source_1.ParticleSource({ x: pos.x, y: pos.y }, { x: 5, y: 5 }, { x: 5 * Math.cos(angle), y: 5 * Math.sin(angle) }, '#ff0000', true, 100, false, 5, 10, 5, '#ffcc44');
+                        bullet.position.x = -10000;
+                        bullet.position.y = -10000;
+                        bullet.velocity.x = 0;
+                        bullet.velocity.y = 0;
+                    });
+                }, 100);
+                const addEnemyBullet = throttle_1.throttle((position, target) => {
+                    const bullet = new bullet_1.Bullet({ ...target }, { ...position }, { x: 10, y: 5 }, 10, 10, '#ffffff', '#3377ff');
                     bullet.onTileHit(tileMap.tiles, (pos, angle) => {
                         new particle_source_1.ParticleSource({ x: pos.x, y: pos.y }, { x: 5, y: 5 }, { x: -5 * Math.cos(angle), y: -5 * Math.sin(angle) }, '#ffffff', true, 100, false, 5, 10, 5, '#ffcc44');
                         bullet.position.x = -10000;
@@ -32625,12 +32650,16 @@ function initGame() {
                         stateEntity.physicsState.velocity.y += 5;
                     }
                     if (state.controlState[state_controller_1.Controls.MOUSE_LEFT]) {
-                        addBullet();
+                        addHeroBullet();
                     }
                     tilesCollision.track(stateEntity.physicsState, tileMap.tiles, dt);
                     stateEntity.physicsState.acceleratedMotion(dt);
                 };
-                const enemy = new enemy_1.Enemy(person.stateEntity.physicsState.position, { x: 900, y: 450 }, { x: 60, y: 60 }, { x: 60, y: 60 }, 700, mediaStorage.getSource('enemy'), 2);
+                const enemy = new enemy_1.Enemy(person.stateEntity.physicsState.position, { x: 900, y: 450 }, { x: 60, y: 60 }, { x: 60, y: 60 }, 300, mediaStorage.getSource('enemy'), 2);
+                enemy.onActiveRange((position, target, angleToTarget) => {
+                    addEnemyBullet(position, target);
+                });
+                enemy.onOutActiveRange(() => { });
                 enemy.stateEntity.update = (dt, stateEntity) => {
                     tilesCollision.track(stateEntity.physicsState, tileMap.tiles, dt);
                     enemy.patrolling.horizontalPatrol(tileMap.tiles);

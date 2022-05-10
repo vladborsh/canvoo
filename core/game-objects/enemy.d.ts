@@ -13,4 +13,6 @@ export declare class Enemy {
     patrolling: Patrolling;
     aiming: Aiming;
     constructor(target: Vector, position: Vector, size: Vector, renderSize: Vector, activationRange: number, image: HTMLImageElement, layer: number);
+    onActiveRange(callback: (position: Vector, target: Vector, angleToTarget: number) => void): void;
+    onOutActiveRange(callback: (position: Vector) => void): void;
 }
